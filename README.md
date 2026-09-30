@@ -3,7 +3,7 @@
 Source for the Coi documentation. Pages are grouped into section directories:
 
 ```
-getting-started/   setup/   usage/   security/   maintenance/   help/
+Getting-Started/   Setup/   Usage/   Security/   Maintenance/   Help/
 Home.md   _Sidebar.md   _Footer.md   README.md      (repo root)
 ```
 
