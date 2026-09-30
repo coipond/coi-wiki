@@ -10,12 +10,34 @@ workflow publishes the Markdown pages into `coipond/coi`'s Wiki tab.
 > The Wiki tab is a **read-only mirror**. Edits made directly on the Wiki tab
 > will be overwritten by the next sync — always change pages in this repo.
 
-## How it works
+## Layout
 
-- Each top-level `*.md` file is one wiki page (`Home.md` is the landing page;
-  `_Sidebar.md` / `_Footer.md` are the wiki chrome). `README.md` (this file) is
-  repo-only and is **not** published.
-- The sync mirrors the full page set, so renames and deletions propagate too.
+Pages are grouped into section directories for the (upcoming) docs website:
+
+```
+getting-started/   setup/   usage/   security/   maintenance/   help/
+Home.md   _Sidebar.md   _Footer.md   README.md      (repo root)
+```
+
+- Each `*.md` file is one wiki page. `Home.md` is the landing page; `_Sidebar.md`
+  / `_Footer.md` are the wiki chrome (kept at the repo root). `README.md` (this
+  file) is repo-only and is **not** published.
+
+## How the sync works
+
+GitHub wikis are **flat** — they don't support subdirectories. So the sync
+**flattens** every page to its basename at the wiki root:
+
+```
+security/Security-Monitoring.md   ->   Security-Monitoring
+usage/Configuration.md            ->   Configuration
+```
+
+Flattening by basename (not by path) keeps every existing wiki page name and all
+`[[links]]` intact, while the directories organise the same files for the
+website. **Page basenames must be globally unique** across all directories — a
+collision fails the sync loudly. The sync mirrors the full page set, so renames
+and deletions propagate too.
 
 ## One-time setup
 

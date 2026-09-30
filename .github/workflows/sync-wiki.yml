@@ -6,6 +6,13 @@ name: Sync to coi wiki
 # publishes them to the wiki. The Wiki tab should be treated as a read-only
 # mirror; direct edits there will be overwritten on the next sync.
 #
+# Pages are organised into section directories here (getting-started/, usage/,
+# security/, ...) for the future docs website. GitHub wikis are flat, so the sync
+# FLATTENS every page to its basename at the wiki root — e.g.
+# security/Security-Monitoring.md -> Security-Monitoring. Basenames must therefore
+# be globally unique; a collision fails the sync loudly. Flattening by basename
+# (not by path) keeps every existing wiki page name and link intact.
+#
 # Requires a repository secret WIKI_SYNC_TOKEN: a token with write (Contents)
 # access to coipond/coi (the wiki shares that repo's access). A fine-grained PAT
 # scoped to coipond/coi with Contents: Read and write works; so does a classic
@@ -52,18 +59,23 @@ jobs:
             "https://x-access-token:${WIKI_TOKEN}@github.com/coipond/coi.wiki.git" wiki
 
           # Source is authoritative: drop the wiki's current top-level pages, then
-          # copy this repo's pages over (excluding repo meta docs). This makes
-          # renames and deletions propagate, not just edits.
+          # copy this repo's pages over (flattened to basename, excluding repo meta
+          # docs). This makes renames and deletions propagate, not just edits.
           find wiki -maxdepth 1 -type f -name '*.md' -delete
 
-          shopt -s nullglob
-          for f in source/*.md; do
+          declare -A seen
+          while IFS= read -r -d '' f; do
             base="$(basename "$f")"
             case "$base" in
               README.md) continue ;;   # repo meta doc, not a wiki page
             esac
+            if [ -n "${seen[$base]:-}" ]; then
+              echo "::error::Duplicate wiki page '$base' after flattening: '$f' and '${seen[$base]}'. Page basenames must be unique across all directories."
+              exit 1
+            fi
+            seen[$base]="$f"
             cp "$f" "wiki/$base"
-          done
+          done < <(find source -type f -name '*.md' -not -path 'source/.github/*' -print0)
 
           cd wiki
           if [ -z "$(git status --porcelain)" ]; then
