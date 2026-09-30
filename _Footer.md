@@ -1,0 +1,1 @@
+[Home](Home) · [Getting Started](Getting-Started) · [Configuration](Configuration) · [Migration Guide](Migration-Guide) · [GitHub](https://github.com/coipond/coi) · [Issues](https://github.com/coipond/coi/issues)
