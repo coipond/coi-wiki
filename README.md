@@ -1,53 +1,15 @@
-# coi wiki (source of truth)
+# coi documentation
 
-This repository holds the documentation that appears on the
-**[coipond/coi Wiki](https://github.com/coipond/coi/wiki)**.
-
-Edit the docs **here** — through normal pull requests against `master`. On every
-push to `master`, the [`Sync to coi wiki`](.github/workflows/sync-wiki.yml)
-workflow publishes the Markdown pages into `coipond/coi`'s Wiki tab.
-
-> The Wiki tab is a **read-only mirror**. Edits made directly on the Wiki tab
-> will be overwritten by the next sync — always change pages in this repo.
-
-## Layout
-
-Pages are grouped into section directories for the (upcoming) docs website:
+Source for the Coi documentation. Pages are grouped into section directories:
 
 ```
 getting-started/   setup/   usage/   security/   maintenance/   help/
 Home.md   _Sidebar.md   _Footer.md   README.md      (repo root)
 ```
 
-- Each `*.md` file is one wiki page. `Home.md` is the landing page; `_Sidebar.md`
-  / `_Footer.md` are the wiki chrome (kept at the repo root). `README.md` (this
-  file) is repo-only and is **not** published.
+Each `*.md` file is one page. `Home.md` is the landing page and `_Sidebar.md` /
+`_Footer.md` are wiki chrome (kept at the repo root); `README.md` is repo-only.
 
-## How the sync works
-
-GitHub wikis are **flat** — they don't support subdirectories. So the sync
-**flattens** every page to its basename at the wiki root:
-
-```
-security/Security-Monitoring.md   ->   Security-Monitoring
-usage/Configuration.md            ->   Configuration
-```
-
-Flattening by basename (not by path) keeps every existing wiki page name and all
-`[[links]]` intact, while the directories organise the same files for the
-website. **Page basenames must be globally unique** across all directories — a
-collision fails the sync loudly. The sync mirrors the full page set, so renames
-and deletions propagate too.
-
-## One-time setup
-
-The sync needs a repository secret named **`WIKI_SYNC_TOKEN`** with write access
-to `coipond/coi` (the wiki shares that repo's access — the built-in
-`GITHUB_TOKEN` can't reach another repo's wiki):
-
-1. Create a **fine-grained PAT** scoped to `coipond/coi` with
-   **Contents: Read and write** (a classic PAT with `repo` scope also works).
-2. Add it under **Settings → Secrets and variables → Actions → New repository
-   secret**, name `WIKI_SYNC_TOKEN`.
-3. Run the workflow once (**Actions → Sync to coi wiki → Run workflow**) to
-   confirm it publishes.
+> **Note:** the automatic GitHub-wiki sync has been removed. Documentation is
+> moving to the docs website; the GitHub Wiki tab will become a single page that
+> points there. Edit docs here via pull requests.
