@@ -97,7 +97,7 @@ max_duration = "4h"
 | `inherits` | string | Parent profile name for inheritance (see [Inheritance](#profile-inheritance)) |
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
 | `[incus]` | section | Incus settings (`project`, `group`, `code_uid`, `code_user`) |
-| `[git]` | section | Git settings (`writable_hooks`) |
+| `[git]` | section | Git settings (`writable_hooks`, `protected_branches`, …). `protected_branches` is **trusted-scope only** — ignored from a project profile |
 | `[ssh]` | section | SSH settings (`forward_agent`) |
 | `[security]` | section | Security settings (`host_immutable`, `protected_paths`) |
 | `[monitoring]` | section | Security monitoring settings |

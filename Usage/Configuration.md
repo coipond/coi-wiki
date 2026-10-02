@@ -567,7 +567,7 @@ protected_branches = ["main", "master", "release"]   # replace the list
 - Refused on a protected branch: commits and merge commits, and moving the branch to a commit the remote doesn't already have — cherry-pick, revert, `git am`, fast-forward merge, rebase, `reset`, `update-ref`, `branch -f`, or deleting and recreating it. Pushes whose destination is a protected branch are refused too.
 - Still allowed: `git pull` and `git reset --hard origin/main` (commits the remote already has), deleting the branch, the first commit of a brand-new repository, and pushes **into** a local bare repository.
 - `git fetch origin main:main` is refused (git moves `main` before `origin/main`, so the guard can't tell it from a local commit); use `git fetch origin && git branch -f main origin/main`, which the refusal message suggests.
-- Only your own config (`~/.coi/config.toml`, `$COI_CONFIG`) can change or disable the list; a project's `.coi/config.toml` can't, and the default stays on.
+- Only your own config (`~/.coi/config.toml`, `$COI_CONFIG`, profiles under `~/.coi/profiles`) can change or disable the list; a project's `.coi/config.toml` or project profile can't, and the default stays on.
 - The hooks guard against accidental commits, not a determined workaround: `git commit --no-verify`, a repository-local `core.hooksPath` (e.g. husky), `git branch -M`/`-C`, `git symbolic-ref`, or writing a commit under `refs/remotes/` first get around the local checks. Server-side branch protection is the real backstop.
 
 ## Profiles
