@@ -65,9 +65,9 @@ ThreatEvent → Responder (pause/kill) + AuditLog
 sudo apt-get install -y libsystemd-dev nftables
 sudo usermod -a -G systemd-journal $USER
 
-# Configure passwordless sudo for nft commands
-echo '%incus-admin ALL=(ALL) NOPASSWD: /usr/sbin/nft' | sudo tee /etc/sudoers.d/coi-nft
-sudo chmod 0440 /etc/sudoers.d/coi-nft
+# Configure passwordless sudo for nft commands (validated with visudo, then
+# installed atomically — an invalid sudoers file would disable sudo entirely)
+./scripts/install-sudoers-dropin.sh '%incus-admin ALL=(ALL) NOPASSWD: /usr/sbin/nft' /etc/sudoers.d/coi-nft
 ```
 
 **IMPORTANT:** Log out and log back in (or run `newgrp systemd-journal`) for group membership to take effect.

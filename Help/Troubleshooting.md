@@ -153,7 +153,7 @@ file_read_threshold_mb = 200    # Increase from default 50MB
 
 **Common triggers:**
 
-- Reverse shell patterns detected (bash -i, /dev/tcp, nc with suspicious flags)
+- Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
 - Connection to known attack ports (4444, 5555, 31337)
 

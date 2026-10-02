@@ -23,11 +23,19 @@ nftables provides the FORWARD chain filtering needed for network isolation. Re-r
 sudo apt install nftables
 
 # 2. Allow Coi to manage firewall rules (passwordless sudo for nft)
-echo "$USER ALL=(ALL) NOPASSWD: /usr/sbin/nft" | sudo tee /etc/sudoers.d/coi-nft
-sudo chmod 0440 /etc/sudoers.d/coi-nft
+coi health --fix
 ```
 
-(If `nft` lives elsewhere on your distro, use the path from `command -v nft` in the sudoers rule — that is what `install.sh` does.)
+`coi health --fix` writes `/etc/sudoers.d/coi-nft` safely: the rule names you by numeric UID and is checked with `visudo` before it is installed (see [System Health Check](System-Health-Check#fixing-problems---fix)). To do the same by hand:
+
+```bash
+rule="#$(id -u) ALL=(ALL) NOPASSWD: $(command -v nft || echo /usr/sbin/nft)"
+tmp=$(mktemp) && echo "$rule" > "$tmp" \
+  && sudo visudo -cf "$tmp" && sudo install -m 0440 "$tmp" /etc/sudoers.d/coi-nft
+rm -f "$tmp"
+```
+
+Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables `sudo` for the whole system, including the command you would need to fix it.
 
 ## Key Points
 

@@ -83,7 +83,7 @@ Any section from the full config is valid in a project config:
 | `[container]` | Image, persistence, alias, storage pool, named session (`session_name`), shutdown/readiness timeouts |
 | `[defaults]` | Environment variables, `forward_env`, and `profile` — the profile a no-flag `coi` uses (`profile` is trusted-scope only; ignored with a warning from a project config). In profiles, `forward_env` is a top-level key, not under `[defaults]`. |
 | `[limits.*]` | CPU, memory, disk, and runtime limits |
-| `[tool]` | Default AI tool, permission mode, context file |
+| `[tool]` | Default AI tool, permission mode, executable (`binary`) — but `context_file`, `context_json_file` and `pre_launch` are **trusted-scope config only** (ignored with a warning from a project config or a project profile) |
 | `[network]` | Network isolation mode and allowed domains (but `[[network.hosts]]` is **trusted-scope config only** — ignored from project config) |
 | `[mounts]` | Additional mount points (out-of-workspace mounts gated behind `coi trust`) |
 | `[[sockets]]` | Forward host Unix sockets into the container (gated behind `coi trust`) |
@@ -91,7 +91,7 @@ Any section from the full config is valid in a project config:
 | `[[credentials]]` | Copy credential files from host into the container (ad-hoc entries gated behind `coi trust`) |
 | `[defaults.env_commands]` (+ `env_command_timeout`) | Mint env vars from host commands, and the duration bounding each invocation — **trusted-scope config only** (ignored from project config) |
 | `[prompts]` | Named prompts for headless `coi run --prompt-name` — **trusted-scope config only** (ignored from project config) |
-| `[git]` | Git hooks write access |
+| `[git]` | Git hooks write access (but `protected_branches` is **trusted-scope config only** — a project config can't change the list) |
 | `[ssh]` | SSH agent forwarding |
 | `[timezone]` | Container timezone (host, fixed, or UTC) |
 | `[security]` | Protected path overrides |
@@ -154,7 +154,18 @@ storage_pool = ""              # empty = Incus default pool
 [tool]
 name = "claude"              # AI coding tool: "claude", "opencode", "pi"
 permission_mode = "bypass"   # "bypass" (default) or "interactive"
-# binary = "claude"          # Optional: override binary name
+# binary = "/workspace/scripts/claude-wrapper.sh"
+#                            # Optional: executable to launch instead of the tool's default
+#                            # (e.g. a wrapper script); it receives the tool's usual arguments.
+#                            # A plain command name or path — no spaces or shell syntax.
+# Commands run inside the container, in order, before the tool starts in
+# `coi shell` — e.g. keep the agent current without rebuilding the image.
+# Output shows in the session; each command gets 5 minutes (it and anything it
+# started are stopped after that); a failing or slow command is reported and
+# the tool starts anyway; Ctrl+C skips the rest. Commands get no terminal input.
+# TRUSTED-SCOPE ONLY: ignored (with a warning) from a project ./.coi/config.toml
+# or a project profile. See "Running commands before the agent" below.
+# pre_launch = ["claude update"]
 # Path to a custom context file injected as ~/SANDBOX_CONTEXT.md in every container.
 # Supports ~ expansion. If empty, the built-in template is used.
 # context_file = "~/my-sandbox-context.md"
@@ -316,6 +327,9 @@ writable_hooks = false  # Allow container to write .git/hooks
 #                                     # attribution (Co-Authored-By trailers, "Generated with" footers)
 #                                     # from every commit. Set false to keep tool attribution.
 # strip_attribution_patterns = ["^X-Bot:"]  # replace the default strip patterns (grep -E, per line)
+# protected_branches = ["main", "master"]   # default: the agent can't commit on, or push to,
+#                                     # these branches — it works on a feature branch and opens
+#                                     # a PR. Set [] to disable. See "Protected branches" below.
 
 [security]
 # host_immutable = true        # Apply chattr +i to protected paths (default: true)
@@ -503,6 +517,58 @@ shift = true      # force an idmapped mount → host files show up owned by `cod
 - **unset** (default) — inherit the session-wide decision the workspace uses. Leave it unset unless you have a specific reason; the default is correct for the vast majority of mounts.
 
 **Interaction with `raw.idmap` / `disable_shift`:** `shift` and `raw.idmap` are mutually exclusive (Incus rejects the combination). When Coi maps UIDs via `raw.idmap` instead of shifting — a host/container UID mismatch, a Colima/Lima guest that maps UIDs itself, `disable_shift = true`, or a source filesystem that cannot do idmapped mounts (FUSE-family, 9p) — the whole container is already remapped, so a per-mount `shift = true` is unnecessary and is ignored, with a warning. In those environments the mount is already writable by `code` without any override.
+
+## Replacing the Tool's Executable (`binary`)
+
+`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `pi`, `omp`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
+
+```toml
+[tool]
+binary = "/workspace/scripts/claude-wrapper.sh"
+```
+
+```sh
+#!/bin/sh
+# claude-wrapper.sh — runs in place of `claude`, with claude's arguments
+exec claude "$@"
+```
+
+The value must be a plain command name or path (letters, digits and `._:/@+-`; no spaces, quotes or shell syntax) — it is placed directly on the launch command line. An invalid value stops the launch with an error rather than being ignored. The executable must exist inside the container: in the workspace (`/workspace/...`), a [mounted directory](#mounting-additional-files), or the image.
+
+## Running Commands Before the Agent (`pre_launch`)
+
+`[tool] pre_launch` runs commands inside the container, in order, every time `coi shell` starts the tool — for example to keep the agent current without rebuilding the image:
+
+```toml
+# ~/.coi/config.toml (or a profile under ~/.coi/profiles)
+[tool]
+pre_launch = ["claude update"]
+```
+
+- Each entry is a full shell command, so it can also run a script with arguments: `pre_launch = ["/workspace/scripts/before-agent.sh --quiet"]`.
+- Commands run as the container user, in the workspace, with the session's environment. Their output shows in the session.
+- Each command gets **5 minutes**; after that it — and anything it started — is stopped. A failing or timed-out command is reported and the next one runs; the tool **always starts**. Ctrl+C skips the remaining commands.
+- Commands get no terminal input, so they must not prompt.
+- It applies to `coi shell` (new sessions, re-launching into an existing tmux session, and `use_tmux = false`), not to headless `coi run`.
+- **Trusted-scope only.** Commands that run automatically at every session start are honored from `~/.coi/config.toml`, `$COI_CONFIG` and profiles under `~/.coi/profiles` — never from a project's `.coi/config.toml` or a project profile, where they are ignored with a warning (a cloned repo can't switch them on).
+
+`pre_launch` and `binary` combine: the `pre_launch` commands finish first, then `binary` (or the default tool) starts.
+
+## Protected Branches
+
+By default the agent can't commit on, or push to, `main` or `master` — it works on a feature branch and opens a pull request instead. coi enforces this with root-owned git hooks in the container (the agent can't edit them):
+
+```toml
+[git]
+protected_branches = ["main", "master", "release"]   # replace the list
+# protected_branches = []                            # disable the guard
+```
+
+- Refused on a protected branch: commits and merge commits, and moving the branch to a commit the remote doesn't already have — cherry-pick, revert, `git am`, fast-forward merge, rebase, `reset`, `update-ref`, `branch -f`, or deleting and recreating it. Pushes whose destination is a protected branch are refused too.
+- Still allowed: `git pull` and `git reset --hard origin/main` (commits the remote already has), deleting the branch, the first commit of a brand-new repository, and pushes **into** a local bare repository.
+- `git fetch origin main:main` is refused (git moves `main` before `origin/main`, so the guard can't tell it from a local commit); use `git fetch origin && git branch -f main origin/main`, which the refusal message suggests.
+- Only your own config (`~/.coi/config.toml`, `$COI_CONFIG`) can change or disable the list; a project's `.coi/config.toml` can't, and the default stays on.
+- The hooks guard against accidental commits, not a determined workaround: `git commit --no-verify`, a repository-local `core.hooksPath` (e.g. husky), `git branch -M`/`-C`, `git symbolic-ref`, or writing a commit under `refs/remotes/` first get around the local checks. Server-side branch protection is the real backstop.
 
 ## Profiles
 
