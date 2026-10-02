@@ -16,6 +16,28 @@ coi health --json                # shorthand for --format json
 coi health --verbose
 ```
 
+## Fixing Problems (`--fix`)
+
+`coi health --fix` applies safe fixes for failing checks, then re-runs each check to confirm the fix worked:
+
+| Check | Fix |
+|-------|-----|
+| Permissions | Adds you to the `incus-admin` group (log out and back in for it to take effect) |
+| IP forwarding | Enables IPv4 forwarding (`net.ipv4.ip_forward=1`) |
+| nft | Configures passwordless sudo for `nft`, needed for restricted/allowlist network isolation |
+| iptables sudo | **Shown, not applied** — prints the command for you to run (see below) |
+
+```bash
+coi health --fix --dry-run   # show what would be done, change nothing
+coi health --fix             # apply the fixes (asks for your sudo password)
+```
+
+- Commands are printed ready to copy and paste.
+- The sudoers rules name you by numeric UID and are checked with `visudo` before being installed, so an invalid rule is never written — a broken file in `/etc/sudoers.d` would otherwise disable `sudo` entirely.
+- Passwordless sudo for `iptables` grants root-equivalent access, so `--fix` only prints the command for you to run deliberately. It is offered only when sudo is what's failing — not when iptables itself is broken.
+- The sudo checks ignore a recently typed sudo password, so a missing rule isn't hidden for the ~15 minutes sudo remembers it.
+- `--fix` can't be combined with `--json`.
+
 ## Example Output
 
 ```text
@@ -159,6 +181,15 @@ Returns structured JSON with all check results, suitable for scripting and CI in
 **Colima/Lima detection:** When running inside a Colima or Lima VM, the health check automatically detects this and shows `[colima]` in the OS info. If `nft` is not available or passwordless sudo is not configured, the nft check provides Colima-specific guidance (set `mode = "open"`). AppArmor is not available in Lima VMs, so the security posture check reports seccomp-only isolation.
 
 **Privileged profile detection:** If `security.privileged=true` is set on the default Incus profile, both the `privileged_profile` and `security_posture` checks fail. Fix with: `incus profile unset default security.privileged`
+
+**Large host UIDs (e.g. Google Cloud OS Login):** if your UID falls inside root's range in `/etc/subuid`, Incus can't map it into the container. `coi shell` stops with an explanation instead of giving you an unwritable workspace, and `coi health` skips the secret-masking and credential-isolation probes with a warning naming the cause. Fix it by giving Incus a dedicated mapping for your UID, then restarting Incus:
+
+```bash
+echo "root:$(id -u):1" | sudo tee -a /etc/subuid /etc/subgid
+sudo systemctl restart incus
+```
+
+Until the line is in **both** files and Incus has been restarted, `coi health` keeps the warning and says which step is still missing.
 
 
 ## Updating Coi

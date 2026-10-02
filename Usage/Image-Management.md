@@ -286,6 +286,7 @@ If running in a terminal, Coi prompts interactively and builds on confirmation. 
 **Common causes and fixes:**
 
 - **Network issue during build** - The build runs inside a container with internet access. Check your internet connection and DNS resolution. If using a restrictive firewall, try temporarily switching to open mode.
+- **Slow or failing apt mirror** - To speed up builds you can point apt at a nearby Ubuntu mirror by exporting `COI_APT_MIRROR` (e.g. `COI_APT_MIRROR=http://azure.archive.ubuntu.com/ubuntu coi build`). If an apt step fails while a mirror is set, the build switches back to the standard Ubuntu archive for the rest of the build and retries, so a broken mirror slows a build down instead of failing it.
 - **Full disk or storage pool** - Check available space with `coi health` or `incus storage info default`. Free up space and retry.
 - **Custom build script error** - Run the script manually in a persistent container to debug:
 

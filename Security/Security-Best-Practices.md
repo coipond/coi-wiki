@@ -201,6 +201,10 @@ AI agents commonly auto-inject attribution into commit messages — a `Co-Author
 
 **Known limitations** (accepted and pinned by an integration test): a repo whose local git config sets `core.hooksPath` — husky writes `core.hooksPath = .husky` into `.git/config` — overrides the global hook (local beats global in git's config precedence), so the strip does not run in such repos; and `git commit --no-verify` skips `commit-msg` hooks entirely. Both cases are still covered for Claude Code by the managed-settings layer.
 
+### Protected Branches (`protected_branches`)
+
+By default the agent can't commit on, or push to, `main` or `master`: it works on a feature branch and opens a pull request, so its changes always get reviewed. Root-owned git hooks refuse commits on a protected branch, moving the branch to a commit the remote doesn't already have (cherry-pick, merge, rebase, reset, …), and pushes to it; `git pull` keeps working. Configure or disable the list with `[git] protected_branches` in your own config — a cloned repo can't change it. The hooks catch accidents, not a determined workaround (`--no-verify`, a repo-local hooks path, and a few git commands get around them), so keep server-side branch protection on as well. Details: [Configuration → Protected Branches](Configuration#protected-branches).
+
 ## Symlink Security
 
 Coi rejects symlinked protected paths to prevent attacks where a symlink could trick Coi into mounting arbitrary host paths as read-only (or failing to protect the real path).

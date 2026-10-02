@@ -85,7 +85,7 @@ max_duration = "4h"
 | `[container]` | section | Container settings (`image`, `persistent`, `storage_pool`, `alias`, `session_name` — see [Named Sessions](Container-Lifecycle-and-Sessions#named-sessions-session_name--v0111), `shutdown_timeout`, `ready_timeout`) |
 | `[container.build]` | section | Custom image build (`base`, `script`, `commands`) |
 | `[environment]` | map | Static environment variables |
-| `[tool]` | section | AI tool config (`name`, `binary`, `permission_mode`, `context_file`, `auto_context`) |
+| `[tool]` | section | AI tool config (`name`, `binary`, `permission_mode`, `context_file`, `auto_context`, `pre_launch`). `context_file`, `context_json_file` and `pre_launch` are **trusted-scope only** — stripped (with a warning) from a project profile, since they read host files into the container or run commands at every session start |
 | `[tool.claude]` | section | Claude-specific settings (`model`, `effort_level`); `model` is delivered to Claude Code as `ANTHROPIC_MODEL` |
 | `[[mounts]]` / `[[mounts.default]]` | array | Additional mount points (`host`, `container`, `readonly`). Both the flat `[[mounts]]` form and the nested `[[mounts.default]]` form are accepted here and in the main config, so a mount block reads identically in either scope — you can copy it between a profile and your top-level config verbatim |
 | `[[credentials]]` | array | Credential files to copy into the container (as of v0.10.0): `bundle = "<catalog name>"`, or ad-hoc `host`/`container`/`mode`. See [Configuration](Configuration) for the trust model |

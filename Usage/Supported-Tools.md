@@ -251,6 +251,22 @@ permission_mode = "interactive"  # "bypass" (default) or "interactive"
 - Empty or omitted value defaults to `"bypass"` for backward compatibility
 - **Auto mode under `interactive` (as of v0.12.0, #764):** earlier versions also wrote a Claude Code managed-settings policy (`disableAutoMode`) whenever the tool was Claude — the highest-precedence tier, un-overridable by any user setting — which stripped auto mode from the in-session Shift+Tab cycle even under `interactive`. That policy is now written only under `bypass`. So `interactive` is a genuinely interactive session: you get manual approval prompts by default and can opt into auto mode yourself. `bypass` is unchanged (the policy still suppresses Claude's startup auto-mode prompt).
 
+## Keeping Tools Up to Date and Wrapping Them
+
+Two `[tool]` settings, which can be combined, cover this without rebuilding the image:
+
+```toml
+# ~/.coi/config.toml
+[tool]
+pre_launch = ["claude update"]                     # run before the tool starts, every session
+# binary = "/workspace/scripts/claude-wrapper.sh"  # launch this instead of the tool's executable
+```
+
+- `pre_launch` runs commands in the container before the tool starts; a failing or slow command never blocks the session. It is honored only from your own config, not a project's.
+- `binary` replaces the executable coi launches; it receives the tool's usual arguments, so a wrapper can do its own setup and `exec` the tool.
+
+See [Configuration → Running commands before the agent](Configuration#running-commands-before-the-agent-pre_launch) and [Replacing the tool's executable](Configuration#replacing-the-tools-executable-binary).
+
 ## Adding New Tools
 
 Coi's tool abstraction (the `Tool` interface plus optional capability interfaces) makes it straightforward to add a new AI coding assistant.

@@ -43,7 +43,7 @@ The monitoring system detects multiple threat categories:
 
 | Threat | Detection Method | Severity | Response |
 |--------|-----------------|----------|----------|
-| Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, `bash -i`, `/dev/tcp/`, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
+| Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, interactive shells such as `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
 | Reverse shells (interpreter one-liners) | `python -c` / `python3 -c` / `perl -e` / `ruby -e` / `php -r` **combined with a real network indicator** (a socket/tcp/udp keyword, an IP address, or a `host:port` endpoint). Severity is configurable — see [Interpreter one-liner policy](#interpreter-one-liner-policy-reverse_shell_one_liners) | CRITICAL (default) | Kill |
 | Environment scanning | Detecting reads of /proc/*/environ, credential files, language-specific env access patterns | WARNING | Alert |
 | Large file reads | File read rate exceeds threshold (default 50MB) | HIGH | Pause |
@@ -148,10 +148,23 @@ Reverse-shell detection splits interpreter patterns into two classes:
 - **Interpreter one-liners** — `python -c`, `python3 -c`, `perl -e`, `ruby -e`,
   `php -r`. A coding agent runs these constantly for legitimate work, so they are
   flagged **only when the command also carries a real network indicator** (a
-  `socket`/`tcp`/`udp` keyword, an IP address, or a `host:port` endpoint). A bare
+  `socket`/`tcp`/`udp` keyword, an IP address, or a `host:port` endpoint — local
+  addresses such as `127.0.0.1` or `localhost` don't count). A bare
   `python3 -c "print(2+2)"` — or any one-liner whose text merely contains a colon
   (a `PATH`, a dict literal like `{"k": v}`, a URL, a timestamp) — is **not** a
   threat and is left alone.
+
+Everyday agent commands that merely *resemble* these patterns are not flagged,
+for example:
+
+- installing or mentioning tools (`apt-get install socat`, `rg -i powershell docs/`);
+- searching code or docs for the patterns themselves (`grep -rn /dev/tcp/ docs`,
+  `rg "exec:"`), or `/dev/tcp` text inside another program's arguments
+  (`git commit -m`, `sed`);
+- waiting for a local service, e.g.
+  `until (echo > /dev/tcp/localhost/5432) 2>/dev/null; do sleep 1; done`;
+- `rsync -e ssh`, `ssh -i key host`, `./setup.sh -i`, `perl -MIO::File`;
+- writing a Kubernetes manifest whose probes contain `exec:` and `tcpSocket:`.
 
 `reverse_shell_one_liners` controls the severity of the one-liner class:
 
@@ -232,8 +245,8 @@ sudo apt install nftables libsystemd-dev
 # Add user to systemd-journal group
 sudo usermod -aG systemd-journal $USER
 
-# Allow passwordless nft commands
-echo "$USER ALL=(ALL) NOPASSWD: /usr/sbin/nft" | sudo tee /etc/sudoers.d/coi-nft
+# Allow passwordless nft commands (writes a visudo-validated /etc/sudoers.d/coi-nft)
+coi health --fix
 
 # Verify setup
 coi health --verbose
