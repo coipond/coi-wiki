@@ -547,7 +547,7 @@ pre_launch = ["claude update"]
 
 - Each entry is a full shell command, so it can also run a script with arguments: `pre_launch = ["/workspace/scripts/before-agent.sh --quiet"]`.
 - Commands run as the container user, in the workspace, with the session's environment. Their output shows in the session.
-- Each command gets **5 minutes**; after that it — and anything it started — is stopped. A failing or timed-out command is reported and the next one runs; the tool **always starts**. Ctrl+C skips the remaining commands.
+- Each command gets **5 minutes**; after that it is stopped (anything it left running in the background may keep running). A failing or timed-out command is reported and the next one runs; the tool **always starts**. Ctrl+C skips the current command and the remaining ones, and the tool starts right away.
 - Commands get no terminal input, so they must not prompt.
 - It applies to `coi shell` (new sessions, re-launching into an existing tmux session, and `use_tmux = false`), not to headless `coi run`.
 - **Trusted-scope only.** Commands that run automatically at every session start are honored from `~/.coi/config.toml`, `$COI_CONFIG` and profiles under `~/.coi/profiles` — never from a project's `.coi/config.toml` or a project profile, where they are ignored with a warning (a cloned repo can't switch them on).
