@@ -225,6 +225,23 @@ Answering `y` triggers the build inline and continues into the session. Answerin
 
 See also [Profiles - Build Scripts](Profiles#build-scripts) for per-profile build configuration.
 
+## cloud-init
+
+The coi image is built from Ubuntu's cloud image but ships with **cloud-init disabled**: it ran on every container boot, ahead of the network, and slowed every start. Coi containers don't need it — Incus sets the hostname and the image brings its own DHCP network config.
+
+To keep it, set it in config and rebuild:
+
+```toml
+[container.build]
+cloud_init = true
+```
+
+```bash
+coi build --force
+```
+
+The setting only affects newly built images. In an existing persistent container you can toggle it directly: `sudo rm /etc/cloud/cloud-init.disabled` re-enables it, `sudo touch /etc/cloud/cloud-init.disabled` disables it (from the next start).
+
 ## Pre-installed Runtime Manager (mise)
 
 The base `coi-default` image includes [mise](https://mise.jdx.dev) - a polyglot runtime manager for installing and managing language runtimes. The following are pre-installed:

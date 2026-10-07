@@ -343,6 +343,16 @@ coi health
 
 **Note:** This check is skipped on macOS/darwin and on any failure to read the kernel version.
 
+## Container Fails to Start
+
+**Symptom:** `coi shell` / `coi run` stops with a start error, or a container that briefly looked up stops again during startup.
+
+**What to do:** Coi stops waiting as soon as the container is no longer running and quotes the first errors from its start log (`lxc.log`) — read those first. See the full log with `incus info --show-log <container>`. Common causes are a missing mount source (a path in `[[mounts]]` or a protected path that was deleted) and an idmap/shift problem on the mounted filesystem (`coi health` checks both).
+
+## "Waiting for another coi launch of this workspace"
+
+Another `coi shell` / `coi run` for the same workspace is picking its slot at the same moment; launches take turns until each one's container is up, which usually takes a few seconds. If it waits much longer, the other launch is probably building the image. Ctrl-C cancels the wait.
+
 ## Profiling Slow Startup
 
 **Symptom:** `coi run`, `coi shell`, or `coi build` takes tens of seconds to start and you want to see where the time actually goes before changing anything.
@@ -351,7 +361,7 @@ coi health
 
 **Check the storage pool first (v0.11.1):** `coi health` names each pool's driver in its storage line (`default (zfs): …`) and warns outright on `dir` pools. If it warns, the fix is recreating the pool with a copy-on-write driver (zfs/btrfs) — re-running `install.sh` sets one up — and startup cost drops to near-free cloning. On `dir` pools, image size is a per-session cost, so lean images pay off twice.
 
-**What to do:** Set `COI_TIMING_DEBUG=1` on any command to print a wall-clock startup timeline to stderr at exit — every pipeline phase, every teardown, and each `incus` and `nft` call, nested by containment, followed by per-category totals and the slowest `incus` calls:
+**What to do:** Set `COI_TIMING_DEBUG=1` on any command to print a wall-clock startup timeline to stderr at exit — every pipeline phase, every teardown, and each `incus` and `nft` call, nested by containment, followed by per-category totals and the slowest `incus` calls. It also shows how long coi took before its first phase (process start, config load):
 
 ```bash
 COI_TIMING_DEBUG=1 coi run -- true

@@ -18,6 +18,7 @@ coi shell  # Default behavior
 - Blocks: Cloud metadata endpoints (169.254.0.0/16)
 - Allows: All public internet (npm, pypi, GitHub, APIs, etc.)
 - IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
+- A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
 
 ### Allowlist Mode
 
