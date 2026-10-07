@@ -13,7 +13,7 @@ Understanding how containers and sessions work in Coi.
    - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0`
 
 3. **On cleanup** (when you exit/detach):
-   - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`
+   - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
    - If persistent mode is NOT enabled: container is deleted after saving
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
@@ -111,7 +111,7 @@ NODE_ENV = "development"
 
 - `exit` in bash → exits bash but keeps container running (use for temporary shell exit)
 - `Ctrl+b d` → detaches from tmux, container stays running
-- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
 
 ### From Outside (Host)
 
@@ -151,6 +151,8 @@ Slots are allocated automatically when you run `coi shell`:
 - If slots 1 and 2 are running, slot 3 is created
 
 By default slots are allocated automatically — each `coi shell` in a new terminal picks the next available number. You can also pin a specific slot with `--slot N` (`0` means auto-allocate).
+
+Launches of the same workspace started at the same moment (`coi shell` or `coi run`, e.g. from a script) take turns picking a slot until each one's container is up, so every launch gets its own container. A launch that has to wait prints `Waiting for another coi launch of this workspace to pick its slot...`; Ctrl-C cancels the wait. Different workspaces never wait on each other.
 
 ### What Is Isolated Per Slot
 

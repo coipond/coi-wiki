@@ -119,6 +119,9 @@ storage_pool = ""              # empty = Incus default pool
 [container.build]
 # base = "coi-default"
 # script = "build.sh"
+# cloud_init = false           # Keep cloud-init in the built coi image. Off by default:
+#                              # it ran on every container boot and slowed starts.
+#                              # Takes effect on the next `coi build --force`.
 
 [defaults]
 # Profile a bare `coi` (no --profile) launches into. Lowest-precedence profile
@@ -395,7 +398,7 @@ There is no env-var config layer (as of v0.10.0). The legacy `CLAUDE_ON_INCUS_*`
 
 `COI_CONFIG` still exists — it selects which user config file to load instead of `~/.coi/config.toml`; it does not configure anything itself.
 
-Two diagnostic env vars also exist and, like `COI_CONFIG`, never configure anything — they only observe: `COI_TIMING_DEBUG=1` prints a startup timing breakdown to stderr at exit, and `COI_TIMING_DEBUG_JSON=<path>` writes the same data as JSON. See [Profiling Slow Startup](Troubleshooting#profiling-slow-startup) in Troubleshooting.
+Two diagnostic env vars also exist and, like `COI_CONFIG`, never configure anything — they only observe: `COI_TIMING_DEBUG=1` prints a startup timing breakdown to stderr at exit (including the time before the first phase), and `COI_TIMING_DEBUG_JSON=<path>` writes the same data as JSON. See [Profiling Slow Startup](Troubleshooting#profiling-slow-startup) in Troubleshooting.
 
 ## CLI Flags
 

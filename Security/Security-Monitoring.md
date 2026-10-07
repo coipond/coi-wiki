@@ -13,6 +13,10 @@ The security monitoring daemon provides:
 - **Large file I/O detection** to catch data packaging/exfiltration attempts
 - **Disk space monitoring** to prevent /tmp exhaustion
 
+### Background and Detached Sessions
+
+Monitoring (and the `max_duration` runtime limit) runs for as long as the container does — including `coi shell --background`, a detached tmux session, or leaving the agent with the container still running. A small supervisor process keeps it going after `coi shell` returns and stops when the container stops; `coi shell` prints a `[supervisor]` line saying what is covered and where it logs (`~/.coi/logs/<container>.stderr.log`).
+
 ## Enabling Security Monitoring
 
 Security monitoring has two independent subsystems. Enable each separately:
