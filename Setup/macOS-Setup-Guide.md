@@ -145,17 +145,35 @@ Then run `coi shell` again. coi picks up `~/.claude/.credentials.json` (plus you
 
 > The token refreshes periodically, so if you get logged out again, re-run the `security … > ~/.claude/.credentials.json` command.
 
+### Alternative: Long-Lived Token (`claude setup-token`)
+
+To keep using your Pro/Max subscription without re-exporting the Keychain token when it refreshes, create a long-lived token once and forward it:
+
+```bash
+# On the Mac:
+claude setup-token          # prints a long-lived OAuth token
+export CLAUDE_CODE_OAUTH_TOKEN=…
+```
+
+```toml
+# ~/.coi/config.toml (inside the VM)
+[defaults]
+forward_env = ["CLAUDE_CODE_OAUTH_TOKEN"]
+```
+
+Make sure the variable is set in the shell that starts coi (inside the VM). When `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is set, forwarded, or set in `[defaults.environment]`, coi does not show the Keychain hint.
+
 ### Alternative: Use an API Key
 
 If you would rather not touch the Keychain, forward an API key instead — this sidesteps OAuth entirely:
 
-```bash
+```toml
 # ~/.coi/config.toml
-[env]
+[defaults]
 forward_env = ["ANTHROPIC_API_KEY"]
 ```
 
-Then `export ANTHROPIC_API_KEY=…` on the Mac (or inside the VM) before starting coi. API-key usage bills separately from a Pro/Max subscription, so subscription users usually prefer the Keychain approach above.
+Then `export ANTHROPIC_API_KEY=…` on the Mac (or inside the VM) before starting coi. API-key usage bills separately from a Pro/Max subscription, so subscription users usually prefer the Keychain or long-lived token approach above.
 
 ### Older Layouts / Whole-`/Users` Shares
 
@@ -172,6 +190,13 @@ mode = "0600"
 host = "/Users/<you>/.claude.json"
 container = "/home/code/.claude.json"
 ```
+
+
+## Git Identity on macOS
+
+Coi seeds the container's git `user.name` / `user.email` from your host git config. Inside a Colima/Lima/OrbStack VM, "host" means your **Mac**: coi reads `~/.gitconfig` and `~/.config/git/config` from the shared Mac home (including files pulled in with `include.path`), not the VM's own gitconfig. If the Mac config has no complete identity, coi falls back to the VM's global git config. Name and email always come from the same source.
+
+On a Mac with several users whose homes are all shared into the VM, coi only uses your own home (the VM user mirrors your Mac username) and never guesses. `[git] name` / `email` and `seed_host_identity = false` work as on Linux — see [Configuration](Configuration).
 
 ## Setup Instructions
 

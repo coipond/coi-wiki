@@ -26,6 +26,8 @@ Profile directories are scanned at two config levels:
 | 1 (lowest) | `~/.coi/profiles/NAME/config.toml` (user) |
 | 2 (highest) | `./.coi/profiles/NAME/config.toml` (project) |
 
+Profiles are read when each coi command starts. A profile directory removed while that happens (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
+
 Profiles from all discovered locations are merged into a single namespace. If the same profile name is defined in more than one location, Coi refuses to start and asks you to rename one so it is always unambiguous which profile is being applied. Operational CLI flags (`--slot`, `--workspace`, `--resume`) are per-invocation choices, not configuration, and never conflict with profile settings.
 
 ## Profile Config Reference
@@ -92,7 +94,7 @@ max_duration = "4h"
 | `[network]` | section | Network isolation (`mode`, `allowed_domains`) |
 | `[limits.cpu]` | section | CPU limits (`count`, `allowance`, `priority`) |
 | `[limits.memory]` | section | Memory limits (`limit`, `enforce`, `swap`) |
-| `[limits.disk]` | section | Disk IO limits (`read`, `write`, `max`) |
+| `[limits.disk]` | section | Disk limits: IO rates (`read`, `write`, `max`), root disk `size`, `tmpfs_size` |
 | `[limits.runtime]` | section | Runtime limits (`max_duration`, `max_processes`) |
 | `inherits` | string | Parent profile name for inheritance (see [Inheritance](#profile-inheritance)) |
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
