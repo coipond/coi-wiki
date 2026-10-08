@@ -317,7 +317,16 @@ coi health --format=json | jq '.checks | {nftables, systemd_journal, libsystemd}
 
 ### Rules Not Cleaning Up
 
-If rules persist after session ends:
+Monitoring rules are removed when the session's container stops or is deleted. Before the fix in #882, a race in the session supervisor's teardown could occasionally leave them behind, and the next container given the same IP would inherit them.
+
+If rules persist after a session ends, remove orphaned rules with:
+
+```bash
+coi clean --orphans --dry-run   # show what would be removed
+coi clean --orphans
+```
+
+Or inspect and remove them by hand:
 
 ```bash
 # List rules for specific container IP

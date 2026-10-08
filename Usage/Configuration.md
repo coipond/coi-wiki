@@ -319,6 +319,7 @@ writable_hooks = false  # Allow container to write .git/hooks
 # name  = "Jane Dev"                  # pin the commit identity (overrides host git config)
 # email = "jane@corp.example"         # ...both name+email required to take effect
 # seed_host_identity = true           # default: copy host `git config --global` user.name/email
+#                                     # (in a macOS VM: the Mac's gitconfig, then the VM's)
 #                                     # into the container. Set false to keep only the fail-closed guard.
 # readonly = true                     # LOCK the identity so the agent cannot commit as anyone
 #                                     # else: mounts ~/.gitconfig read-only AND pins GIT_AUTHOR_*/
