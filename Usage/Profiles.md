@@ -94,7 +94,7 @@ max_duration = "4h"
 | `[network]` | section | Network isolation (`mode`, `allowed_domains`) |
 | `[limits.cpu]` | section | CPU limits (`count`, `allowance`, `priority`) |
 | `[limits.memory]` | section | Memory limits (`limit`, `enforce`, `swap`) |
-| `[limits.disk]` | section | Disk IO limits (`read`, `write`, `max`) |
+| `[limits.disk]` | section | Disk limits: IO rates (`read`, `write`, `max`), root disk `size`, `tmpfs_size` |
 | `[limits.runtime]` | section | Runtime limits (`max_duration`, `max_processes`) |
 | `inherits` | string | Parent profile name for inheritance (see [Inheritance](#profile-inheritance)) |
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
