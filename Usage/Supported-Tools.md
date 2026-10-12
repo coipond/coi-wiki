@@ -59,14 +59,14 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 **Configuration:**
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
-- Session storage: `.opencode/` in workspace directory (SQLite database)
+- Session storage: redirected into the workspace (`.local/share/opencode/`, via `XDG_DATA_HOME`/`XDG_STATE_HOME`; SQLite) so it survives ephemeral containers
 - Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases)
 
 **Requirements:**
 
 - API key required (unlike Claude, opencode will not start without one)
 - Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` environment variable
-- Or configure in `~/.opencode.json`:
+- Or configure in `~/.config/opencode/opencode.json`:
 
 ```json
 {
@@ -83,7 +83,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 | Feature | Claude Code | opencode |
 |---------|-------------|----------|
 | Login screen | Shows if no API key | Fails if no API key |
-| Session storage | `~/.claude/` (home dir) | `.opencode/` (workspace, SQLite) |
+| Session storage | `~/.claude/` (home dir) | `.local/share/opencode/` (workspace, SQLite) |
 | Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
 | Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
@@ -125,7 +125,7 @@ name = "omp"
 
 ```toml
 [container.build]
-agents = ["claude", "omp"]   # omit this key to install ALL supported agents
+agents = ["claude", "omp"]   # omit this key to install the default set (claude, opencode, pi)
 ```
 ```bash
 coi build --force
@@ -158,7 +158,7 @@ name = "codex"
 
 ```toml
 [container.build]
-agents = ["claude", "codex"]   # omit this key to install ALL supported agents
+agents = ["claude", "codex"]   # omit this key to install the default set (claude, opencode, pi)
 ```
 ```bash
 coi build --force
@@ -191,7 +191,7 @@ forward_env = ["ANTHROPIC_API_KEY"]
 
 ```bash
 # Via host config file (copied into container automatically)
-# ~/.opencode.json on host is copied and merged with permission bypass
+# ~/.config/opencode/opencode.json (and tui.json) on host is copied and merged with the permission setting
 ```
 
 ## Tool Selection
@@ -242,7 +242,7 @@ permission_mode = "interactive"  # "bypass" (default) or "interactive"
 | Mode | Claude Code | opencode |
 |------|-------------|----------|
 | `bypass` (default) | `--permission-mode bypassPermissions` flag + bypass settings injected into `settings.json` | `"permission": {"*": "allow"}` injected into `opencode.json` |
-| `interactive` | No bypass flag or settings - Claude asks before running commands, and **auto mode stays selectable in-session** (Shift+Tab) | No permission bypass injected - opencode asks before running commands |
+| `interactive` | No bypass flag or settings - Claude asks before running commands, and **auto mode stays selectable in-session** (Shift+Tab) | `"permission": {"*": "ask"}` injected - opencode asks before running commands |
 
 **Notes:**
 

@@ -10,7 +10,7 @@ Add to your `~/.coi/config.toml`:
 [limits.cpu]
 count = "2"              # CPU cores: "2", "0-3", "0,1,3" or "" (unlimited)
 allowance = "50%"        # CPU time: "50%", "25ms/100ms" or "" (unlimited)
-priority = 0             # CPU priority: 0-10 (higher = more priority)
+priority = 0             # CPU priority: 1-10 (higher = more priority); 0 = unset (Incus default 10)
 
 [limits.memory]
 limit = "2GiB"           # Memory: "512MiB", "2GiB", "50%" or "" (unlimited)
@@ -21,7 +21,7 @@ swap = "true"            # Swap: "true", "false", or size like "1GiB"
 read = "10MiB"           # Read rate in bytes/sec: "10MiB", "1000iops" or "" (unlimited)
 write = "5MiB"           # Write rate in bytes/sec: "5MiB", "1000iops" or "" (unlimited)
 max = ""                 # Combined I/O limit (overrides read/write)
-priority = 0             # Disk priority: 0-10
+priority = 0             # Disk priority: 1-10; 0 = unset (Incus default)
 size = ""                # Rootfs quota: "" (unlimited) or "20GiB" (needs a btrfs/zfs/lvm pool)
 tmpfs_size = ""          # /tmp size: "" (disk-backed, unlimited) or "4GiB" (RAM-backed, opt-in)
 
@@ -43,14 +43,14 @@ All limits are configured via config files or [profiles](Profiles). There are no
 
 `allowance` sets how much of the allocated cores the container can consume. `"50%"` means the container gets half of each assigned core's time. `"25ms/100ms"` is the equivalent expressed as a CFS quota: 25ms of CPU time per 100ms period. An allowance of `""` means no throttling.
 
-`priority` is a relative weight (0-10) used when multiple containers compete for CPU. Higher values win more CPU time under contention. At 0, the container gets a fair share; raising it makes this container's tasks favored over lower-priority containers.
+`priority` (1-10) is a relative weight used when multiple containers compete for CPU. Higher values win more CPU time under contention. `0` (unset) leaves the Incus default of 10, the maximum, so setting a lower value deprioritizes this container relative to others.
 
 ### Memory Limits
 
-`limit` is a hard ceiling on memory use (e.g., `"2GiB"`). When the container exceeds this limit:
+`limit` caps memory use (e.g., `"2GiB"`). How strictly depends on `enforce`:
 
-- With `enforce = "hard"`: the kernel OOM-kills the process that pushed it over the limit. The container keeps running but the killed process is gone.
-- With `enforce = "soft"` (default): the kernel attempts to reclaim memory by swapping and evicting caches before killing anything. The container may slow down significantly under memory pressure but is less likely to have processes killed.
+- With `enforce = "hard"`: the container can never exceed the limit; the kernel OOM-kills the process that pushed it over. The container keeps running but the killed process is gone.
+- With `enforce = "soft"` (default): the container may exceed `limit` while the host has free memory; the limit is enforced only when the host comes under memory pressure.
 
 `swap` controls whether the container's processes can use swap space:
 
@@ -133,9 +133,10 @@ auto_stop = true
 
 Limits are applied with this precedence (highest to lowest):
 1. Profile limits (if `--profile` specified)
-2. Project config (`[limits]` section)
-3. User/system config (`[limits]` section)
-4. Unlimited (Incus defaults)
+2. `$COI_CONFIG` file (if set)
+3. Project config (`[limits]` section)
+4. User config (`~/.coi/config.toml`, `[limits]` section)
+5. Unlimited (Incus defaults)
 
 ## Examples
 

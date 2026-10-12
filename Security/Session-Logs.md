@@ -59,7 +59,7 @@ All background subsystem output is routed to the session log files:
 
 | Subsystem | Where it goes |
 |-----------|--------------|
-| Network manager (allowlist IP refresh, TTL resolution) | `<container>.stdout.log` |
+| Network manager (allowlist IP refresh, TTL resolution) | `<container>.stdout.log` (info) / `<container>.stderr.log` (warnings, e.g. a failed refresh) |
 | Resource/time limit notifications | `<container>.stdout.log` |
 | Security monitoring errors (`OnError` callbacks) | `<container>.stderr.log` |
 | Security threat detections (`OnThreat` callbacks) | `<container>.stdout.log` |

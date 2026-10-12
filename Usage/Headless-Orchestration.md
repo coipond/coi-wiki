@@ -78,7 +78,7 @@ Because the run exits with the agent's status code, it drops straight into cron:
 ```bash
 coi tool spec --container <ctr> --session-id <id> --prompt-file <host> \
     [--system-prompt-file <host>] \
-    [--continue[=<id>] | --resume-id <id> | --resume] \
+    [--continue[=<id>] | --resume-id <id> | --resume-latest] \
     --json
 ```
 
@@ -117,7 +117,7 @@ orchestrator delivers it out-of-band after launch (e.g. `tmux load-buffer <path>
 | `--container <ctr>` | **Required.** Existing container to build the launch spec for. |
 | `--session-id <id>` | **Required.** Session id for the launch. Validated as a safe token (letters, digits, `.`, `_`, `-`; starts alphanumeric; max 64) since it becomes a filename component and is joined into the shell-run command. |
 | `--prompt-file <host>` | Host file whose contents are staged as the tool's initial prompt. |
-| `--system-prompt-file <host>` | Host file staged as the tool's system prompt (only for tools that support one, e.g. Claude's `--append-system-prompt`; codex/pi/omp reject it). |
+| `--system-prompt-file <host>` | Host file staged as the tool's system prompt (only Claude supports one, via `--append-system-prompt`; codex, opencode, pi and omp reject it). |
 | `--json` | Print the spec as JSON (the machine-readable form orchestrators consume). |
 
 ### Resume Strategies (at Most One)

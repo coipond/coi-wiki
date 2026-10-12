@@ -43,7 +43,7 @@ Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI c
 ### Maintenance
 - **[Updating Coi](Updating-Coi)** - Keep Coi current with `coi update` (binary + detection databases)
 - **[System Health Check](System-Health-Check)** - Diagnose setup issues and verify configuration
-- **[Migration Guide](Migration-Guide)** - Breaking changes and upgrade steps between versions ([Upgrading from 0.11 to 0.12](Migration-Guide#upgrading-from-011-to-012), [Upgrading from 0.10.1 to 0.11.0](Migration-Guide#upgrading-from-0101-to-0110), [Upgrading from 0.9 to 0.10](Migration-Guide#upgrading-from-09-to-010), [Upgrading from 0.8 to 0.9](Migration-Guide#upgrading-from-08-to-09))
+- **[Migration Guide](Migration-Guide)** - Breaking changes and upgrade steps between versions ([Upgrading to 0.15](Migration-Guide#upgrading-to-015), [Upgrading from 0.11 to 0.12](Migration-Guide#upgrading-from-011-to-012), [Upgrading from 0.10.1 to 0.11.0](Migration-Guide#upgrading-from-0101-to-0110), [Upgrading from 0.9 to 0.10](Migration-Guide#upgrading-from-09-to-010), [Upgrading from 0.8 to 0.9](Migration-Guide#upgrading-from-08-to-09))
 
 ### Help and Reference
 - **[FAQ](FAQ)** - Frequently Asked Questions about Coi

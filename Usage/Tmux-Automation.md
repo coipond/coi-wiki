@@ -79,7 +79,7 @@ done
 # (persistence comes from config: [container] persistent = true)
 
 # Launch and wait for the session to be ready
-coi shell
+coi shell --background
 SESSION=$(coi list --running --format=json | jq -r '.active_containers[0].name')
 
 # Send task and wait for completion
@@ -113,7 +113,7 @@ done
 ```bash
 # Queue multiple AI tasks to run overnight
 # (persistence via config: [container] persistent = true)
-coi shell --slot 1 &
+coi shell --slot 1 --background
 sleep 5
 coi tmux send coi-workspace-1 "refactor module A"
 coi tmux send coi-workspace-1 "refactor module B"

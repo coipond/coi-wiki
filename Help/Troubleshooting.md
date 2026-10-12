@@ -243,10 +243,10 @@ incus exec <container-name> -- chown -R <your-uid>:<your-uid> /home/code
 **Verification:** After updating, check that your security settings are applied:
 
 ```bash
-coi health --verbose
+coi health --format json | jq '.checks.monitoring_configuration.details'
 ```
 
-Look for the Monitoring section to confirm `auto_pause=true` and other security settings.
+Confirm `auto_pause_on_high: true` and `auto_kill_on_critical: true` (the text output shows only each check's summary message, not these values).
 
 ## Firewall Rules Accumulating (Thousands of Rules)
 

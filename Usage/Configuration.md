@@ -8,7 +8,7 @@ Coi uses TOML configuration files. The primary user config lives at:
 ~/.coi/config.toml
 ```
 
-Create this file manually - no generator command is needed. See the [Full Config Reference](#full-config-reference) below for a complete example you can copy and trim down.
+Create this file manually, or run `coi profile create default` to write a commented starter (it never overwrites an existing file). See the [Full Config Reference](#full-config-reference) below for a complete example you can copy and trim down.
 
 ## Configuration Hierarchy
 
@@ -17,13 +17,14 @@ Settings are loaded in order, with later sources overriding earlier ones:
 | Priority | Source | Path |
 |----------|--------|------|
 | 1 (lowest) | Built-in defaults | embedded `profiles/default/config.toml` |
-| 2 | User config | `~/.coi/config.toml` (or the file `$COI_CONFIG` points at) |
+| 2 | User config | `~/.coi/config.toml` |
 | 3 | Project config | `./.coi/config.toml` (repo root) |
-| 4 (highest) | Profile | selected with `coi shell/run --profile <name>` |
+| 4 | `$COI_CONFIG` file | the file `$COI_CONFIG` points at, if set — loaded in addition to, and on top of, both files above |
+| 5 (highest) | Profile | selected with `coi shell/run --profile <name>` |
 
 Each layer only overrides the fields it explicitly sets. Unset fields inherit from the previous layer.
 
-There is no environment-variable config layer (as of v0.10.0): the legacy `CLAUDE_ON_INCUS_*` and `COI_LIMIT_*` overrides were removed — they silently outranked explicit config. `$COI_CONFIG` itself and test/debug toggles still exist, but they select or diagnose, they do not configure. CLI flags are operational only (`--workspace`, `--slot`, `--resume`/`--continue`, `--profile`) and never carry configuration.
+There is no environment-variable config layer (as of v0.10.0): the legacy `CLAUDE_ON_INCUS_*` and `COI_LIMIT_*` overrides were removed — they silently outranked explicit config. `$COI_CONFIG`, `COI_TRUST_ALL`, `COI_CONTAINER_PREFIX` and test/debug toggles still exist (see [Environment Variables](#environment-variables)), but they select config files, gate trust, or diagnose — they do not set config keys. CLI flags are operational only (`--workspace`, `--slot`, `--resume`/`--continue`, `--profile`) and never carry configuration.
 
 ## Per-Repository Configuration
 
@@ -80,21 +81,21 @@ Any section from the full config is valid in a project config:
 
 | Section | Example use case |
 |---------|-----------------|
-| `[container]` | Image, persistence, alias, storage pool, named session (`session_name`), shutdown/readiness timeouts |
+| `[container]` | Image, persistence, alias, storage pool, shutdown/readiness timeouts (but `session_name` and `docker = true` are **trusted-scope config only** — ignored from project config; `docker = false` is honored) |
 | `[defaults]` | Environment variables, `forward_env`, and `profile` — the profile a no-flag `coi` uses (`profile` is trusted-scope only; ignored with a warning from a project config). In profiles, `forward_env` is a top-level key, not under `[defaults]`. |
 | `[limits.*]` | CPU, memory, disk, and runtime limits |
 | `[tool]` | Default AI tool, permission mode, executable (`binary`) — but `context_file`, `context_json_file` and `pre_launch` are **trusted-scope config only** (ignored with a warning from a project config or a project profile) |
-| `[network]` | Network isolation mode and allowed domains (but `[[network.hosts]]` is **trusted-scope config only** — ignored from project config) |
+| `[network]` | Network isolation mode and allowed domains (but settings that weaken isolation — `mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true` — and `[[network.hosts]]`, `dns_servers`, `allowed_ports` are **trusted-scope config only** — ignored from project config) |
 | `[mounts]` | Additional mount points (out-of-workspace mounts gated behind `coi trust`) |
 | `[[sockets]]` | Forward host Unix sockets into the container (gated behind `coi trust`) |
 | `[ports]` | Publish container TCP ports on the host — `pool` + `[[ports.map]]` (gated behind `coi trust`; see [Port Publishing](Port-Publishing)) |
 | `[[credentials]]` | Copy credential files from host into the container (ad-hoc entries gated behind `coi trust`) |
 | `[defaults.env_commands]` (+ `env_command_timeout`) | Mint env vars from host commands, and the duration bounding each invocation — **trusted-scope config only** (ignored from project config) |
 | `[prompts]` | Named prompts for headless `coi run --prompt-name` — **trusted-scope config only** (ignored from project config) |
-| `[git]` | Git hooks write access (but `protected_branches` is **trusted-scope config only** — a project config can't change the list) |
+| `[git]` | Git settings — but `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are all **trusted-scope config only** (ignored from project config; a project config can't change the protected-branch list) |
 | `[ssh]` | SSH agent forwarding |
 | `[timezone]` | Container timezone (host, fixed, or UTC) |
-| `[security]` | Protected path overrides |
+| `[security]` | Add-only protections (`additional_protected_paths`, `secret_paths`) — everything that removes or replaces protection (`protected_paths`, `writable_paths`, `disable_protection`, `host_immutable`) and `reduce_kernel_surface`/`reduce_kernel_surface_strict` are **trusted-scope config only** (ignored from project config) |
 | `[monitoring]` | Security monitoring settings |
 | `profiles/` | Named configuration profiles (as [profile directories](Profiles)) |
 
@@ -103,7 +104,8 @@ Any section from the full config is valid in a project config:
 ```toml
 [container]
 image = "coi-default"
-persistent = false
+# persistent = false           # unset by default; an explicit value overrides the
+#                              # session's saved mode on --resume
 storage_pool = ""              # empty = Incus default pool
 # session_name = ""           # Key the session identity on this name instead of the
                               # workspace path: the same persistent session (container,
@@ -115,10 +117,19 @@ storage_pool = ""              # empty = Incus default pool
 # shutdown_timeout = 60        # Seconds to wait for graceful shutdown before force-killing (default: 60)
 # ready_timeout = 30           # Seconds to wait for a launched container to become ready (default: 30)
 #                              # Raise on slow hosts (nested virt, cold storage pools)
+# docker = true                # Docker-in-container support (nesting + syscall interception,
+#                              # default: true). false shrinks the shared-kernel attack surface.
+#                              # An untrusted project config can set false, but not true.
+# stale_base_check = "warn"    # "warn" (default), "error", or "off" — react when the image
+#                              # is older than the base it was built from
 
 [container.build]
 # base = "coi-default"
 # script = "build.sh"
+# commands = ["apt-get update"] # Inline build commands (alternative to script)
+# compression = ""             # Image compression: "none", "gzip", "xz" ("" = Incus default)
+# agents = ["claude"]          # AI agents to install (default set: claude, opencode, pi;
+#                              # codex and omp are opt-in and must be listed explicitly)
 # cloud_init = false           # Keep cloud-init in the built coi image. Off by default:
 #                              # it ran on every container boot and slowed starts.
 #                              # Takes effect on the next `coi build --force`.
@@ -155,7 +166,7 @@ storage_pool = ""              # empty = Incus default pool
 # nightly-maintenance = { file = "prompts/nightly.md" }
 
 [tool]
-name = "claude"              # AI coding tool: "claude", "opencode", "pi"
+name = "claude"              # AI coding tool: "claude", "codex", "opencode", "pi", "omp"
 permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # binary = "/workspace/scripts/claude-wrapper.sh"
 #                            # Optional: executable to launch instead of the tool's default
@@ -173,8 +184,8 @@ permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # Supports ~ expansion. If empty, the built-in template is used.
 # context_file = "~/my-sandbox-context.md"
 # Also emit a structured, versioned ~/SANDBOX_CONTEXT.json companion for
-# programmatic consumers (default: false).
-# context_json = true
+# programmatic consumers (default: true).
+# context_json = false
 # context_json_file = "~/my-context.json"   # optional: custom JSON template
 # NOTE: context_file / context_json_file are honored only from trusted-scope
 # config (~/.coi/config.toml / $COI_CONFIG), not from a project ./.coi/config.toml.
@@ -187,7 +198,7 @@ permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # model = "opus"             # Claude model, delivered as ANTHROPIC_MODEL: an alias
 #                            # like "opus" or a full ID like "claude-opus-4-8".
 #                            # Unset (default): Claude Code uses its own default.
-effort_level = "medium"      # "low", "medium", "high", "xhigh", "max", or "auto"
+# effort_level = "medium"    # "low", "medium", "high", "xhigh", "max", or "auto"
                              # unset (default): user controls it interactively
 
 [shell]
@@ -224,6 +235,11 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 # refresh_interval_minutes = 30                       # Max DNS refresh interval (actual uses DNS TTL if shorter)
 # allow_local_network_access = false                  # Allow connections from entire local network
 # use_sudo = true                                      # false = never invoke sudo for nft/iptables (see "Running without sudo")
+# dns_servers = ["192.168.1.2"]                        # Pin the resolvers the container may reach on port 53
+#                                                      # (restricted mode; IPv4; not valid in allowlist mode).
+#                                                      # Trusted scope only.
+# allowed_ports = [80, 443]                            # Restrict outbound destination ports (restricted and
+#                                                      # allowlist modes, LAN included). Trusted scope only.
 
 # Static /etc/hosts entries with mode-aware firewall reachability (v0.11.0).
 # TRUSTED-SCOPE ONLY: entries in a project ./.coi/config.toml are ignored with a
@@ -337,8 +353,12 @@ writable_hooks = false  # Allow container to write .git/hooks
 
 [security]
 # host_immutable = true        # Apply chattr +i to protected paths (default: true)
-# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json"]
+# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json", ".codex/config.toml"]
 # additional_protected_paths = [".idea", "Makefile"]
+# writable_paths = [".claude/settings.json"]  # Remove entries from the effective protected paths so the
+#                                             # container can write them (default: none). Trusted scope only.
+# secret_paths = [".env", "*.pem"]            # Workspace-relative globs masked inside the container (contents
+#                                             # hidden, not just read-only; default: none). Add-only, any scope.
 # disable_protection = false
 # reduce_kernel_surface = false        # opt-in kernel attack-surface hardening: deny the syscall
 #                                      # families behind recent kernel escape chains (io_uring, bpf,
@@ -357,10 +377,13 @@ mode = "host"              # "host" (inherit from host, default), "fixed", or "u
 # enabled = false                  # Enable background security monitoring
 # auto_pause_on_high = true        # Pause container on high-severity threats
 # auto_kill_on_critical = true     # Kill container on critical threats
+# forensics_on_kill = false        # Keep a forensic copy (*-forensics-*) before an auto-kill deletes the container
 # reverse_shell_one_liners = "critical"  # python -c/perl -e/ruby -e/php -r class: "critical" | "warn" | "off"
 # poll_interval_sec = 2
 # file_read_threshold_mb = 50.0    # Alert if >N MB read in poll interval
 # file_read_rate_mb_per_sec = 10.0 # Alert on sustained read rate
+# process_count_threshold = 0      # Max processes before a fork-bomb alert (0 = disabled)
+# process_spawn_rate_threshold = 0 # Max processes spawned per poll interval before an alert (0 = disabled)
 # audit_log_retention_days = 30
 
 [monitoring.nft]
@@ -397,7 +420,9 @@ There is no env-var config layer (as of v0.10.0). The legacy `CLAUDE_ON_INCUS_*`
 | `COI_LIMIT_DISK_READ` / `_DISK_WRITE` | `[limits.disk] read` / `write` |
 | `COI_LIMIT_DURATION` | `[limits.runtime] max_duration` |
 
-`COI_CONFIG` still exists — it selects which user config file to load instead of `~/.coi/config.toml`; it does not configure anything itself.
+`COI_CONFIG` still exists — it names an additional trusted config file, loaded after `~/.coi/config.toml` and the project config (so it has the highest file precedence); its directory is also scanned for `profiles/`. It does not configure anything itself.
+
+`COI_TRUST_ALL=1` (also `true`/`yes`) skips the `coi trust` gate for project-config mounts, sockets, ports and ad-hoc credentials — intended for CI; a repo's config cannot set it. `COI_CONTAINER_PREFIX` overrides the `coi-` container-name prefix.
 
 Two diagnostic env vars also exist and, like `COI_CONFIG`, never configure anything — they only observe: `COI_TIMING_DEBUG=1` prints a startup timing breakdown to stderr at exit (including the time before the first phase), and `COI_TIMING_DEBUG_JSON=<path>` writes the same data as JSON. See [Profiling Slow Startup](Troubleshooting#profiling-slow-startup) in Troubleshooting.
 

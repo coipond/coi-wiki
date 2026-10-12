@@ -83,7 +83,7 @@ read = "50MiB"   # max read rate (bytes/sec)
 write = "50MiB"  # max write rate (bytes/sec)
 ```
 
-The `[limits.disk]` settings (`read`, `write`, `max`) are I/O rate limits (bytes per second), not storage caps — they keep one container from starving others of disk bandwidth, but they do not bound how much disk space a session can consume. The only size cap available is `tmpfs_size`, which limits `/tmp` only.
+The `[limits.disk]` settings (`read`, `write`, `max`) are I/O rate limits (bytes per second), not storage caps — they keep one container from starving others of disk bandwidth, but they do not bound how much disk space a session can consume. To cap disk space, use `size` (whole-container rootfs quota, e.g. `size = "20GiB"`; needs a btrfs/zfs/lvm pool and is rejected on a `dir` pool), or `tmpfs_size`, which limits a RAM-backed `/tmp` only.
 
 ## AI-Generated Code
 

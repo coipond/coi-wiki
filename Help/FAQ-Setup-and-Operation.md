@@ -65,7 +65,7 @@ With this enabled, if your project is at `/home/user/projects/my-app`, it is mou
 
 ## Can I Use Docker and Docker Compose Inside Coi?
 
-**Yes.** Coi automatically enables Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod`, `security.syscalls.intercept.setxattr`) on session containers. Docker and Docker Compose work out of the box without any additional configuration.
+**Yes.** Coi automatically enables Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod`, `security.syscalls.intercept.setxattr`) on session containers. Docker and Docker Compose work out of the box without any additional configuration (unless Docker support is disabled via `[container] docker = false`, `[security] reduce_kernel_surface`, or the built-in `hardened` profile).
 
 Docker commands also work without `sudo` - the container's `code` user is added to the `docker` group, and the Docker socket is configured with the correct group ownership.
 
@@ -99,6 +99,8 @@ Coi supports multiple AI coding tools through its extensible tool interface. Cur
 - **Claude Code** (default) - Anthropic's CLI agent
 - **opencode** - open-source AI coding agent
 - **pi** - open-source AI coding agent
+- **codex** - OpenAI's Codex CLI (opt-in at image build)
+- **omp** - Oh My Pi
 
 Coming soon:
 

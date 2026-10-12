@@ -74,7 +74,7 @@ coi kill --all --force
 ### Clean Up
 
 ```bash
-# Clean up stopped/orphaned containers
+# Clean up stopped containers (orphans/pools/sessions need their own flags or --all)
 coi clean
 
 # Skip confirmation
@@ -100,7 +100,7 @@ coi info
 coi info <session-id>
 ```
 
-`coi info` shows detailed information about a saved session, not a container — pass a session ID (see `coi sessions`), or omit it to auto-detect the current workspace's session.
+`coi info` shows detailed information about a saved session, not a container — pass a session ID (see `coi list --all`), or omit it to auto-detect the current workspace's session.
 
 ### Version
 

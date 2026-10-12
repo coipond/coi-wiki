@@ -19,6 +19,9 @@ By default, Coi also injects the sandbox context into each tool's native context
 
 - **Claude Code**: Sandbox context is written to `~/.claude/CLAUDE.md`, which Claude auto-reads at every session start. If the host has a `CLAUDE.md` with user instructions, those are preserved: the sandbox context is written as a single marker-delimited managed block (`# BEGIN COI Sandbox Context (managed by coi - do not edit this block)` … `# END COI Sandbox Context (managed by coi)`), and injection is idempotent — each session replaces the managed block with one fresh copy, healing any duplicated pre-v0.11.1 copies, while non-managed content is left untouched.
 - **OpenCode**: The `instructions` field in `opencode.json` is set to reference `~/SANDBOX_CONTEXT.md`.
+- **Codex**: A managed block is written into the container's `~/.codex/AGENTS.md` (never the workspace `AGENTS.md`).
+- **pi**: `~/.pi/agent/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
+- **omp**: `~/.omp/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
 
 This means AI tools automatically have full sandbox awareness without users needing to manually reference `~/SANDBOX_CONTEXT.md`.
 
@@ -40,12 +43,12 @@ When `context_file` is set, Coi uses your custom file instead of the built-in te
 
 **Machine-readable companion (`~/SANDBOX_CONTEXT.json`):**
 
-For programmatic consumers, Coi can also emit a structured, versioned JSON
-companion to the Markdown context. Enable it with `context_json`:
+For programmatic consumers, Coi also writes a structured, versioned JSON
+companion to the Markdown context (on by default; set `context_json = false` to skip it):
 
 ```toml
 [tool]
-context_json = true                      # also write ~/SANDBOX_CONTEXT.json
+context_json = true                      # default: write ~/SANDBOX_CONTEXT.json
 context_json_file = "~/my-context.json"  # optional: use your own file instead of the built-in template
 ```
 

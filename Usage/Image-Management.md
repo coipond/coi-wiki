@@ -69,6 +69,8 @@ coi image cleanup claudeyard-node-42- --keep 3
 coi image cleanup my-project- --keep 1
 ```
 
+Cleanup orders versions by a `-YYYYMMDD-HHMMSS` suffix on the alias (e.g. `myproject-20260526-143022`); aliases without it are ordered alphabetically, so "most recent" is only reliable with timestamped names.
+
 ## Creating Custom Images
 
 ### Workflow 1: Install Tools in Container
@@ -84,11 +86,11 @@ sudo apt install -y rust-all python3.11 golang
 cargo install ripgrep
 exit
 
-# Stop the container first — exit leaves a persistent container running,
-# and publish requires a stopped container
+# exit leaves the container running; coi image publish stops a running
+# container automatically before publishing, so stopping it first is optional
 coi container stop coi-workspace-1
 
-# Publish the stopped container as an image
+# Publish the container as an image
 coi image publish coi-workspace-1 coi-dev-full
 ```
 
@@ -280,7 +282,7 @@ mise use node@22                 # Install Node.js 22 (per-project)
 
 Create a `.mise.toml` in your project root to pin runtime versions per-project. mise is activated in all shell sessions (interactive and non-interactive), so tools are available to AI agents automatically. Workspaces containing `mise.toml` or `.tool-versions` are automatically trusted inside the container (via `MISE_TRUSTED_CONFIG_PATHS`), so you do not need to run `mise trust` manually.
 
-**Note:** System Node.js (v20 LTS) is retained for Claude CLI and core tooling alongside mise-managed runtimes.
+**Note:** System Node.js (v22 LTS) is retained for Claude CLI and core tooling alongside mise-managed runtimes.
 
 ## Notes
 
@@ -372,7 +374,7 @@ Release notes indicate when `coi build --force` is needed after an update.
 
 3. **Clean up old images regularly** - Use `coi image cleanup myproject- --keep 3` to retain only the last 3 versions and prevent storage pool bloat
 
-4. **Publish from stopped containers** - `coi image publish` captures filesystem state, not process memory. A running container's in-memory state is only present on disk if the process has flushed it. For reproducible images, stop the container first (`coi container stop <name>`) so the filesystem is in a clean, consistent state, then publish
+4. **Publish from stopped containers** - `coi image publish` captures filesystem state, not process memory, and stops a running container automatically before publishing. Stop it yourself first (`coi container stop <name>`) if you want to control when its processes shut down
 
 5. **Use build scripts for team images** - Checked-in build scripts (`build.sh` in a profile directory) are reproducible and auditable. Avoid publishing ad-hoc containers as shared team images
 

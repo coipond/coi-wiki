@@ -16,6 +16,12 @@ All security events are logged to `~/.coi/audit/<container-name>.jsonl`:
 
 Network events from nftables are logged separately to `~/.coi/audit/<container-name>-nft.jsonl`.
 
+Besides threat events, `<container-name>.jsonl` also contains one monitoring snapshot per poll interval (`timestamp`, `container`, `network`, `processes`, `filesystem`, `resources`, `threats`). Snapshots embed the threats detected in that poll, so a plain `grep` on `"level"` matches them too. To select only threat events:
+
+```bash
+jq -c 'select(.id != null)' ~/.coi/audit/<container-name>.jsonl
+```
+
 ### Audit Log Field Reference
 
 Every JSONL threat event contains these fields:
@@ -28,7 +34,7 @@ Every JSONL threat event contains these fields:
 | `category` | string | Event category: `process`, `network`, `filesystem`, `environment`, `auth`, `proc_event`, or a sensitive-file category such as `credential_access` / `persistence` |
 | `title` | string | Short summary, e.g. `Reverse shell detected` |
 | `description` | string | Detailed explanation (command, PID, byte counts, destination, ...) |
-| `action` | string | Response taken: `logged`, `alerted`, `paused`, `killed`, or `deduplicated` (repeat of a recently alerted threat) |
+| `action` | string | Response taken: `logged`, `alerted`, `paused`, `killed`, `logged (already paused)`, or `deduplicated` (repeat of a recently alerted threat) |
 | `evidence` | object | Nested, threat-specific supporting data — exactly one sub-object is set per event |
 
 Evidence sub-objects (typed per threat kind, serialized with `omitempty`):
@@ -43,15 +49,9 @@ Evidence sub-objects (typed per threat kind, serialized with `omitempty`):
 | `evidence.process_count` | Fork-bomb / spawn-rate spikes | `count`, `threshold`, `delta` |
 | `evidence.auth_log` | auth.log / syslog pattern matches | `log_file`, `line`, `pattern` |
 | `evidence.proc_event` | Netlink PROC_EVENTS detections | `pid`, `command`, `pattern` |
+| `evidence.disk_space` | `/tmp` over 80% full (WARNING) | `tmp_used_mb`, `tmp_total_mb`, `tmp_used_percent` |
 
-NFT network events (written to `<container-name>-nft.jsonl`) additionally include:
-
-| Field | Description |
-|-------|-------------|
-| `src` | Source IP:port inside the container |
-| `rule` | The nftables rule that matched |
-| `iif` | Inbound interface |
-| `oif` | Outbound interface |
+NFT network events (written to `<container-name>-nft.jsonl`) use the same threat-event schema as above, with `evidence.network` populated: `connection.protocol`, `connection.local_addr` (container source IP:port), `connection.remote_addr` (destination IP:port), `reason` (e.g. `TCP connection to 1.2.3.4:4444`), and `remote_host`.
 
 View audit logs:
 
@@ -101,7 +101,7 @@ coi audit --file ./session.jsonl
 
 ### Event Format
 
-All events are JSON Lines (one object per line). The `type` field identifies the event source:
+Dump mode prints the host-side log's threat events and snapshots as-is (see [On-Disk Audit Logs](#on-disk-audit-logs)). Follow mode (and a replayed `--follow` recording) emits collector events as JSON Lines (one object per line), where the `type` field identifies the event source:
 
 | `type` | Source | Key fields |
 |--------|--------|------------|
