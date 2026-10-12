@@ -26,7 +26,26 @@ hostnames = ["redmine.susanoo.pl"]
 ports     = [443]                  # reachable ONLY on 443
 ```
 
-This is the piece the global `allowed_ports` cannot provide (it caps every destination, internet included), so restricted mode can open one LAN service on one port while the internet stays fully open. Empty `ports` inherits the global `allowed_ports` (else all ports). It takes effect where the mode actually filters that class of address - a private host in restricted mode, a public host in allowlist mode - and a `ports` scope that could never be enforced (a public host in restricted mode, a private host in allowlist mode, or anything in open mode) is refused at setup with an explanation rather than silently ignored. At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
+This is the piece the global `allowed_ports` cannot provide (it caps every destination, internet included): restricted mode can open one LAN service on one port while the internet stays fully open, and allowlist mode can reach one LAN service while everything else stays closed. Empty `ports` inherits the global `allowed_ports` (else all ports).
+
+It takes effect where the mode actually filters that class of address - a private host in restricted or allowlist mode, a public host in allowlist mode. A `ports` scope that could never be enforced is refused at setup with an explanation rather than silently ignored: a public host in restricted mode (already reachable on every port), a private host in allowlist mode with `allow_local_network_access = true` (the whole LAN is already open on the global `allowed_ports`), or anything in open mode. At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
+
+### A LAN Service in Allowlist Mode
+
+Allowlist mode blocks the LAN, so a private address is only opened on explicit ports: set `ports` on the entry (or a global `allowed_ports`). Without either, the entry is refused - an allowlist container never gets an all-ports hole to a LAN machine.
+
+```toml
+[network]
+mode            = "allowlist"
+allowed_domains = ["github.com", "api.anthropic.com"]
+
+[[network.hosts]]
+ip        = "10.50.0.100"
+hostnames = ["redmine.susanoo.pl"]
+ports     = [443]                  # required for a LAN host in allowlist mode
+```
+
+The container reaches `redmine.susanoo.pl:443` and nothing else on that machine or the rest of the LAN, and you manage no firewall rules yourself. The name resolves from `/etc/hosts`, as every allowlisted name does: allowlist mode blocks all DNS from the container, so the LAN host's DNS ports are refused (`53`, and `853` for DNS-over-TLS) even if it is also your resolver. The host itself still resolves names normally.
 
 ## Mode-Aware Reachability
 
@@ -36,9 +55,13 @@ Writing a name into `/etc/hosts` only makes it resolve — the firewall still de
 |--------------|-----------|----------------------|----------------------------------------|
 | `open`       | Resolves (no firewall change needed) | Resolves | Resolves |
 | `restricted` | Resolves (public egress already allowed) | Resolves **+** a targeted per-address allow is punched through the RFC1918 block | **Refused** (cloud-metadata SSRF) |
-| `allowlist`  | Resolves **+** the address is added to the firewall allow set | **Refused** unless `allow_local_network_access = true` (allowlist hard-blocks RFC1918, so the entry would be a dead name) | **Refused** (cloud-metadata SSRF) |
+| `allowlist`  | Resolves **+** the address is added to the firewall allow set (scoped to its ports) | Resolves **+** a targeted allow on the entry's `ports` (required) is punched through the RFC1918 block; with `allow_local_network_access = true` the LAN is already open, so no extra rule | **Refused** (cloud-metadata SSRF) |
 
 Metadata / link-local addresses (`169.254.0.0/16`, the cloud metadata endpoint) are refused in both enforcing modes regardless of `allow_local_network_access` — pointing a name there is a credential-theft SSRF vector.
+
+## Security Monitoring
+
+With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks (such as known attack ports) still apply to the host.
 
 ## Trusted Scope Only
 
@@ -63,7 +86,7 @@ coi hosts list coi-abc12345-1
 coi hosts remove coi-abc12345-1 db.internal
 ```
 
-Runtime entries are session-scoped: the `/etc/hosts` line and any firewall hole opened for it are torn down when the container stops. For entries that should always be present, declare them in `[[network.hosts]]` config instead. `coi hosts add` detects the container's actual enforced mode, so it will not punch a restricted-style per-address hole through an allowlist container; adding a second hostname for an IP already present unions the names.
+Runtime entries are session-scoped: the `/etc/hosts` line and any firewall hole opened for it are torn down when the container stops. For entries that should always be present, declare them in `[[network.hosts]]` config instead. `coi hosts add` detects the container's actual enforced mode and whether it was started with `allow_local_network_access`, from its live firewall rules rather than from the config of whoever runs the command - so it will not punch a restricted-style per-address hole through an allowlist container, and in allowlist mode a LAN host needs `--ports` just as in config. Adding a second hostname for an IP already present unions the names.
 
 ## See Also
 

@@ -2,6 +2,25 @@
 
 This page documents breaking changes between Coi versions and how to migrate. Check this page after a `coi update` if the release notes mention configuration or behavior changes.
 
+# Upgrading to 0.15
+
+0.15.0 has one breaking change, in the image: the guest `apparmor.service` is masked, so the AppArmor profiles inside the container are no longer loaded. It reaches only images built with 0.15.0 (`coi build --force`); existing images keep the old behavior until rebuilt.
+
+```bash
+coi update          # get the 0.15.0 binary
+coi version         # confirm 0.15.0
+coi build --force   # rebuild the image to pick up the image changes
+```
+
+## Breaking: Guest AppArmor Profiles Are Not Loaded
+
+Docker and Playwright are unaffected. On hosts that restrict unprivileged user namespaces (Ubuntu 24.04+), a non-root user inside the container can no longer use Chrome's own sandbox (use `--no-sandbox`), rootless Podman or Buildah (use `sudo`, or Docker), or Flatpak; snaps installed in the container may fail to start. See [Image Management - AppArmor Inside the Container](Image-Management#apparmor-inside-the-container).
+
+## New in 0.15 (No Action Needed)
+
+- **A single LAN service in allowlist mode** - a [`[[network.hosts]]`](Static-Host-Entries#a-lan-service-in-allowlist-mode) entry with a private IP and `ports` is reachable on just those ports, without `allow_local_network_access` opening the whole LAN. Security monitoring no longer flags or pauses on such connections.
+- **`coi container start` / `launch` / `stop` manage the firewall** - launch and start apply the network isolation, stop removes the rules. See [Container Operations](Container-Operations#startstopdelete).
+
 # Upgrading from 0.11 to 0.12
 
 0.12.0 is additive — no breaking changes and no config migration required. Existing configs and profiles keep working as-is; everything below is opt-in.

@@ -450,6 +450,28 @@ sudo systemctl mask udisks2.service
 systemctl is-enabled udisks2.service
 ```
 
+## Chrome Sandbox, Rootless Podman or Flatpak Fail With a User-Namespace Error
+
+**Symptom:** After rebuilding the image on 0.15.0 or later, running as the non-root user: Chrome reports it has no usable sandbox, rootless `podman` / `buildah` cannot set up their user namespace, `flatpak` apps will not start, or a plain `unshare -Ur` fails with `write failed /proc/self/uid_map: Operation not permitted`.
+
+**Cause:** The host restricts unprivileged user namespaces (Ubuntu 24.04+, `kernel.apparmor_restrict_unprivileged_userns = 1`), and the restriction applies inside containers. Ubuntu exempts specific programs through AppArmor profiles, but the coi image no longer loads the guest's AppArmor profiles - see [Image Management - AppArmor Inside the Container](Image-Management#apparmor-inside-the-container).
+
+**What to do:**
+
+- **Chrome / Chromium:** run with `--no-sandbox`; the container is the sandbox. Playwright's headless default needs no change.
+- **Podman / Buildah:** run them with `sudo`, or use Docker, which works unchanged.
+- **Flatpak, snaps:** install the tool another way (apt, mise, a release binary).
+
+**Verification:**
+
+```bash
+# On the host - 1 means unprivileged user namespaces are restricted
+cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+
+# Inside a container built on 0.15.0+ - should report "masked"
+systemctl is-enabled apparmor.service
+```
+
 ## Still Stuck?
 
 If none of the above solved your problem, [join us on Slack](https://slack.karafka.io) - the community is happy to help.

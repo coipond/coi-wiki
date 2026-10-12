@@ -242,6 +242,23 @@ coi build --force
 
 The setting only affects newly built images. In an existing persistent container you can toggle it directly: `sudo rm /etc/cloud/cloud-init.disabled` re-enables it, `sudo touch /etc/cloud/cloud-init.disabled` disables it (from the next start).
 
+## AppArmor Inside the Container
+
+Since 0.15.0 the coi image masks the guest's `apparmor.service`, so the profiles in the container's `/etc/apparmor.d` are not loaded. They add nothing to the sandbox's isolation: the container is confined by Incus's host-side AppArmor profile and seccomp either way, and `coi health` still checks that both are active.
+
+Most tools are unaffected. Docker loads its own `docker-default` profile, so `docker run` works and is confined as before, and Playwright's headless Chromium launches normally.
+
+What changes is unprivileged user namespaces for a non-root user, on hosts that restrict them (Ubuntu 24.04 and later, `kernel.apparmor_restrict_unprivileged_userns = 1`). There, the guest profiles were what allowed specific programs to create one. Without them:
+
+| Tool | Effect | Workaround |
+|------|--------|------------|
+| Google Chrome / Chromium, own sandbox | Fails to start its sandbox | Run with `--no-sandbox` (the container is the sandbox); Playwright's headless default already does |
+| Rootless Podman / Buildah | Cannot set up the user namespace | Run them with `sudo`, or use Docker |
+| Flatpak | Cannot start apps | None inside the container |
+| Snaps installed in the container | May fail to start | Install the tool another way (apt, mise, a release binary) |
+
+Root inside the container is unaffected, as are hosts that do not restrict unprivileged user namespaces. The mask applies to images built with 0.15.0 or later (`coi build --force`); existing images and containers keep the old behavior until rebuilt.
+
 ## Pre-installed Runtime Manager (mise)
 
 The base `coi-default` image includes [mise](https://mise.jdx.dev) - a polyglot runtime manager for installing and managing language runtimes. The following are pre-installed:
