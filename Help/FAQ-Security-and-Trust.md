@@ -90,7 +90,7 @@ One of the more fitting aspects of this workflow: Coi is often built inside Coi 
 - ✅ **Container filesystem** - Temporary files that get deleted (ephemeral mode)
 - ❌ **Your SSH keys** - Not accessible unless you explicitly mount `~/.ssh`
 - ❌ **Your home directory** - Not accessible
-- ❌ **Your environment variables** - Not passed to the container unless explicitly forwarded via `forward_env` config
+- ❌ **Your environment variables** - Not passed to the container unless explicitly forwarded via `forward_env` in your own (trusted) config — a project `.coi/config.toml` cannot set it
 - ❌ **Your local network** - Blocked by default (restricted mode)
 
 You control what gets mounted. By default, Coi is locked down.

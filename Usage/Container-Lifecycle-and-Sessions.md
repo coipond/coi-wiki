@@ -78,13 +78,14 @@ The host's `SSH_AUTH_SOCK` is bridged into the container at `/tmp/ssh-agent.sock
 **Key points:**
 
 - Disabled by default (opt-in for security)
+- Trusted scope only: `forward_agent = true` in a project `.coi/config.toml` or project profile is ignored with a warning
 - Gracefully skips if no SSH agent is running on the host
 - Works with both ephemeral and persistent containers
 - Device is replaced on persistent container re-entry
 
 ## Environment Variable Forwarding
 
-Selectively forward host environment variables into the container by name:
+Selectively forward host environment variables into the container by name (trusted scope only: `forward_env` in a project `.coi/config.toml` or project profile is ignored with a warning, so a cloned repo cannot pick which of your env vars reach the container):
 
 ```toml
 # ~/.coi/config.toml
