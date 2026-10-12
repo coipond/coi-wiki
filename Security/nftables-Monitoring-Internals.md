@@ -38,7 +38,7 @@ ThreatEvent → Responder (pause/kill) + AuditLog
 
 **HIGH Level:**
 
-- **RFC1918 private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (should be blocked by firewall)
+- **RFC1918 private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (should be blocked by firewall), except a destination and port the container's firewall rules deliberately accept, such as a `[[network.hosts]]` LAN service
 - **Allowlist violations** - Connections outside configured allowlist (in allowlist mode)
 
 **WARNING Level:**

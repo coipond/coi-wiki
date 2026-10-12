@@ -209,6 +209,8 @@ coi container delete my-container
 coi container delete my-container --force
 ```
 
+**Network isolation follows the container:** `coi container launch` and `coi container start` install the boot block and the configured network mode's firewall rules, as `coi shell` does, and stop the container again if they cannot be applied - so a container started this way never runs without its firewall. In allowlist mode the resolved addresses are pinned at start, since no coi process stays behind to refresh them. `coi container stop` removes the container's rules after stopping it, and the next `coi shell`, `coi run` or `coi container start` re-applies them, so a persistent container keeps its isolation. Containers outside coi's naming scheme are left alone.
+
 ### Execute Commands
 
 ```bash

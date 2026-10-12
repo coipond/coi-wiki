@@ -165,6 +165,21 @@ hostnames = ["redmine.susanoo.pl"]
 ports     = [443]
 ```
 
+The allowlist-mode version - "only GitHub and Anthropic on the internet, and on the LAN only `redmine.susanoo.pl:443`" - needs no `dns_servers` (allowlist mode resolves names on the host and blocks DNS from the container), and `ports` is required for the LAN host:
+
+```toml
+[network]
+mode            = "allowlist"
+allowed_domains = ["github.com", "api.github.com", "api.anthropic.com"]
+
+[[network.hosts]]
+ip        = "192.168.1.50"
+hostnames = ["redmine.susanoo.pl"]
+ports     = [443]
+```
+
+See [Static Host Entries - A LAN Service in Allowlist Mode](Static-Host-Entries#a-lan-service-in-allowlist-mode).
+
 ## Host Access to Container Services
 
 ### Accessing Services from the Host
