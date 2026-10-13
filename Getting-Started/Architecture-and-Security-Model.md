@@ -48,7 +48,7 @@ What is not accessible inside the container by default:
 
 - Your SSH keys and `~/.ssh`
 - Your home directory
-- Your shell environment variables (must be explicitly forwarded via `forward_env`)
+- Your shell environment variables (must be explicitly forwarded via `forward_env` in your own config; a project config cannot set it)
 - Any other host filesystem path
 
 File ownership is handled automatically: Coi selects per container between Incus idmapped (`shift=true`) mounts and a `raw.idmap` mapping, checking each mount source's filesystem before start (FUSE-family/9p sources get `raw.idmap`) and falling back automatically when a kernel or filesystem cannot do idmapped mounts. Either way the AI tool sees files owned by its `code` user without any manual `chown` or privilege escalation. On macOS VM hosts (Colima/Lima/OrbStack) see the [macOS Setup Guide](macOS-Setup-Guide) for the mechanism details.
@@ -59,7 +59,7 @@ Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the co
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies
-- SSH keys are never copied unless you explicitly enable SSH agent forwarding (`[ssh] forward_agent = true`), which forwards via a socket proxy rather than copying key material
+- SSH keys are never copied unless you explicitly enable SSH agent forwarding (`[ssh] forward_agent = true`, honored only from your own config, never from a project config), which forwards via a socket proxy rather than copying key material
 
 ### Network Isolation
 

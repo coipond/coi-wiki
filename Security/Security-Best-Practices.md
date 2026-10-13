@@ -231,8 +231,8 @@ This affects Claude Code, opencode and codex - see the [Supported Tools](Support
 
 Coi provides opt-in mechanisms to selectively share host resources with containers:
 
-- **SSH agent forwarding** (`[ssh] forward_agent = true`) - Bridges the host's SSH agent socket into the container. The container can use your SSH keys for git operations without the keys themselves being copied. Disabled by default.
-- **Environment variable forwarding** (`forward_env` in config) - Forwards specific host env vars by name. Values are read at session start and never stored in config.
+- **SSH agent forwarding** (`[ssh] forward_agent = true`) - Bridges the host's SSH agent socket into the container. Trusted scope only: ignored from a project `.coi/config.toml` or project profile. The container can use your SSH keys for git operations without the keys themselves being copied. Disabled by default.
+- **Environment variable forwarding** (`forward_env` in config) - Forwards specific host env vars by name. Values are read at session start and never stored in config. Trusted scope only: ignored from a project `.coi/config.toml` or project profile, so a cloned repo cannot choose which of your env vars reach the container.
 
 **Security considerations:**
 

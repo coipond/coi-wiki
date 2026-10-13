@@ -36,10 +36,10 @@ Profiles from all discovered locations are merged into a single namespace. If th
 A profile `config.toml` uses the same sections as the main config. All fields are optional - only set what you want to override.
 
 ```toml
-# .coi/profiles/rust-dev/config.toml
+# ~/.coi/profiles/rust-dev/config.toml
 
 context = "CONTEXT.md"                    # context file (see below)
-forward_env = ["CARGO_REGISTRY_TOKEN"]
+forward_env = ["CARGO_REGISTRY_TOKEN"]    # trusted scope only (ignored in ./.coi/profiles)
 
 [container]
 image = "coi-rust"
@@ -82,7 +82,7 @@ max_duration = "4h"
 | Field | Type | Description |
 |-------|------|-------------|
 | `context` | string | Path to context file (see [Context Files](#context-files)) |
-| `forward_env` | string[] | Host env vars to forward into the container |
+| `forward_env` | string[] | Host env vars to forward into the container. **Trusted-scope only** — stripped from a project profile |
 | `[env_commands]` | map | Env vars minted from host commands at session start (`VAR = "~/bin/mint.sh"`). **Trusted-scope only** — stripped from an untrusted project profile |
 | `env_command_timeout` | string | Profile-root duration bounding each `[env_commands]` invocation (e.g. `"5s"`; default `30s`). **Trusted-scope only**. Echoed by `coi profile info` |
 | `[container]` | section | Container settings (`image`, `persistent`, `storage_pool`, `alias`, `session_name` — see [Named Sessions](Container-Lifecycle-and-Sessions#named-sessions-session_name--v0111), `shutdown_timeout`, `ready_timeout`, `docker` (default `true`), `stale_base_check` (`"warn"` default, `"error"`, `"off"`)). `session_name` and `docker = true` are **trusted-scope only** — stripped from a project profile |
@@ -101,7 +101,7 @@ max_duration = "4h"
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
 | `[incus]` | section | Incus settings (`project`, `group`, `code_uid`, `code_user`) |
 | `[git]` | section | Git settings (`writable_hooks`, `protected_branches`, …). `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are **trusted-scope only** — ignored from a project profile |
-| `[ssh]` | section | SSH settings (`forward_agent`) |
+| `[ssh]` | section | SSH settings (`forward_agent`). `forward_agent = true` is **trusted-scope only** — stripped from a project profile |
 | `[security]` | section | Security settings (`host_immutable`, `protected_paths`, `additional_protected_paths`, `writable_paths`, `secret_paths`, …). From a project profile only the add-only `additional_protected_paths` and `secret_paths` are honored; the rest are **trusted-scope only** |
 | `[monitoring]` | section | Security monitoring settings |
 | `[timezone]` | section | Timezone settings (`mode`, `name`) |
@@ -299,9 +299,9 @@ Displays the full configuration of a named profile:
 
 ```text
 Profile: rust-dev
-Source:  .coi/profiles/rust-dev/config.toml
+Source:  ~/.coi/profiles/rust-dev/config.toml
 
-context = "/path/to/.coi/profiles/rust-dev/CONTEXT.md"
+context = "/home/user/.coi/profiles/rust-dev/CONTEXT.md"
 forward_env = ["CARGO_REGISTRY_TOKEN"]
 
 [container]
@@ -383,7 +383,7 @@ max_duration = "30m"
 ### Full-Stack Development
 
 ```toml
-# .coi/profiles/fullstack/config.toml
+# ~/.coi/profiles/fullstack/config.toml (forward_env is ignored in a project profile)
 forward_env = ["GITHUB_TOKEN", "DATABASE_URL"]
 
 [container]
