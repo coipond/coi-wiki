@@ -80,8 +80,6 @@ mode = "restricted"  # restricted | open | allowlist
 # Allowlist mode configuration
 # Supports both domain names and raw IPv4 addresses
 allowed_domains = [
-    "8.8.8.8",             # Google DNS (REQUIRED for DNS resolution)
-    "1.1.1.1",             # Cloudflare DNS (REQUIRED for DNS resolution)
     "registry.npmjs.org",  # npm package registry
     "api.anthropic.com",   # Claude API
     "platform.claude.com", # Claude Platform
@@ -91,9 +89,9 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 ### Important for Allowlist Mode
 
-- **Gateway IP is auto-detected and excluded from RFC1918 checks**: Coi automatically detects your network gateway IP and exempts it from private network blocking. This prevents false-positive alerts on routine DNS/NTP traffic that routes through the Incus bridge gateway. You do not need to add it manually.
-- **Public DNS servers required**: `8.8.8.8` and `1.1.1.1` must be in the allowlist for DNS resolution to work.
-- **Firewall rule ordering**: Coi adds ALLOW rules first (for gateway, allowed domains/IPs), then REJECT rules (for RFC1918 ranges), then a default REJECT rule for allowlist mode.
+- **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP (UDP 67/68); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
+- **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing.
+- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject (forward and input chains) → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
 - Subdomains must be listed explicitly (`github.com` ≠ `api.github.com`)
 - Domains behind CDNs may have many IPs that change frequently
@@ -101,7 +99,7 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 ## Egress Hardening: DNS Pinning and Port Scoping
 
-Beyond the coarse mode choice, three composable controls narrow what a container can reach. All are trusted-scope only (honored from `~/.coi/config.toml` / `$COI_CONFIG`, stripped from a project `./.coi/config.toml`).
+Beyond the coarse mode choice, three composable controls narrow what a container can reach. `dns_servers` and `allowed_ports` are trusted-scope only (honored from `~/.coi/config.toml` / `$COI_CONFIG`, stripped from a project `./.coi/config.toml`); `allowed_domains` entries, including their `:ports` suffixes, are honored from project config too.
 
 ### DNS Resolver Pinning (`dns_servers`)
 
@@ -141,7 +139,7 @@ mode = "allowlist"
 allowed_domains = [
     "github.com:443",            # git/HTTPS only
     "registry.npmjs.org:80,443", # a port list
-    "192.168.1.50:8080",         # the NAS web UI, and nothing else on it
+    "192.168.1.50:5000",         # the NAS web UI, and nothing else on it
     "10.0.0.0/8:22",             # SSH into the lab subnet, but only SSH
     "svc.internal:8000-8100",    # a port range
     "api.anthropic.com",         # no port -> inherits allowed_ports (else all)
@@ -149,6 +147,8 @@ allowed_domains = [
 ```
 
 Each destination is then reachable only on its own ports. An entry with no `:ports` inherits the global `allowed_ports` (else all ports), so existing allowlists behave unchanged. IPv4 only; a malformed port fails the session closed at startup.
+
+> **Note:** With [Security Monitoring](Security-Monitoring) enabled, connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) are flagged even when the firewall allows them, so avoid those ports for allowlisted services.
 
 ### The "Internet Open, LAN Only redmine:443" Recipe
 
@@ -211,7 +211,7 @@ allow_local_network_access = true  # Allow all RFC1918, not just gateway
 
 **Default behavior:** Only the host (gateway IP) can access container services. Other machines on your local network cannot, even if they are on the same subnet.
 
-**Note:** Nftables rules filter forwarded container traffic. All traffic from the container to the gateway IP is permitted to allow host-to-container communication.
+**Note:** Nftables rules filter forwarded container traffic. In restricted mode all traffic from the container to the gateway IP is permitted to allow host-to-container communication; in allowlist mode only DHCP to the gateway is.
 
 ### Troubleshooting Container Access
 
@@ -239,7 +239,7 @@ Restricted/allowlist modes need nftables plus a passwordless-sudo rule for `nft`
 
 2. **Use `allowlist` mode for untrusted codebases** - When working in a repo you did not write or have not fully audited, constrain egress to only the services the project legitimately needs (npm, PyPI, GitHub, the project's own API). This limits what a malicious or prompted AI tool can contact.
 
-3. **Keep DNS servers in the allowlist** - `8.8.8.8` and `1.1.1.1` are required for DNS resolution in allowlist mode. Without them, package managers and the AI tool itself fail to resolve hostnames.
+3. **Do not add DNS servers to the allowlist** - allowlist mode resolves names on the host and blocks container DNS, so public resolvers like `8.8.8.8` and `1.1.1.1` are unnecessary.
 
 4. **Do not use `allow_local_network_access = true` without understanding the risk** - This disables all RFC1918 blocking. It is appropriate when running services on other machines in your network that the AI needs to reach, but it removes the lateral movement protection.
 

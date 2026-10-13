@@ -14,7 +14,7 @@ Understanding how containers and sessions work in Coi.
 
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
-   - If persistent mode is NOT enabled: container is deleted after saving
+   - If persistent mode is NOT enabled: the container is deleted after saving only if it was stopped (`close` / `sudo poweroff`); after `exit` or a detach it is left running (reconnect with `coi attach`, stop with `coi shutdown`)
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
 
@@ -24,7 +24,7 @@ Understanding how containers and sessions work in Coi.
 
 | Mode | Workspace Files | AI Tool Session | Container State |
 |------|----------------|-----------------|-----------------|
-| **Default (ephemeral)** | Always saved | Always saved | Deleted |
+| **Default (ephemeral)** | Always saved | Always saved | Deleted on `close`/poweroff (kept running after `exit`/detach) |
 | **Persistent (`persistent = true`)** | Always saved | Always saved | Kept |
 
 ## Session vs Container Persistence
@@ -167,13 +167,13 @@ All slots share the same `/workspace` mount — they read and write the same pro
 
 ### Aliases and Slots
 
-When a container alias is configured, additional slots are named with a numeric suffix:
+When a container alias is configured, every slot's container keeps its normal `coi-<hash>-<slot>` name; the alias (with an optional `-N` slot suffix) is just a way to address it:
 
 ```bash
 # Config: alias = "myproject"
-coi shell    # → myproject (slot 1)
-coi shell    # → myproject-2 (slot 2)
-coi shell    # → myproject-3 (slot 3)
+coi shell    # → coi-<hash>-1 (addressable as myproject)
+coi shell    # → coi-<hash>-2 (addressable as myproject-2)
+coi shell    # → coi-<hash>-3 (addressable as myproject-3)
 
 # Attach by alias
 coi attach myproject      # slot 1

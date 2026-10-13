@@ -34,7 +34,7 @@ ThreatEvent → Responder (pause/kill) + AuditLog
 **CRITICAL Level:**
 
 - **Metadata endpoint access** - `169.254.169.254` (cloud provider metadata)
-- **Suspicious ports** - 4444, 5555, 1234, 31337, 12345 (common C2/backdoor ports)
+- **Suspicious ports** - 1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337 (common C2/backdoor ports)
 
 **HIGH Level:**
 
@@ -261,14 +261,13 @@ jq -r '.title' ~/.coi/audit/coi-abc-1-nft.jsonl | sort | uniq -c
 
 ## macOS / Lima Support
 
-NFT monitoring works on macOS via Lima VM. The daemon automatically detects Lima and wraps nft commands:
+NFT monitoring is Linux-only: a macOS build of Coi cannot run it (the daemon reports "nftables monitoring is only supported on Linux"). Coi running inside the Lima VM is a Linux build and needs no `lima_host`. `lima_host` only makes rule management wrap `nft` calls:
 
 ```go
-// Automatic detection
-if cfg.NFT.LimaHost != "" {
-    cmd = exec.Command("limactl", "shell", cfg.NFT.LimaHost, "sudo", "nft", ...)
+if cfg.LimaHost != "" {
+    cmd = exec.Command("limactl", "shell", cfg.LimaHost, "sudo", "-n", "nft", ...)
 } else {
-    cmd = exec.Command("sudo", "nft", ...)
+    cmd = exec.Command("sudo", "-n", "nft", ...)
 }
 ```
 

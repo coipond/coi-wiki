@@ -113,7 +113,7 @@ When you do not specify a container, Coi resolves it in this order:
 
 3. **Use descriptive names** - Auto-named snapshots (`snap-20260526-143022`) are hard to distinguish; prefer names like `before-db-migration` or `clean-deps`
 
-4. **Clean up regularly** - Snapshots consume Incus storage pool space. Use `coi snapshot delete --all` or `coi image cleanup` to prevent accumulation
+4. **Clean up regularly** - Snapshots consume Incus storage pool space. Use `coi snapshot delete <name>` or `coi snapshot delete --all` to prevent accumulation
 
 5. **Snapshots are not a substitute for git** - Snapshots capture container state, not just workspace files. For code changes, commit to git; use snapshots for environment state (installed tools, build caches)
 

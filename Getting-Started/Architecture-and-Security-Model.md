@@ -55,7 +55,7 @@ File ownership is handled automatically: Coi selects per container between Incus
 
 ### Credential Isolation
 
-Coi copies AI tool credentials (e.g., `~/.claude/credentials`) into the container at session start rather than bind-mounting live config directories. This means:
+Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start rather than bind-mounting live config directories. This means:
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies
@@ -65,7 +65,7 @@ Coi copies AI tool credentials (e.g., `~/.claude/credentials`) into the containe
 
 Network access is controlled by host-side nftables rules in the FORWARD chain, applied per container IP address. Three modes are available:
 
-**`restricted` (default)** - Internet access is allowed, but all RFC1918 private network ranges are blocked. The container can reach public services but cannot reach your internal network, databases, CI systems, or other machines on your subnet. Cloud metadata endpoints (169.254.169.254) and known C2 ports are also blocked.
+**`restricted` (default)** - Internet access is allowed, but all RFC1918 private network ranges are blocked. The container can reach public services but cannot reach your internal network, databases, CI systems, or other machines on your subnet. Cloud metadata endpoints (169.254.169.254) are also blocked. Connections to known C2/backdoor ports are flagged by security monitoring when it is enabled.
 
 **`allowlist`** - Only explicitly listed domains or IP ranges are reachable. Everything else is denied. Use for untrusted projects where you want to constrain which external services the AI can contact.
 
@@ -88,13 +88,13 @@ These paths are write-protected from inside the container regardless of the netw
 
 ### Security Monitoring
 
-Coi runs an active monitoring process that watches AI tool behavior in real time and responds automatically to detected threats. Monitoring operates at three levels:
+When enabled (`[monitoring] enabled = true`; off by default), Coi runs an active monitoring process that watches AI tool behavior in real time and responds automatically to detected threats. Monitoring operates at three levels:
 
 **Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), credential scanning (access to known credential file patterns), and suspicious process trees.
 
 **Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc.
 
-**Network monitoring** - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure, cloud metadata services, and private network ranges are detected and logged even when the container is in `open` mode.
+**Network monitoring** - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure, cloud metadata services, and private network ranges are detected and logged even when the container is in `open` mode (requires `[monitoring.nft] enabled = true`).
 
 Detected threats are classified by severity and trigger automatic responses:
 
@@ -130,7 +130,7 @@ Host machine
 │   ├── tmux
 │   │   └── AI coding tool (Claude Code, opencode, etc.)
 │   ├── /workspace  ← bind-mounted from host (read-write)
-│   ├── ~/.git/hooks  ← read-only (supply-chain protection)
+│   ├── /workspace/.git/hooks  ← read-only (supply-chain protection)
 │   └── (rest of filesystem: isolated, ephemeral)
 │
 ├── Security monitor (watches container from host)

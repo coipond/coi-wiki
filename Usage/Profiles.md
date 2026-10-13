@@ -19,12 +19,13 @@ Each profile is a directory under `profiles/` containing a `config.toml` and opt
         └── setup.sh
 ```
 
-Profile directories are scanned at two config levels:
+Profile directories are scanned in these locations:
 
-| Priority | Location |
-|----------|----------|
-| 1 (lowest) | `~/.coi/profiles/NAME/config.toml` (user) |
-| 2 (highest) | `./.coi/profiles/NAME/config.toml` (project) |
+| Location | Scope |
+|----------|-------|
+| `~/.coi/profiles/NAME/config.toml` | user (trusted) |
+| `./.coi/profiles/NAME/config.toml` | project (untrusted) |
+| `$(dirname $COI_CONFIG)/profiles/NAME/config.toml` | when `COI_CONFIG` is set (trusted) |
 
 Profiles are read when each coi command starts. A profile directory removed while that happens (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
 
@@ -84,14 +85,14 @@ max_duration = "4h"
 | `forward_env` | string[] | Host env vars to forward into the container |
 | `[env_commands]` | map | Env vars minted from host commands at session start (`VAR = "~/bin/mint.sh"`). **Trusted-scope only** — stripped from an untrusted project profile |
 | `env_command_timeout` | string | Profile-root duration bounding each `[env_commands]` invocation (e.g. `"5s"`; default `30s`). **Trusted-scope only**. Echoed by `coi profile info` |
-| `[container]` | section | Container settings (`image`, `persistent`, `storage_pool`, `alias`, `session_name` — see [Named Sessions](Container-Lifecycle-and-Sessions#named-sessions-session_name--v0111), `shutdown_timeout`, `ready_timeout`) |
-| `[container.build]` | section | Custom image build (`base`, `script`, `commands`) |
+| `[container]` | section | Container settings (`image`, `persistent`, `storage_pool`, `alias`, `session_name` — see [Named Sessions](Container-Lifecycle-and-Sessions#named-sessions-session_name--v0111), `shutdown_timeout`, `ready_timeout`, `docker` (default `true`), `stale_base_check` (`"warn"` default, `"error"`, `"off"`)). `session_name` and `docker = true` are **trusted-scope only** — stripped from a project profile |
+| `[container.build]` | section | Custom image build (`base`, `script`, `commands`, `compression` — `""` = Incus default, `agents` — default set claude/opencode/pi, `cloud_init` — default `false`) |
 | `[environment]` | map | Static environment variables |
 | `[tool]` | section | AI tool config (`name`, `binary`, `permission_mode`, `context_file`, `auto_context`, `pre_launch`). `context_file`, `context_json_file` and `pre_launch` are **trusted-scope only** — stripped (with a warning) from a project profile, since they read host files into the container or run commands at every session start |
 | `[tool.claude]` | section | Claude-specific settings (`model`, `effort_level`); `model` is delivered to Claude Code as `ANTHROPIC_MODEL` |
 | `[[mounts]]` / `[[mounts.default]]` | array | Additional mount points (`host`, `container`, `readonly`). Both the flat `[[mounts]]` form and the nested `[[mounts.default]]` form are accepted here and in the main config, so a mount block reads identically in either scope — you can copy it between a profile and your top-level config verbatim |
 | `[[credentials]]` | array | Credential files to copy into the container (as of v0.10.0): `bundle = "<catalog name>"`, or ad-hoc `host`/`container`/`mode`. See [Configuration](Configuration) for the trust model |
-| `[network]` | section | Network isolation (`mode`, `allowed_domains`) |
+| `[network]` | section | Network isolation (`mode`, `allowed_domains`, …). From a project profile, isolation-weakening values (`mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true`) and `hosts`, `dns_servers`, `allowed_ports` are ignored |
 | `[limits.cpu]` | section | CPU limits (`count`, `allowance`, `priority`) |
 | `[limits.memory]` | section | Memory limits (`limit`, `enforce`, `swap`) |
 | `[limits.disk]` | section | Disk limits: IO rates (`read`, `write`, `max`), root disk `size`, `tmpfs_size` |
@@ -99,11 +100,15 @@ max_duration = "4h"
 | `inherits` | string | Parent profile name for inheritance (see [Inheritance](#profile-inheritance)) |
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
 | `[incus]` | section | Incus settings (`project`, `group`, `code_uid`, `code_user`) |
-| `[git]` | section | Git settings (`writable_hooks`, `protected_branches`, …). `protected_branches` is **trusted-scope only** — ignored from a project profile |
+| `[git]` | section | Git settings (`writable_hooks`, `protected_branches`, …). `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are **trusted-scope only** — ignored from a project profile |
 | `[ssh]` | section | SSH settings (`forward_agent`) |
-| `[security]` | section | Security settings (`host_immutable`, `protected_paths`) |
+| `[security]` | section | Security settings (`host_immutable`, `protected_paths`, `additional_protected_paths`, `writable_paths`, `secret_paths`, …). From a project profile only the add-only `additional_protected_paths` and `secret_paths` are honored; the rest are **trusted-scope only** |
 | `[monitoring]` | section | Security monitoring settings |
 | `[timezone]` | section | Timezone settings (`mode`, `name`) |
+| `[shell]` | section | Shell settings (`use_tmux`, default `true`) |
+| `[[sockets]]` | array | Forward host Unix sockets into the container (`host`, `container`, `env`); gated behind `coi trust` from a project profile |
+| `[ports]` | section | Publish container TCP ports on the host (`pool`, `[[ports.map]]`); gated behind `coi trust` from a project profile. See [Port Publishing](Port-Publishing) |
+| `[prompts]` | map | Named prompts for `coi run --prompt-name` (inline string or `{ file = "..." }`, resolved relative to the profile dir). **Trusted-scope only** — stripped from a project profile |
 
 ## Profile Inheritance
 
@@ -218,7 +223,7 @@ rust-dev    coi-rust      true        .coi/profiles/rust-dev/config.toml
 limited     coi-default   false       ~/.coi/profiles/limited/config.toml
 ```
 
-The built-in `default` profile is always present and reflects the embedded default configuration. It can be used as a parent via `inherits = "default"` but cannot be edited or deleted.
+The built-in `default` profile is always present and reflects your resolved config (built-in defaults plus your config files). It can be used as a parent via `inherits = "default"` but cannot be edited or deleted.
 
 ### Selecting the Profile a Bare `coi` Uses (`[defaults] profile`)
 

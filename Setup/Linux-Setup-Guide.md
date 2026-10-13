@@ -190,9 +190,10 @@ sudo systemctl reload NetworkManager
 
 Ubuntu and Debian are the primary target for Coi. The install script handles everything automatically.
 
-Ubuntu ships Incus 6.0.x in its main repository. Coi recommends Incus >= 6.1 from the [Zabbly repository](https://github.com/zabbly/incus) for full idmapped-mount support. Since v0.11.1 a start failing with `idmapping abilities are required but aren't supported on system` no longer aborts — Coi converts the container to `raw.idmap` and retries automatically on every start path — so an older Incus degrades gracefully rather than fatally.
+Ubuntu ships Incus 6.0.x in its main repository, which is below Coi's required minimum of 6.1: `coi shell`/`coi run`/`coi build` refuse to start on it. Install Incus >= 6.1 from the [Zabbly repository](https://github.com/zabbly/incus) (6.7+ recommended). Separately, since v0.11.1 a start failing with `idmapping abilities are required but aren't supported on system` no longer aborts — Coi converts the container to `raw.idmap` and retries automatically on every start path.
 
 ```bash
+# After adding the Zabbly repository (see https://github.com/zabbly/incus):
 sudo apt install -y incus
 sudo systemctl enable --now incus.service
 sudo usermod -aG incus-admin $USER

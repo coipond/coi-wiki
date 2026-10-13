@@ -244,12 +244,7 @@ Coi warns on startup if it detects a `.coi.toml` at the project root and no `.co
 
 ## Mount Syntax: `[[mounts]]` vs `[[mounts.default]]`
 
-The mount table key differs between the main config and profile configs:
-
-| Context | Correct key |
-|---------|-------------|
-| `~/.coi/config.toml` or `.coi/config.toml` | `[[mounts.default]]` |
-| `.coi/profiles/NAME/config.toml` | `[[mounts]]` |
+As of v0.12 both forms are accepted everywhere: flat `[[mounts]]` and nested `[[mounts.default]]` work in `~/.coi/config.toml`, `.coi/config.toml`, and a profile's `config.toml` alike, so a block can be copied between them verbatim. Before 0.12 the main config required `[[mounts.default]]` and profiles required `[[mounts]]`; the other form was silently ignored.
 
 **Main config:**
 
@@ -270,7 +265,7 @@ host = "~/.cargo"
 container = "/home/code/.cargo"
 ```
 
-Using `[[mounts]]` in the main config or `[[mounts.default]]` in a profile config results in the mounts being silently ignored. If extra files are not appearing in the container, check the mount key.
+If extra files are not appearing in the container on a pre-0.12 version, check the mount key.
 
 ## Checking Your Current Version
 

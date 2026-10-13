@@ -41,6 +41,7 @@
 - [Updating Coi](Updating-Coi)
 - [System Health Check](System-Health-Check)
 - [Migration Guide](Migration-Guide)
+  - [Upgrading to 0.15](Migration-Guide#upgrading-to-015)
   - [Upgrading 0.11 → 0.12](Migration-Guide#upgrading-from-011-to-012)
   - [Upgrading 0.10.1 → 0.11.0](Migration-Guide#upgrading-from-0101-to-0110)
   - [Upgrading 0.9 → 0.10](Migration-Guide#upgrading-from-09-to-010)

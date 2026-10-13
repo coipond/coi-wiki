@@ -40,17 +40,17 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 ## Key Points
 
 - nftables plus passwordless sudo for `nft` must be available for network isolation to work
-- Coi adds nftables rules to the FORWARD chain to filter container traffic
+- Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for the allowlist DNS block) to filter container traffic
 - Rules are scoped by container IP address for precise filtering
 - Rules are removed when containers are stopped/deleted
 
 ## How It Works
 
 - Coi gets the container's IP address from Incus
-- nftables rules are applied per container IP, with allow rules ordered before reject rules
+- nftables rules are applied per container IP and evaluated in order (first match wins)
 - Restricted mode: Allow gateway, block RFC1918, allow all else
-- Allowlist mode: Allow gateway, allow specific IPs, block RFC1918, block all else
-- If `nft` is unavailable and the host's FORWARD policy is DROP, Coi falls back to iptables bridge rules so container traffic can still be forwarded
+- Allowlist mode: Block all DNS, allow gateway DHCP only, block RFC1918 and 169.254.0.0/16, allow the allowlisted IPs on their ports, block all else
+- In open mode, if `nft` is unavailable and the host's FORWARD policy is DROP, Coi falls back to iptables bridge rules so container traffic can still be forwarded (restricted/allowlist always require nft)
 
 ## Automatic Cleanup
 

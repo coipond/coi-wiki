@@ -13,7 +13,7 @@ coi file push ./config.json my-container:/workspace/config.json
 # Push directory (recursive)
 coi file push -r ./src my-container:/workspace/src
 
-# Push with custom permissions
+# Push to a system path
 coi file push ./script.sh my-container:/usr/local/bin/script.sh
 ```
 
@@ -26,11 +26,13 @@ Copy files from a container to your host:
 coi file pull my-container:/workspace/build.log ./build.log
 
 # Pull directory (recursive)
-coi file pull -r my-container:/home/code/.claude ./saved-sessions/session-123/
+coi file pull -r my-container:/home/code/.claude ./saved-sessions/session-123
 
 # Pull build artifacts
-coi file pull -r my-container:/workspace/dist ./output/
+coi file pull -r my-container:/workspace/dist ./output
 ```
+
+A destination ending in `/` must be an existing directory (the pulled entry is placed inside it); without the slash, the path is the exact target and must not already exist (a single file may overwrite an existing file).
 
 ## Common Use Cases
 
@@ -38,7 +40,7 @@ coi file pull -r my-container:/workspace/dist ./output/
 
 ```bash
 # Save AI tool session to host
-coi file pull -r my-container:/home/code/.claude ./backups/session-$(date +%Y%m%d)/
+coi file pull -r my-container:/home/code/.claude ./backups/session-$(date +%Y%m%d)
 ```
 
 ### Inject Configuration
@@ -52,7 +54,7 @@ coi file push ./custom-config.toml my-container:/home/code/.config/tool/config.t
 
 ```bash
 # Copy compiled binaries or build output
-coi file pull -r my-container:/workspace/build ./artifacts/
+coi file pull -r my-container:/workspace/build ./artifacts
 ```
 
 ### Share Files Between Containers

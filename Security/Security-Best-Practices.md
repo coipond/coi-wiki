@@ -19,6 +19,7 @@ Coi automatically mounts security-sensitive paths as read-only by default. This 
 | `.coi` | Project Coi config — an agent could otherwise weaken the next session's settings | Read-only mount |
 | `.claude/settings.json` | Claude Code project settings carry `hooks` the host auto-executes | Read-only mount |
 | `.claude/settings.local.json` | Same auto-executed `hooks` risk as `settings.json` | Read-only mount |
+| `.codex/config.toml` | Codex project config can define commands/hooks that a later session auto-executes | Read-only mount |
 
 In addition to this static list, Coi dynamically discovers and protects each existing per-worktree git config file (`.git/worktrees/<name>/config.worktree`) at session setup, since those are config sinks too when `extensions.worktreeConfig` is enabled.
 
@@ -224,7 +225,7 @@ By default, Coi bypasses all tool permission prompts so sessions run autonomousl
 permission_mode = "interactive"
 ```
 
-This affects both Claude Code and opencode - see the [Supported Tools](Supported-Tools#permission-mode) page for details on how each tool behaves in interactive mode.
+This affects Claude Code, opencode and codex - see the [Supported Tools](Supported-Tools#permission-mode) page for details on how each tool behaves in interactive mode.
 
 ## SSH Agent and Environment Variable Forwarding
 

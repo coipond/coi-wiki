@@ -33,7 +33,7 @@ coi update patterns --dry-run  # print the git commands without running them
 
 - **Checksum verification**: the downloaded binary is verified against its SHA256 checksum before the current binary is replaced.
 - **Symlink-aware**: if `coi` is a symlink, the symlink target is resolved before replacement so existing symlinks keep working.
-- **Sudo auto-escalation**: when the binary directory is not writable by the current user (e.g. `/usr/local/bin`), Coi re-executes itself with `sudo`.
+- **Unwritable install directory**: when the binary directory is not writable by the current user (e.g. `/usr/local/bin`), Coi stops and prints the exact command to re-run with `sudo` (`sudo coi update core --force --version <tag>`).
 - **Dev build safety**: development builds (no version tag) cannot be version-compared. `coi update core` refuses to proceed and prints a warning; pass `--force` to install the latest release anyway.
 
 ## Updating the Detection Databases (`coi update patterns`)
