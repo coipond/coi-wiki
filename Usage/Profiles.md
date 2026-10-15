@@ -453,6 +453,10 @@ The self-contained schema (all `$defs` bundled inline) is produced by `coi schem
 
 Any JSON Schema 2020-12 validator can use it — for example the Ruby [`json_schemer`](https://github.com/davishmcclurg/json_schemer) gem or the Python [`jsonschema`](https://python-jsonschema.readthedocs.io/) package.
 
+### Agent Skill: `coi-profile`
+
+To have your coding agent write a profile for you, give it the [coi-profile skill](https://github.com/coipond/coi/blob/master/skills/coi-profile/SKILL.md). It teaches the agent to read the format from `coi schema profile`, scaffold with `coi profile create`, and check its work with `coi validate profile` and `coi profile info`.
+
 ## Best Practices
 
 1. **One profile per distinct workload type, not per project** - Profiles work best as reusable templates: `rust-dev`, `python-ml`, `restricted-research`. Avoid creating a profile for every individual project; use per-project `.coi/config.toml` for project-specific overrides instead.
