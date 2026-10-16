@@ -17,11 +17,11 @@ Coi does not try to:
 
 The workspace is mounted read-write. Only the paths in `protected_paths` (and `additional_protected_paths`) are read-only. The agent can change or delete every other file, and the change lands on your host.
 
-Files that host tools run on their own are not protected unless you add them. Examples: `.envrc`, `.pre-commit-config.yaml`. Review the diff before you run host tools in the workspace. To protect more paths, see [Configuring Protected Paths](Security-Best-Practices#configuring-protected-paths).
+Files that host tools run on their own are not protected unless you add them. Examples: `.envrc`, `.pre-commit-config.yaml`. To protect more paths, see [Configuring Protected Paths](Security-Best-Practices#configuring-protected-paths).
 
 ### An Allowed Destination Can Receive Anything the Agent Can Read
 
-In `restricted` mode (the default), Coi blocks private networks and metadata endpoints and accepts all other traffic. Any public host can receive any file or credential the agent can read. Without `allowed_ports`, all ports are open. Only `allowlist` mode ends in a default reject. See [Network Isolation](Network-Isolation).
+In `restricted` mode (the default), Coi blocks private networks and metadata endpoints and accepts all other traffic. Any public host can receive any file or credential the agent can read. Without `allowed_ports`, all ports are open. Only `allowlist` mode limits which hosts the agent can reach. See [Network Isolation](Network-Isolation).
 
 ### DNS Still Resolves in `restricted` Mode
 
@@ -39,18 +39,18 @@ The AI tool runs with its permission prompts bypassed by default (`permission_mo
 
 ### Monitoring Is Off by Default and Only Matches Patterns
 
-`[monitoring] enabled` is `false` by default, so a default session has no threat detection. When you turn it on, it matches process command lines, file activity and network patterns against known attack shapes. A payload that does not match a pattern is not detected. Treat monitoring as a detective control, not a guarantee. See [Security Monitoring](Security-Monitoring).
+`[monitoring] enabled` is `false` by default, so a default session has no threat detection. When you turn it on, it matches process command lines, file activity and network patterns against known attack shapes. A payload that does not match a pattern is not detected. See [Security Monitoring](Security-Monitoring).
 
 ## Checklist
 
 Before you trust Coi with a repository you did not write:
 
-- [ ] Use `allowlist` mode, or at least set `allowed_ports`, if the agent must not reach arbitrary hosts.
-- [ ] Turn on `[monitoring]` (and `[monitoring.nft]` for network detection).
-- [ ] Assume the tool credentials in the container can leak. Use a credential you can revoke.
-- [ ] Add the workspace files your host tools run to `additional_protected_paths`.
-- [ ] Review workspace changes before you run them on the host.
-- [ ] For an adversarial agent, put a VM or a dedicated host under Coi ([When a Container Is Not Enough](Threat-Model-Containment-Limits#when-a-container-is-not-enough)).
+- Use `allowlist` mode, or at least set `allowed_ports`, if the agent must not reach arbitrary hosts.
+- Turn on `[monitoring]` (and `[monitoring.nft]` for network detection).
+- Assume the tool credentials in the container can leak. Use a credential you can revoke.
+- Add the workspace files your host tools run to `additional_protected_paths`.
+- Review workspace changes before you run them on the host.
+- For an adversarial agent, put a VM or a dedicated host under Coi ([When a Container Is Not Enough](Threat-Model-Containment-Limits#when-a-container-is-not-enough)).
 
 ## See Also
 

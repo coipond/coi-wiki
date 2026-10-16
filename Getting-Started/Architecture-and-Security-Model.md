@@ -152,7 +152,7 @@ Coi contains the blast radius of AI tool compromise. It does not prevent the AI 
 
 **Insecure code generation** - Coi has no visibility into the quality or security of code the AI writes. Generated code may contain SQL injection, XSS, hardcoded secrets, or other vulnerabilities.
 
-**Workspace file exfiltration** - The workspace is mounted read-write and the AI can read any file in it. In `restricted` and `allowlist` network modes, what the AI can do with those files externally is limited, but Coi does not prevent the AI from reading your source code.
+**Workspace file exfiltration** - The workspace is mounted read-write and the AI can read any file in it. In `allowlist` mode, Coi limits where those files can go; in `restricted` mode, any public host can receive them. Coi does not prevent the AI from reading your source code.
 
 For the other limits (tool credentials readable in the container, open egress in `restricted` mode, bypassed permission prompts, monitoring off by default), see [Limits and Non-Goals](Limits-and-Non-Goals).
 
