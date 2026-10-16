@@ -32,6 +32,7 @@ Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI c
 
 ### Security
 - **[Threat Model: Containment Limits](Threat-Model-Containment-Limits)** - What the shared-kernel boundary does and does not contain, and the kernel attack-surface hardening flags
+- **[Limits and Non-Goals](Limits-and-Non-Goals)** - What Coi does not protect by default and does not try to do, with a checklist
 - **[Security Monitoring](Security-Monitoring)** - Real-time threat detection and automated response (the detection engine)
 - **[Audit Log](Audit-Log)** - On-disk audit log format, field reference, and `coi audit` live streaming
 - **[Session Logs](Session-Logs)** - Coi operational logs and `coi logs` command

@@ -70,3 +70,5 @@ If your threat model includes a frontier-capability agent actively trying to esc
 - a dedicated/disposable host with nothing else on it.
 
 Coi's sweet spot is containing misbehavior — prompt-injected agents, supply-chain-compromised tooling, overeager automation — with excellent ergonomics. For containing adversaries, put a hardware or hypervisor boundary underneath it.
+
+For the limits that do not depend on the kernel (allowed writes, open egress, copied credentials), see [Limits and Non-Goals](Limits-and-Non-Goals).

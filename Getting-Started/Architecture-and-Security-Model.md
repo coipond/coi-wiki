@@ -154,6 +154,8 @@ Coi contains the blast radius of AI tool compromise. It does not prevent the AI 
 
 **Workspace file exfiltration** - The workspace is mounted read-write and the AI can read any file in it. In `restricted` and `allowlist` network modes, what the AI can do with those files externally is limited, but Coi does not prevent the AI from reading your source code.
 
+For the other limits (tool credentials readable in the container, open egress in `restricted` mode, bypassed permission prompts, monitoring off by default), see [Limits and Non-Goals](Limits-and-Non-Goals).
+
 For a full picture of what Coi protects and does not protect, see [Does Coi prevent prompt injection attacks?](FAQ-Security-and-Trust#does-coi-prevent-prompt-injection-attacks) in the FAQ.
 
 ## When Coi Is the Right Tool
@@ -174,6 +176,7 @@ Coi is probably overkill when:
 
 ## See Also
 
+- [Limits and Non-Goals](Limits-and-Non-Goals) - What Coi does not protect by default, and its non-goals
 - [Security Monitoring](Security-Monitoring) - Full event catalog, severity levels, and monitoring configuration
 - [Network Isolation](Network-Isolation) - Configuring restricted, allowlist, and open network modes
 - [Security Best Practices](Security-Best-Practices) - Recommended settings for different risk levels

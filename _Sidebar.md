@@ -28,6 +28,7 @@
 
 **Security**
 - [Threat Model: Containment Limits](Threat-Model-Containment-Limits)
+- [Limits and Non-Goals](Limits-and-Non-Goals)
 - [Security Monitoring](Security-Monitoring)
   - [nftables Monitoring Internals](nftables-Monitoring-Internals)
 - [Audit Log](Audit-Log)
