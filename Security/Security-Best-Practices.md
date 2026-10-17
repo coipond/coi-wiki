@@ -239,7 +239,7 @@ Coi provides opt-in mechanisms to selectively share host resources with containe
 - Only enable SSH agent forwarding when you need git-over-SSH inside the container
 - Only forward the minimum set of environment variables needed (e.g., API keys for the AI tool)
 - Forwarded env vars are accessible to all processes in the container, including the AI tool
-- For maximum isolation, prefer passing API keys via the tool's config file rather than env vars
+- The tool's config and credential files that Coi copies in are readable by all processes in the container too (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 
 ## Network Isolation
 
