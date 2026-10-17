@@ -62,9 +62,9 @@ wait_for_idle() {
 }
 
 for prompt in "create tests" "document code" "optimize performance"; do
-  coi tmux send my-session "$prompt"
-  wait_for_idle my-session
-  coi tmux capture my-session > "output-${prompt// /-}.txt"
+  coi tmux send coi-abc12345-1 "$prompt"
+  wait_for_idle coi-abc12345-1
+  coi tmux capture coi-abc12345-1 > "output-${prompt// /-}.txt"
 done
 ```
 
@@ -103,7 +103,7 @@ coi shutdown "$SESSION"
 ```bash
 # Periodically check AI session output
 while true; do
-  coi tmux capture my-session | grep -i "error\|warning" && notify-send "Issue detected"
+  coi tmux capture coi-abc12345-1 | grep -i "error\|warning" && notify-send "Issue detected"
   sleep 300
 done
 ```
@@ -115,10 +115,10 @@ done
 # (persistence via config: [container] persistent = true)
 coi shell --slot 1 --background
 sleep 5
-coi tmux send coi-workspace-1 "refactor module A"
-coi tmux send coi-workspace-1 "refactor module B"
-coi tmux send coi-workspace-1 "refactor module C"
-coi tmux send coi-workspace-1 "/exit"
+coi tmux send coi-abc12345-1 "refactor module A"
+coi tmux send coi-abc12345-1 "refactor module B"
+coi tmux send coi-abc12345-1 "refactor module C"
+coi tmux send coi-abc12345-1 "/exit"
 ```
 
 ## Notes

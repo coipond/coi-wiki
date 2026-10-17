@@ -115,7 +115,7 @@ NODE_ENV = "development"
 
 ### From Outside (Host)
 
-- `coi shutdown <name>` → graceful stop with session save, then delete (60s grace window by default)
+- `coi shutdown <name>` → graceful stop, then delete (60s grace window by default)
 - The grace window is config, not a flag (as of v0.10.0): `[container] shutdown_timeout = 30`
 - `coi shutdown --all` → graceful stop all containers (with confirmation)
 - `coi shutdown --all --force` → graceful stop all without confirmation

@@ -21,7 +21,7 @@ coi image list --json          # shorthand for --format json
 
 ## Publish Containers as Images
 
-Convert a container into a reusable image:
+Convert a container into a reusable image. After a successful publish, Coi deletes the source container:
 
 ```bash
 # Publish container as image
@@ -34,7 +34,7 @@ coi image publish my-container my-custom-image --description "Custom build with 
 coi image publish my-container my-custom-image --compression none
 
 # Create image from container with installed tools
-coi image publish coi-workspace-1 coi-rust --description "Coi with Rust toolchain"
+coi image publish coi-abc12345-1 coi-rust --description "Coi with Rust toolchain"
 ```
 
 ## Delete Images
@@ -88,10 +88,10 @@ exit
 
 # exit leaves the container running; coi image publish stops a running
 # container automatically before publishing, so stopping it first is optional
-coi container stop coi-workspace-1
+coi container stop coi-abc12345-1
 
-# Publish the container as an image
-coi image publish coi-workspace-1 coi-dev-full
+# Publish the container as an image (this deletes the container)
+coi image publish coi-abc12345-1 coi-dev-full
 ```
 
 Then select the custom image in config (or a profile):
@@ -149,7 +149,7 @@ Create standardized images for your team:
 coi shell
 # Install team tools...
 exit
-coi image publish coi-workspace-1 team-nodejs-2024
+coi image publish coi-abc12345-1 team-nodejs-2024
 ```
 
 Team members select it via the shared project config:
@@ -171,8 +171,10 @@ coi image publish project-container myapp-v1.0
 
 ```bash
 # Keep multiple versions
-coi image publish coi-workspace-1 myproject-v1.0
-coi image publish coi-workspace-1 myproject-v1.1
+coi image publish coi-abc12345-1 myproject-v1.0
+# Publish deleted the container: run coi shell again, update the new
+# container, then publish the next version
+coi image publish coi-abc12345-1 myproject-v1.1
 
 # Clean up old versions, keep last 3
 coi image cleanup myproject- --keep 3
