@@ -319,6 +319,8 @@ If running in a terminal, Coi prompts interactively and builds on confirmation. 
 
 **Symptom:** `coi build` starts but fails during package installation or script execution.
 
+The build output names each step (for example `[coi] Updating package lists...` and `[coi] Downloading and installing base packages...`), so the last lines show where the build stopped. While Incus packs and compresses the finished image, `coi build` prints `Still creating image... (<elapsed>)` every 5 seconds until the publish returns.
+
 **Common causes and fixes:**
 
 - **Network issue during build** - The build runs inside a container with internet access. Check your internet connection and DNS resolution. If using a restrictive firewall, try temporarily switching to open mode.
