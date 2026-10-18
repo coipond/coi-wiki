@@ -23,7 +23,7 @@ Run the install script from the [Coi repository](https://github.com/coipond/coi)
 curl -fsSL https://raw.githubusercontent.com/coipond/coi/master/install.sh | bash
 ```
 
-This installs the `coi` binary and sets up shell completions. Verify it worked:
+This installs the `coi` binary. It does not set up shell completions; see [Shell Completion](Container-Operations#shell-completion). Verify it worked:
 
 ```bash
 coi --version

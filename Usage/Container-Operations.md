@@ -109,6 +109,25 @@ coi info <session-id>
 coi version
 ```
 
+### Shell Completion
+
+`coi completion <shell>` prints a tab-completion script for `bash`, `zsh`, `fish` or `powershell`. It is the standard completion command of the cobra CLI library, and it needs no Incus.
+
+```bash
+# Load completions in the current shell session
+source <(coi completion bash)                              # bash (needs the bash-completion package)
+source <(coi completion zsh)                               # zsh
+coi completion fish | source                               # fish
+coi completion powershell | Out-String | Invoke-Expression # powershell
+
+# Load completions for every new session (Linux; run once, then start a new shell)
+coi completion bash > /etc/bash_completion.d/coi
+coi completion zsh > "${fpath[1]}/_coi"
+coi completion fish > ~/.config/fish/completions/coi.fish
+```
+
+Add `--no-descriptions` to leave out the command descriptions. `coi completion <shell> --help` shows the macOS paths, the zsh `compinit` setup, and how to add the powershell script to your profile.
+
 
 ## Running Sessions Non-Interactively (`coi run`)
 
