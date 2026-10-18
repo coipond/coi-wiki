@@ -99,7 +99,11 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
   prompt is embedded via a staged-file `"$(cat …)"` reference, so arbitrary prompt
   text (quotes, newlines, `$()`) cannot corrupt the command. Run it through a shell
   (e.g. `bash -c "<command>"`) so the substitution expands.
-- **`env`** — tool-derived environment only (model / effort). Secrets and
+- **`env`** — tool-derived environment only. Per tool:
+  claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
+  a model or effort; codex: none; opencode: `XDG_DATA_HOME` and `XDG_STATE_HOME`;
+  pi: `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The opencode, pi and
+  omp paths point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
   `CLAUDE_CODE_OAUTH_TOKEN`) when it execs. No auth is baked into the spec.
 
@@ -124,7 +128,7 @@ orchestrator delivers it out-of-band after launch (e.g. `tmux load-buffer <path>
 
 | Flag | Meaning |
 |------|---------|
-| `--continue[=<id>]` | **Discover-or-fresh.** Looks up coi's **host-side** session store (`~/.coi/…`) via `DiscoverSessionID`; resumes if found, else starts fresh. Bare `--continue` targets `--session-id`. Correct when *coi* owns session persistence. |
+| `--continue[=<id>]` | **Discover-or-fresh.** Looks up coi's **host-side** session store (`~/.coi/…`) via `DiscoverSessionID`; resumes if found, else starts fresh. Only claude and codex sessions are discoverable: for opencode, pi and omp it always starts fresh (use `--resume-latest`, or `--resume-id` for opencode). Bare `--continue` targets `--session-id`. Correct when *coi* owns session persistence. |
 | `--resume-id <id>` | **Assert, don't discover.** Builds a resume command for that exact id **verbatim** — no host-side lookup. For an orchestrator that owns session state itself (it restored the tool's state dir into the container and assigned the id). |
 | `--resume-latest` | **Resume-latest**, no id. Resumes the most recent conversation the tool can find. |
 
