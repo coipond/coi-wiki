@@ -216,12 +216,15 @@ coi profile list
 Shows all loaded profiles in a table:
 
 ```text
-NAME        IMAGE         PERSISTENT  SOURCE
-default     coi-default   -           (built-in)
-python-ml   coi-default   -           .coi/profiles/python-ml/config.toml
-rust-dev    coi-rust      true        .coi/profiles/rust-dev/config.toml
-limited     coi-default   false       ~/.coi/profiles/limited/config.toml
+NAME       IMAGE        PERSISTENT  INHERITS  SOURCE
+default    coi-default  -           -         (built-in)
+hardened   (default)    false       -         (built-in)
+limited    (default)    false       -         /home/user/.coi/profiles/limited/config.toml
+python-ml  coi-default  -           default   /home/user/myproject/.coi/profiles/python-ml/config.toml
+rust-dev   coi-rust     true        -         /home/user/.coi/profiles/rust-dev/config.toml
 ```
+
+`IMAGE` shows `(default)` when the profile sets no image, and `INHERITS` shows the parent profile. `SOURCE` is the absolute path of the profile's `config.toml`.
 
 The built-in `default` profile is always present and reflects your resolved config (built-in defaults plus your config files). It can be used as a parent via `inherits = "default"` but cannot be edited or deleted.
 
@@ -299,18 +302,14 @@ Displays the full configuration of a named profile:
 
 ```text
 Profile: rust-dev
-Source:  .coi/profiles/rust-dev/config.toml
+Source:  /home/user/.coi/profiles/rust-dev/config.toml
 
-context = "/path/to/.coi/profiles/rust-dev/CONTEXT.md"
+context = "/home/user/.coi/profiles/rust-dev/CONTEXT.md"
 forward_env = ["CARGO_REGISTRY_TOKEN"]
 
 [container]
 image = "coi-rust"
 persistent = true
-
-[container.build]
-base = "coi-default"
-script = "/path/to/.coi/profiles/rust-dev/build.sh"
 
 [environment]
 RUST_BACKTRACE = "1"
@@ -321,6 +320,10 @@ permission_mode = "bypass"
 
 [tool.claude]
 effort_level = "high"
+
+[container.build]
+base = "coi-default"
+script = "/home/user/.coi/profiles/rust-dev/build.sh"
 
 [limits.cpu]
 count = "4"

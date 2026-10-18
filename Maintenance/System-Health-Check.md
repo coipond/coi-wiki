@@ -41,15 +41,16 @@ coi health --fix             # apply the fixes (asks for your sudo password)
 ## Example Output
 
 ```text
-Code on Incus Health Check
+Coi Health Check
 ==========================
 
 SYSTEM:
-  [OK]   Operating system  : Ubuntu 24.04.4 LTS (amd64)
-  [OK]   Kernel version    : Kernel 6.17.0-19-generic (>= 5.15)
-  [OK]   Kernel build age  : Kernel built 42 days ago
+  [OK]   Operating system  : Ubuntu 24.04.5 LTS (amd64)
+  [OK]   Kernel version    : Kernel 6.8.0-142-generic (>= 5.15)
+  [OK]   Kernel build age  : Kernel built 46 days ago
   [OK]   Kernel mitigations: CPU mitigations enabled (no disable flags on the kernel command line)
   [OK]   Distro support    : ubuntu 24.04 supported until 2029-05-31
+  [OK]   Timezone          : Host timezone: Etc/UTC
 
 CRITICAL:
   [OK]   Incus             : Running (version 6.21)
@@ -57,19 +58,27 @@ CRITICAL:
   [OK]   Default image     : coi-default (fingerprint: 3c946d37f573)
   [OK]   Image age         : 2 days old
   [OK]   Privileged check  : Default profile uses unprivileged containers
-  [OK]   Security posture  : Full isolation - unprivileged containers with seccomp and AppArmor
+  [OK]   Security posture  : Full isolation — unprivileged containers with seccomp and AppArmor
+  [OK]   Immutable cap     : Host-side immutable protection available (CAP_LINUX_IMMUTABLE present)
+  [OK]   Secret masking    : Secret masking working (masked secret_paths read empty inside the container)
+  [OK]   Host cred isolation: Host credentials isolated (host home not reachable inside the container)
 
 NETWORKING:
   [OK]   Network bridge    : incusbr0 (10.128.178.1/24)
   [OK]   IP forwarding     : Enabled
   [OK]   nft firewall      : nft available, Incus bridge NAT enabled (restricted mode available)
   [OK]   Bridge forward    : Bridge incusbr0 forwarding OK
+  [OK]   iptables sudo     : Passwordless sudo configured for iptables
   [OK]   Docker FORWARD    : Docker running, FORWARD policy is not DROP
+  [OK]   UFW conflict      : ufw is not active
+  [OK]   Container connect : DNS and HTTP working (status 200)
+  [OK]   Network restriction: Restricted mode working (external OK; private networks + metadata endpoint blocked)
+  [OK]   Firewalld Veth Bloat: no firewalld nft table on this host
 
 MONITORING:
-  [OK]   nftables          : Available and configured
-  [OK]   systemd journal   : Access granted
-  [OK]   libsystemd        : Installed
+  [OK]   Monitoring config : Monitoring is properly configured
+  [OK]   Audit log dir     : Audit log directory is ready
+  [OK]   cgroup v2         : Cgroup v2 is available with controllers
 
 STORAGE:
   [OK]   Coi directory     : ~/.coi (writable)
@@ -81,24 +90,20 @@ CONFIGURATION:
   [OK]   Config loaded     : ~/.coi/config.toml
   [OK]   Network mode      : restricted
   [OK]   Tool              : claude
+  [OK]   Git branch guard  : Protecting main, master (no direct commits/pushes)
 
 STATUS:
   [OK]   Containers        : 1 running
   [OK]   Saved sessions    : 12 session(s)
   [OK]   Orphaned resources: No orphaned resources
 
-OTHER:
-  [OK]   Monitoring config : Enabled with auto_pause=true
-  [OK]   Audit Log Dir     : ~/.coi/audit (writable)
-  [OK]   Cgroup Availability: Cgroup v2 is available with controllers
-  [OK]   Container Connectivity: DNS and HTTP working (status 200)
-  [OK]   Network Restriction: Restricted mode working (external OK, private networks blocked)
-
 STATUS: HEALTHY
-All checks passed
+All 39 checks passed
 ```
 
-**Note:** The MONITORING section (nftables, systemd journal, libsystemd) only appears when `monitoring.nft.enabled = true` in your config. The `--verbose` flag adds optional checks: DNS resolution and process monitoring capability.
+Versions, addresses, sizes and counts depend on your host.
+
+**Note:** The MONITORING section always shows the monitoring config, audit log directory and cgroup v2 checks. Three more rows (nftables, systemd journal, libsystemd-dev) appear only when `monitoring.nft.enabled = true` in your config. The `--verbose` flag adds an OPTIONAL section: DNS resolution and process monitoring capability.
 
 ## Exit Codes
 
@@ -157,7 +162,7 @@ Returns structured JSON with all check results, suitable for scripting and CI in
     "security_posture": {
       "name": "security_posture",
       "status": "ok",
-      "message": "Full isolation - unprivileged containers with seccomp and AppArmor",
+      "message": "Full isolation — unprivileged containers with seccomp and AppArmor",
       "details": {
         "seccomp": "enabled (default)",
         "apparmor": "enabled (default)",

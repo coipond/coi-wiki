@@ -313,7 +313,7 @@ incus profile get default security.privileged
 coi health
 # Should show:
 #   [OK]   Privileged check  : Default profile uses unprivileged containers
-#   [OK]   Security posture  : Full isolation - unprivileged containers with seccomp and AppArmor
+#   [OK]   Security posture  : Full isolation — unprivileged containers with seccomp and AppArmor
 ```
 
 **Note:** Incus containers are unprivileged by default. This setting is only present if someone explicitly set it. If you need privileged containers for other (non-Coi) workloads, use a separate Incus profile rather than changing the default.
