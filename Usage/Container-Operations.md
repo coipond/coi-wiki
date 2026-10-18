@@ -80,7 +80,8 @@ coi clean
 # Delete saved session data of the configured tool (no containers)
 coi clean --sessions
 
-# Clean everything: stopped containers, saved sessions, orphans and unreferenced pools
+# All of the above: stopped containers, saved sessions, orphans, and the Coi containers
+# (running ones are stopped first) in pools no loaded profile references
 coi clean --all    # or -a
 
 # Skip confirmation
