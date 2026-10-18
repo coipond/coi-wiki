@@ -87,7 +87,7 @@ STORAGE:
   [OK]   Incus storage pools: default (zfs): 26.1 GiB free of 50.0 GiB (48% used)
 
 CONFIGURATION:
-  [OK]   Config loaded     : ~/.coi/config.toml
+  [OK]   Config loaded     : /home/user/.coi/config.toml
   [OK]   Network mode      : restricted
   [OK]   Tool              : claude
   [OK]   Git branch guard  : Protecting main, master (no direct commits/pushes)

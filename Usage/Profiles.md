@@ -216,12 +216,13 @@ coi profile list
 Shows all loaded profiles in a table:
 
 ```text
+WARNING: ignoring 'forward_env' in project config /home/user/myproject/.coi/profiles/rust-dev/config.toml; it hands host environment variables to the container. Move it to ~/.coi/config.toml (or a profile under ~/.coi/profiles) or set COI_CONFIG to apply it.
 NAME       IMAGE        PERSISTENT  INHERITS  SOURCE
 default    coi-default  -           -         (built-in)
 hardened   (default)    false       -         (built-in)
 limited    (default)    false       -         /home/user/.coi/profiles/limited/config.toml
 python-ml  coi-default  -           default   /home/user/myproject/.coi/profiles/python-ml/config.toml
-rust-dev   coi-rust     true        -         /home/user/.coi/profiles/rust-dev/config.toml
+rust-dev   coi-rust     true        -         /home/user/myproject/.coi/profiles/rust-dev/config.toml
 ```
 
 `IMAGE` shows `(default)` when the profile sets no image, and `INHERITS` shows the parent profile. `SOURCE` is the absolute path of the profile's `config.toml`.
@@ -301,11 +302,11 @@ coi profile info rust-dev
 Displays the full configuration of a named profile:
 
 ```text
+WARNING: ignoring 'forward_env' in project config /home/user/myproject/.coi/profiles/rust-dev/config.toml; it hands host environment variables to the container. Move it to ~/.coi/config.toml (or a profile under ~/.coi/profiles) or set COI_CONFIG to apply it.
 Profile: rust-dev
-Source:  /home/user/.coi/profiles/rust-dev/config.toml
+Source:  /home/user/myproject/.coi/profiles/rust-dev/config.toml
 
-context = "/home/user/.coi/profiles/rust-dev/CONTEXT.md"
-forward_env = ["CARGO_REGISTRY_TOKEN"]
+context = "/home/user/myproject/.coi/profiles/rust-dev/CONTEXT.md"
 
 [container]
 image = "coi-rust"
@@ -323,11 +324,13 @@ effort_level = "high"
 
 [container.build]
 base = "coi-default"
-script = "/home/user/.coi/profiles/rust-dev/build.sh"
+script = "/home/user/myproject/.coi/profiles/rust-dev/build.sh"
 
 [limits.cpu]
 count = "4"
 ```
+
+The `WARNING` goes to stderr: coi ignores `forward_env` in a project profile, so `rust-dev` above has none.
 
 ### Use a Profile
 
