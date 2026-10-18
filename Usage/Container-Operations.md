@@ -46,7 +46,7 @@ coi container info <ctr> --json
 coi snapshot list --json
 coi snapshot info <snap> --json
 coi profile list --json
-coi validate profile --json
+coi validate profile <path> --json
 coi tmux list --json
 coi version --json
 ```
