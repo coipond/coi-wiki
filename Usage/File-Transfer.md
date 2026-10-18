@@ -76,7 +76,7 @@ coi file push ./temp.json my-container-2:/workspace/data.json
 
 Coi containers use Incus UID mapping — idmapped (`shift=true`) mounts or a per-instance `raw.idmap`, selected automatically per host/filesystem — so that files owned by your host user appear as the `code` user (UID 1000) inside the container. `coi file push` does not change ownership: a pushed file keeps the UID, GID and mode it has on the host. If they differ from the `code` user's, `chown` the file inside the container after pushing (for example `coi container exec <name> -- chown 1000:1000 /path/to/file`).
 
-`coi file pull` does not change ownership either: it pulls the entry with `incus file pull` into a temporary directory on the host, then moves it to the destination.
+A pulled file is owned by the host user who runs `coi file pull`, and keeps the mode it has in the container, masked by your umask. coi pulls the entry with `incus file pull` into a temporary directory on the host, then moves it to the destination.
 
 > **Note: Pushing to System Paths**
 > Pushing files to paths outside `/home/code` and `/workspace` (e.g., `/usr/local/bin`) may require the file to be owned by root inside the container. Use `coi container exec <name> -- chown root:root /path/to/file` after pushing if the tool requires root ownership.
