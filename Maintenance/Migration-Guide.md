@@ -35,7 +35,7 @@ coi version         # confirm 0.12.0
 - **Switch AI tools in one persistent container** — point two profiles at the same `[container] session_name` (both `persistent = true`) and each re-enters that same box under its own `[tool] name`; the new tool's credentials are seeded on first switch. See [Running a different AI tool in the same container](Container-Lifecycle-and-Sessions#running-a-different-ai-tool-in-the-same-container-v012).
 - **Headless "fire and forget" prompt runs** — `coi run --prompt` / `--prompt-file` / `--prompt-name` runs the agent to completion on a predefined prompt and exits with its status code; register reusable prompts in a `[prompts]` table. See [Headless Orchestration](Headless-Orchestration#fire-and-forget-prompt-runs-coi-run---prompt).
 - **Config/profile symmetry** — a `[mounts]` block works in both the flat `[[mounts]]` and nested `[[mounts.default]]` form in either top-level config or a profile (copy it between them verbatim), and `env_command_timeout` is now settable at a [profile](Profiles)'s root.
-- **[`coi tool spec`](Headless-Orchestration)** — print a tool's launch command + env for an external orchestrator to run (with `--continue` / `--resume-id` / `--resume`).
+- **[`coi tool spec`](Headless-Orchestration)** — print a tool's launch command + env for an external orchestrator to run (with `--continue` / `--resume-id` / `--resume-latest`).
 - **[`coi top`](Resource-Usage)** — live per-container and per-process CPU / memory / disk / network usage.
 - **New tools**: [Codex CLI](Supported-Tools#codex-cli) (`[tool] name = "codex"`) and [omp (Oh My Pi)](Supported-Tools#omp-oh-my-pi) (`[tool] name = "omp"`) — both opt-in at image build via `[container.build] agents`.
 - **[`~/SANDBOX_CONTEXT.json`](Sandbox-Context)** — structured JSON companion to the Markdown context (`[tool] context_json = true`).
@@ -240,7 +240,7 @@ mv .coi.toml .coi/config.toml
 
 4. Profile directories also move: `~/.coi-profiles/` → `~/.coi/profiles/` (user-level) and `.coi-profiles/` → `.coi/profiles/` (project-level). Move your profile directories accordingly.
 
-Coi warns on startup if it detects a `.coi.toml` at the project root and no `.coi/config.toml`, so you will not silently lose configuration.
+Coi refuses to start if it detects a `.coi.toml` at the project root (even when `.coi/config.toml` also exists), until you move the file, so you will not silently lose configuration.
 
 ## Mount Syntax: `[[mounts]]` vs `[[mounts.default]]`
 
@@ -287,8 +287,9 @@ Compare against the [releases page](https://github.com/coipond/coi/releases) to 
 
 ```bash
 coi update
-coi health --verbose
-# Check the Monitoring section for auto_pause=true and other security settings
+coi health --json
+# In the monitoring_configuration check, look at auto_pause_on_high,
+# auto_kill_on_critical and the other values under details
 ```
 
 No config changes needed — the fix is transparent once you update the binary.
