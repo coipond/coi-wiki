@@ -138,6 +138,8 @@ coi build --profile my-custom
 coi shell --profile my-custom
 ```
 
+To build the images of all profiles at once, run `coi build --all` (`-a`). It builds `coi-default` first, then each other profile with a `[container.build]` section, in alphabetical order; profiles without one are skipped. It always sees the global profiles in `~/.coi/profiles/`, but a project's `.coi/profiles/` only when you run it from that project directory. An image that already exists is skipped unless you add `--force`.
+
 ## Use Cases
 
 ### Team Images
