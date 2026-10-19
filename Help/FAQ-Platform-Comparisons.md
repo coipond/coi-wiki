@@ -34,7 +34,7 @@ Docker Sandboxes is a Docker Desktop feature that uses microVMs for isolation on
 - **System containers, not microVMs** - One clean isolation layer vs. containers-in-VMs complexity
 - **Linux-first design** - Built for Linux from day one, not as an afterthought
 
-Beyond architectural differences, Coi includes a [security monitoring](Security-Monitoring) layer that Docker Sandboxes lack entirely. Coi monitors processes for reverse shells and credential scanning, tracks filesystem I/O for data exfiltration, and can use kernel-level nftables rules to detect and log suspicious network connections (C2 ports, cloud metadata endpoints, private network access; off by default, see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables)). Threats trigger automated responses - HIGH severity events pause the container, CRITICAL events kill it - with all events logged to JSONL audit files for forensic review.
+Beyond architectural differences, Coi includes a [security monitoring](Security-Monitoring) layer that Docker Sandboxes lack entirely. It is off by default (`[monitoring] enabled`). When on, Coi monitors processes for reverse shells and credential scanning, tracks filesystem I/O for data exfiltration, and, with `[monitoring.nft] enabled`, uses kernel-level nftables rules to detect and log suspicious network connections (C2 ports, cloud metadata endpoints, private network access; see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables)). Threats trigger automated responses - HIGH severity events pause the container, CRITICAL events kill it - with all events logged to JSONL audit files for forensic review.
 
 ## How Is Coi Different From DevContainers?
 
