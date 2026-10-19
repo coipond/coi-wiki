@@ -97,7 +97,7 @@ coi audit coi-abc123-1 --follow
 # Re-stream a saved recording from a custom path
 coi audit --file ./session.jsonl
 
-# Print a file, then keep printing new lines as they are appended (Ctrl+C to stop)
+# Print a file, then keep printing new lines as they are appended
 coi audit --file ./session.jsonl --follow
 ```
 
@@ -107,7 +107,7 @@ coi audit --file ./session.jsonl --follow
 
 **Follow mode** (`--follow`): pushes a small POSIX-sh collector into the running container via `incus exec` and streams live events as they happen. No daemon is installed — the collector exits when `coi audit` is interrupted. Requires the container to be running.
 
-**File mode** (`--file <path>`): reads that JSONL file instead of `~/.coi/audit/<container>.jsonl` and overrides every other source, so no container is looked up. With `--follow` (`-f`), it prints the file and then polls it for new lines until interrupted; it does not start the in-container collector.
+**File mode** (`--file <path>`): reads that JSONL file instead of `~/.coi/audit/<container>.jsonl` and overrides every other source, so no container is looked up. With `--follow` (`-f`), it prints the file, then polls it every second for new lines and does not exit on its own; it does not start the in-container collector.
 
 ### Event Format
 
