@@ -264,7 +264,7 @@ mode = "open"
 coi health --verbose
 ```
 
-This checks Incus setup, permissions, security posture, network configuration, and monitoring prerequisites.
+This checks Incus setup, permissions, security posture, network configuration and the monitoring setup. The nftables monitoring prerequisites are checked only when `[monitoring.nft] enabled = true`. `--verbose` adds DNS resolution and process monitoring checks.
 
 ## See Also
 
