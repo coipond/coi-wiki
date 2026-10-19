@@ -56,8 +56,11 @@ NFT network events (written to `<container-name>-nft.jsonl`) use the same threat
 View audit logs:
 
 ```bash
-# Real-time monitoring dashboard (auto-detects container from current workspace)
+# One snapshot of the container's monitoring state (auto-detects container from current workspace)
 coi monitor
+
+# Redraw the snapshot every 2 seconds until Ctrl+C (--watch 0, the default, is one-shot)
+coi monitor --watch 2
 
 # Or specify a container explicitly
 coi monitor coi-abc123-1
@@ -72,6 +75,8 @@ cat ~/.coi/audit/coi-abc123-1.jsonl
 cat ~/.coi/audit/coi-abc123-1.jsonl | grep '"level":"high"'
 cat ~/.coi/audit/coi-abc123-1.jsonl | grep '"level":"critical"'
 ```
+
+`--watch` works only with text output: `--watch` with `--format json` (or `--json`) exits with code 2 and `--format json is not supported with --watch`.
 
 ## `coi audit` — Live Threat-Event Streaming
 
@@ -91,6 +96,9 @@ coi audit coi-abc123-1 --follow
 
 # Re-stream a saved recording from a custom path
 coi audit --file ./session.jsonl
+
+# Print a file, then keep printing new lines as they are appended
+coi audit --file ./session.jsonl --follow
 ```
 
 ### Two Operating Modes
@@ -98,6 +106,8 @@ coi audit --file ./session.jsonl
 **Dump mode** (default, no `--follow`): reads `~/.coi/audit/<container>.jsonl` written by the security monitoring daemon and prints it to stdout. Use this to review historical events after a session ends.
 
 **Follow mode** (`--follow`): pushes a small POSIX-sh collector into the running container via `incus exec` and streams live events as they happen. No daemon is installed — the collector exits when `coi audit` is interrupted. Requires the container to be running.
+
+**File mode** (`--file <path>`): reads that JSONL file instead of `~/.coi/audit/<container>.jsonl` and overrides every other source, so no container is looked up. With `--follow` (`-f`), it prints the file, then polls it every second for new lines and does not exit on its own; it does not start the in-container collector.
 
 ### Event Format
 
@@ -107,8 +117,8 @@ Dump mode prints the host-side log's threat events and snapshots as-is (see [On-
 |--------|--------|------------|
 | `exec` | `ps` diff every 2 s | `pid`, `ppid`, `comm`, `args` |
 | `net` | `ss -tunp` diff every 5 s | `proto`, `state`, `local`, `peer`, `pid`, `comm` |
-| `file` | auditd `PATH` records | `path`, `op`, `pid`, `comm` |
-| `audit` | auditd / syslog / auth.log | `msg`, `raw` |
+| `file` | auditd `PATH` and `CWD` records | `path`, `op` |
+| `audit` | other auditd records / syslog / auth.log | `msg`, `raw` |
 | `heartbeat` | Emitted every 10 s | `seq`, `sources` |
 
 Every event also carries:
@@ -133,7 +143,7 @@ Fields are sparse-populated with `omitempty` — only relevant fields appear for
 
 When `--follow` is active, the in-container collector tries sources in order:
 
-1. **auditd** — tails `/var/log/audit/audit.log` if auditd is running; `PATH` records → `type=file`, `EXECVE`/`SYSCALL` records → `type=audit`
+1. **auditd** — tails `/var/log/audit/audit.log` if auditd is running; `PATH` and `CWD` records → `type=file`, all other records (such as `EXECVE` and `SYSCALL`) → `type=audit`
 2. **syslog / auth.log** — fallback when auditd is absent; all lines become `type=audit` events
 3. **`ss` snapshots** — `ss -tunp` every 5 s; only new connections (diff against previous snapshot) become `type=net` events
 4. **`ps` snapshots** — `ps` every 2 s; only new PIDs (diff) become `type=exec` events

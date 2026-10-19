@@ -29,7 +29,7 @@ coi logs coi-abc123-1 -f
 
 ### Auto-Detection
 
-When no container name is given, `coi logs` resolves the container the same way `coi monitor` does — from the current workspace directory. If multiple containers are running, pass the container name explicitly.
+`coi logs` resolves the container the same way `coi monitor` does, in this order: the container name or [alias](Container-Lifecycle-and-Sessions#aliases-and-slots) you pass, then the `COI_CONTAINER` environment variable, then the current workspace (`--workspace`/`-w`, default `.`). If more than one container belongs to the workspace, the command fails and lists them; pass the container name explicitly.
 
 ### Output Format
 
