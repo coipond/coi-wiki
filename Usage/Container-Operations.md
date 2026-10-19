@@ -87,7 +87,8 @@ coi clean --all    # or -a
 # Skip confirmation
 coi clean --force
 
-# Detect containers in unused storage pools
+# Delete the Coi containers (running ones are stopped first) in pools no loaded
+# profile references; asks first unless --force. The pools themselves are kept
 coi clean --pools
 
 # Clean orphaned veths and stale nft/iptables rules
