@@ -86,7 +86,7 @@ coi hosts list coi-abc12345-1
 coi hosts remove coi-abc12345-1 db.internal
 ```
 
-Runtime entries are session-scoped: the `/etc/hosts` line and any firewall hole opened for it are torn down when the container stops. For entries that should always be present, declare them in `[[network.hosts]]` config instead. `coi hosts add` detects the container's actual enforced mode and whether it was started with `allow_local_network_access`, from its live firewall rules rather than from the config of whoever runs the command - so it will not punch a restricted-style per-address hole through an allowlist container, and in allowlist mode a LAN host needs `--ports` just as in config. Adding a second hostname for an IP already present unions the names.
+Runtime entries are session-scoped: the `/etc/hosts` line and any firewall hole opened for it are torn down when the container stops. For entries that should always be present, declare them in `[[network.hosts]]` config instead. `coi hosts add` checks the container's live firewall rules for allowlist mode: if the container enforces allowlist mode, that mode is used, whatever the `[network] mode` of whoever runs the command. Otherwise the caller's `mode` is used, because the live rules do not tell restricted from open. In allowlist mode, `allow_local_network_access` is also read from the live rules when they show it; in all other cases the caller's value is used. The port cap always comes from the caller's `allowed_ports`. So it will not punch a restricted-style per-address hole through an allowlist container, and in allowlist mode a LAN host needs `--ports` just as in config. Adding a second hostname for an IP already present unions the names.
 
 ## See Also
 
