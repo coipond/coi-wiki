@@ -77,7 +77,7 @@ limit = "4GiB"
 max_duration = "4h"
 ```
 
-coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a `WARNING` on stderr: it would let a cloned repo pick host environment variables, often tokens, for the container. To forward them, put the profile under `~/.coi/profiles/` or the `COI_CONFIG` directory.
+coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a `WARNING` on stderr: it would let a cloned repo pick host environment variables, often tokens, for the container. To forward them, put the profile in a trusted location: `~/.coi/profiles/` or `$(dirname $COI_CONFIG)/profiles/`.
 
 ### Available Fields
 
@@ -334,7 +334,7 @@ count = "4"
 
 The `WARNING` goes to stderr: coi ignores `forward_env` in a project profile, so `rust-dev` above has none.
 
-The summary leaves out some settings: `env_commands`, `prompts`, `sockets`, `ports`, `credentials`, `[shell]`, `[monitoring.nft]`, some `[tool]` keys (for example `context_json`), and every `[network]` key except `mode` and `allowed_domains` (so not `block_private_networks`, `block_metadata_endpoint` or `allow_local_network_access`). For the full settings, read the profile's `config.toml` (the `Source` line). The built-in `hardened` profile has no file: its settings are in the table under [Built-in `hardened` Profile](#built-in-hardened-profile-safe-open-for-untrusted-repos).
+The summary is not complete. It leaves out, among others, `[env_commands]`, `[prompts]`, `[[sockets]]`, `[ports]`, `[[credentials]]`, `[shell]`, `[monitoring.nft]`, every `[network]` key except `mode` and `allowed_domains` (so not `block_private_networks`, `block_metadata_endpoint` or `allow_local_network_access`), and some keys of other sections (for example the `readonly` of a `[[mounts]]` entry). For the full settings, read the profile's `config.toml` (the `Source` line). The built-in `hardened` profile has no file: its settings are in the table under [Built-in `hardened` Profile](#built-in-hardened-profile-safe-open-for-untrusted-repos).
 
 ### Use a Profile
 
