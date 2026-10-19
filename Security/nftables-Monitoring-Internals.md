@@ -74,8 +74,10 @@ sudo usermod -a -G systemd-journal $USER
 
 ### 2. Verify Setup
 
+`coi health` checks the nftables, systemd journal and libsystemd-dev prerequisites only once `[monitoring.nft] enabled = true` is set (see [Configuration](#configuration)); it skips them while it is off.
+
 ```bash
-# Run health check
+# Set [monitoring.nft] enabled = true (see Configuration below), then run health check
 coi health
 
 # Test journal access
@@ -287,6 +289,8 @@ lima_host = "lima-default"  # Or your Lima instance name
 ```bash
 coi health --format=json | jq '.checks | {nftables, systemd_journal, libsystemd}'
 ```
+
+While `[monitoring.nft] enabled` is off, these three checks do not run, so `jq` prints `null` for them.
 
 **Common Issues:**
 
