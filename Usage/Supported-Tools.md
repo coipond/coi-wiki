@@ -164,7 +164,7 @@ agents = ["claude", "codex"]   # omit this key to install the default set (claud
 coi build --force
 ```
 
-If your configured tool is missing from the image, coi warns before launch rather than failing with `exit 127`.
+If the image would be built without your configured tool (see `agents` above), coi warns when it builds the image (`coi build`, or the auto-build on `coi shell`/`coi run`), so you do not first meet it as `exit 127`. There is no check at launch.
 
 **Permission mode:** `bypass` (default) maps to `--dangerously-bypass-approvals-and-sandbox` - the Incus container is the sandbox, codex's own Landlock sandbox may not work nested inside it, and the flag also skips the first-run folder-trust prompt. `interactive` keeps codex's own approval prompts (`-s workspace-write -a on-request`).
 

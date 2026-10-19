@@ -18,7 +18,7 @@ Settings are loaded in order, with later sources overriding earlier ones:
 |----------|--------|------|
 | 1 (lowest) | Built-in defaults | embedded `profiles/default/config.toml` |
 | 2 | User config | `~/.coi/config.toml` |
-| 3 | Project config | `./.coi/config.toml` (repo root) |
+| 3 | Project config | `./.coi/config.toml` (current directory) |
 | 4 | `$COI_CONFIG` file | the file `$COI_CONFIG` points at, if set — loaded in addition to, and on top of, both files above |
 | 5 (highest) | Profile | selected with `coi shell/run --profile <name>` |
 
