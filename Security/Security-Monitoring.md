@@ -35,7 +35,7 @@ enabled = true
 
 `[monitoring] enabled = true` activates process-level and filesystem-level threat detection — it watches spawned processes and file I/O rates. It requires no additional system privileges beyond what Coi already has.
 
-`[monitoring.nft] enabled = true` activates kernel-level network monitoring via nftables, which logs packet metadata to systemd-journal. This subsystem requires `nftables`, `libsystemd`, and the current user to be in the `systemd-journal` group (see Setup below). Run `coi health --verbose` to verify all prerequisites are met before enabling it.
+`[monitoring.nft] enabled = true` activates kernel-level network monitoring via nftables, which logs packet metadata to systemd-journal. This subsystem requires `nftables`, `libsystemd`, and the current user to be in the `systemd-journal` group (see Setup below). Once it is set, `coi health` checks these prerequisites; it skips them while it is off (see [Health Checks](#health-checks)).
 
 You can run process/filesystem monitoring without network monitoring, but network monitoring requires `[monitoring] enabled = true` as well — `[monitoring.nft] enabled = true` on its own starts nothing.
 
@@ -254,8 +254,8 @@ sudo usermod -aG systemd-journal $USER
 # Allow passwordless nft commands (writes a visudo-validated /etc/sudoers.d/coi-nft)
 coi health --fix
 
-# Verify setup
-coi health --verbose
+# Set [monitoring.nft] enabled = true (see Configuration below), then verify setup
+coi health
 ```
 
 Or use the provided setup script:
@@ -313,13 +313,15 @@ The `coi health` command verifies monitoring prerequisites:
 
 ```text
 MONITORING:
-  [OK]   nftables           Available and configured
-  [OK]   systemd journal    Access granted (systemd-journal group)
-  [OK]   libsystemd         Development library installed
-  [OK]   Monitoring config  Enabled with auto_pause=true
-  [OK]   Audit log dir      ~/.coi/audit (writable)
-  [OK]   Cgroup availability Cgroups v2 available
+  [OK]   nftables          : nftables <version> available with sudo access
+  [OK]   systemd journal   : systemd journal access available
+  [OK]   libsystemd-dev    : libsystemd-dev installed
+  [OK]   Monitoring config : Monitoring is properly configured
+  [OK]   Audit log dir     : Audit log directory is ready
+  [OK]   cgroup v2         : Cgroup v2 is available with controllers
 ```
+
+The monitoring config, audit log directory and cgroup v2 checks always run. The nftables, systemd journal and libsystemd-dev rows appear only when `[monitoring.nft] enabled = true`. `coi health --verbose` adds an OPTIONAL section with DNS resolution and process monitoring checks. The nftables version depends on your host.
 
 ## Best Practices
 
@@ -365,21 +367,21 @@ Both patterns are detected and can automatically pause the container before the 
 
 ## Troubleshooting
 
-### "nftables not available"
+### "nftables not found (required for NFT monitoring)"
 
 ```bash
 sudo apt install nftables
 sudo systemctl enable --now nftables
 ```
 
-### "systemd-journal access denied"
+### "No access to kernel logs (add user to systemd-journal group)"
 
 ```bash
 sudo usermod -aG systemd-journal $USER
 # Log out and back in
 ```
 
-### "Monitoring config disabled"
+### "Security monitoring is disabled"
 
 Add to `~/.coi/config.toml`:
 
