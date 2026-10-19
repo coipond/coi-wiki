@@ -271,7 +271,7 @@ coi profile list --format json
 ]
 ```
 
-`image` is an empty string when the profile sets no image, and `persistent` is `null` when it is not set. `inherits` and `storage_pool` are present only when the profile sets them; `storage_pool` is not shown in the text table. Warnings such as the `forward_env` one go to stderr, not into the JSON. With no profiles, the JSON form prints `[]`.
+`image` is an empty string when the profile sets no image, and `persistent` is `null` when it is not set. `inherits` and `storage_pool` are present only when the profile sets them; `storage_pool` is not shown in the text table. Warnings such as the `forward_env` one go to stderr, not into the JSON.
 
 ### Selecting the Profile a Bare `coi` Uses (`[defaults] profile`)
 
