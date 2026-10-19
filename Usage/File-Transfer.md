@@ -10,12 +10,15 @@ Copy files from your host into a container:
 # Push single file
 coi file push ./config.json my-container:/workspace/config.json
 
-# Push directory (recursive)
-coi file push -r ./src my-container:/workspace/src
+# Push directory (creates /workspace/app; into an existing
+# directory it creates <dir>/src)
+coi file push -r ./src my-container:/workspace/app
 
 # Push to a system path
 coi file push ./script.sh my-container:/usr/local/bin/script.sh
 ```
+
+For a directory push (`-r`), a destination ending in `/` must be an existing directory. An existing directory, with or without the slash, receives the pushed directory inside it, under the local directory's name. Any other destination is the exact target. The final target must not already exist: coi does not merge into or replace an existing directory, and refuses the push with exit code 2. So pushing `./src` again to an existing `my-container:/workspace/src` creates `/workspace/src/src`, and is refused if that exists too. To update a copy, remove it in the container and push to the parent (`my-container:/workspace`), or push to a new name. A single file push does not follow these rules.
 
 ## Pull Files from Container
 
