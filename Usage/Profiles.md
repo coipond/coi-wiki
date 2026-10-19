@@ -229,6 +229,50 @@ rust-dev   coi-rust     true        -         /home/user/myproject/.coi/profiles
 
 The built-in `default` profile is always present and reflects your resolved config (built-in defaults plus your config files). It can be used as a parent via `inherits = "default"` but cannot be edited or deleted.
 
+For scripts, `--format json` (default `text`; `--json` is an alias, see [JSON Output](Container-Operations#json-output---json)) prints the same profiles as a JSON array, sorted by name. Any other format exits with code 2. With the profiles above:
+
+```bash
+coi profile list --format json
+```
+
+```json
+[
+  {
+    "name": "default",
+    "image": "coi-default",
+    "persistent": null,
+    "source": "(built-in)"
+  },
+  {
+    "name": "hardened",
+    "image": "",
+    "persistent": false,
+    "source": "(built-in)"
+  },
+  {
+    "name": "limited",
+    "image": "",
+    "persistent": false,
+    "source": "/home/user/.coi/profiles/limited/config.toml"
+  },
+  {
+    "name": "python-ml",
+    "image": "coi-default",
+    "persistent": null,
+    "inherits": "default",
+    "source": "/home/user/myproject/.coi/profiles/python-ml/config.toml"
+  },
+  {
+    "name": "rust-dev",
+    "image": "coi-rust",
+    "persistent": true,
+    "source": "/home/user/myproject/.coi/profiles/rust-dev/config.toml"
+  }
+]
+```
+
+`image` is an empty string when the profile sets no image, and `persistent` is `null` when it is not set. `inherits` and `storage_pool` are present only when the profile sets them; `storage_pool` is not shown in the text table. Warnings such as the `forward_env` one go to stderr, not into the JSON. With no profiles, the JSON form prints `[]`.
+
 ### Selecting the Profile a Bare `coi` Uses (`[defaults] profile`)
 
 By default a plain `coi` (no `--profile`) launches the synthesized `default`
