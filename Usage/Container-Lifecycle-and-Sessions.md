@@ -57,7 +57,12 @@ coi persist <container-name>
 
 # Convert all containers (with confirmation)
 coi persist --all
+
+# Skip the confirmation
+coi persist --all --force    # or -f
 ```
+
+coi asks for confirmation with `--all` and when you name more than one container; `-f`/`--force` skips it.
 
 Use `coi list` to see active containers and their persistence mode.
 
@@ -216,6 +221,7 @@ coi shell                    # Start persistent session (per config above)
 # ... install tools, build things ...
 # Press Ctrl+b d to detach
 coi attach                   # Reconnect to same container with all tools
+coi attach --bash            # Or open a bash shell in the workspace instead of the tmux session
 sudo poweroff                # When done, shutdown and save
 coi shell --resume           # Resume with all installed tools intact
 ```

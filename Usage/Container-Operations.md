@@ -77,6 +77,13 @@ coi kill --all --force
 # Clean up stopped containers (orphans/pools/sessions need their own flags or --all)
 coi clean
 
+# Delete saved session data of the configured tool (no containers)
+coi clean --sessions
+
+# Clean all: stopped containers, saved sessions, orphans, and the Coi containers
+# (running ones are stopped first) in pools no loaded profile references
+coi clean --all    # or -a
+
 # Skip confirmation
 coi clean --force
 
