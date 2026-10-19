@@ -186,7 +186,13 @@ coi container launch coi-default my-container
 
 # Launch ephemeral container (auto-delete on stop)
 coi container launch coi-default my-container --ephemeral
+
+# Launch on a specific Incus storage pool (default: the default pool)
+coi container launch coi-default my-container --storage fastpool
+coi container launch coi-default my-container -s fastpool
 ```
+
+`-s, --storage` names the Incus storage pool for the new container; empty means the default pool. Coi checks that the pool exists before it creates anything and fails with a `storage pool "<name>" does not exist` error that shows how to create it.
 
 **Note:** Coi uses a three-step launch sequence (`incus init` → configure → `incus start`) to ensure Docker support flags and other configuration are applied before the container starts. This guarantees Docker and Docker Compose work correctly inside session containers.
 
@@ -220,6 +226,9 @@ coi container exec my-container -- ls -la /workspace
 # With user, environment, and working directory
 coi container exec my-container --user 1000 --env FOO=bar --cwd /workspace -- npm test
 
+# With a group ID other than the user ID
+coi container exec my-container --user 1000 --group 100 -- id
+
 # Allocate a PTY for interactive sessions (shells, tmux, etc.)
 coi container exec my-container -t -- bash
 coi container exec my-container --tty -- bash
@@ -233,6 +242,8 @@ coi container exec my-container --capture -- echo "hello"
 # Capture output in raw format (for scripting)
 coi container exec my-container --capture --format=raw -- pwd
 ```
+
+`--group` sets the group ID and takes effect only together with `--user`; without `--user` it is ignored. With `--user` and no `--group`, the group ID is the same as the user ID.
 
 **PTY Allocation (`-t, --tty`)**
 
@@ -285,6 +296,9 @@ coi container running my-container
 ```bash
 # Mount directory into container
 coi container mount my-container workspace /home/user/project /workspace --shift
+
+# Mount read-only
+coi container mount my-container data /path/to/data /data --shift --readonly
 ```
 
 Extra mounts are configured via config file:
