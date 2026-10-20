@@ -39,7 +39,7 @@ A profile `config.toml` uses the same sections as the main config. All fields ar
 # .coi/profiles/rust-dev/config.toml
 
 context = "CONTEXT.md"                    # context file (see below)
-forward_env = ["CARGO_REGISTRY_TOKEN"]
+forward_env = ["CARGO_REGISTRY_TOKEN"]    # ignored in a project profile (see below)
 
 [container]
 image = "coi-rust"
@@ -77,12 +77,14 @@ limit = "4GiB"
 max_duration = "4h"
 ```
 
+coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a `WARNING` on stderr: it would let a cloned repo pick host environment variables, often tokens, for the container. To forward them, put the profile in a trusted location: `~/.coi/profiles/` or `$(dirname $COI_CONFIG)/profiles/`.
+
 ### Available Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `context` | string | Path to context file (see [Context Files](#context-files)) |
-| `forward_env` | string[] | Host env vars to forward into the container |
+| `forward_env` | string[] | Host env vars to forward into the container. **Trusted-scope only** — ignored in a project profile |
 | `[env_commands]` | map | Env vars minted from host commands at session start (`VAR = "~/bin/mint.sh"`). **Trusted-scope only** — stripped from an untrusted project profile |
 | `env_command_timeout` | string | Profile-root duration bounding each `[env_commands]` invocation (e.g. `"5s"`; default `30s`). **Trusted-scope only**. Echoed by `coi profile info` |
 | `[container]` | section | Container settings (`image`, `persistent`, `storage_pool`, `alias`, `session_name` — see [Named Sessions](Container-Lifecycle-and-Sessions#named-sessions-session_name--v0111), `shutdown_timeout`, `ready_timeout`, `docker` (default `true`), `stale_base_check` (`"warn"` default, `"error"`, `"off"`)). `session_name` and `docker = true` are **trusted-scope only** — stripped from a project profile |
@@ -276,7 +278,7 @@ Coi also ships a built-in `hardened` profile — a hardened, one-flag preset for
 ```bash
 coi shell --profile hardened        # open an untrusted repo safely
 coi run --profile hardened -- ...    # run a one-off command, hardened
-coi profile info hardened           # see exactly what it locks down
+coi profile info hardened           # summary of its settings (full list below)
 ```
 
 | Setting | Value | Why |
@@ -300,7 +302,7 @@ It is a fixed baseline that overrides a weaker base config (a global `mode = "op
 coi profile info rust-dev
 ```
 
-Displays the full configuration of a named profile:
+Displays a summary of a named profile's configuration:
 
 ```text
 WARNING: ignoring 'forward_env' in project config /home/user/myproject/.coi/profiles/rust-dev/config.toml; it hands host environment variables to the container. Move it to ~/.coi/config.toml (or a profile under ~/.coi/profiles) or set COI_CONFIG to apply it.
@@ -332,6 +334,8 @@ count = "4"
 ```
 
 The `WARNING` goes to stderr: coi ignores `forward_env` in a project profile, so `rust-dev` above has none.
+
+The summary is not complete. It leaves out, among others, `[env_commands]`, `[prompts]`, `[[sockets]]`, `[ports]`, `[[credentials]]`, `[shell]`, `[monitoring.nft]`, every `[network]` key except `mode` and `allowed_domains` (so not `block_private_networks`, `block_metadata_endpoint` or `allow_local_network_access`), and some keys of other sections (for example the `readonly` of a `[[mounts]]` entry). For the full settings, read the profile's `config.toml` (the `Source` line). The built-in `hardened` profile has no file: its settings are in the table under [Built-in `hardened` Profile](#built-in-hardened-profile-safe-open-for-untrusted-repos).
 
 ### Use a Profile
 
