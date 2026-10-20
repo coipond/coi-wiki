@@ -420,7 +420,7 @@ coi profile delete rust-dev           # Interactive confirmation
 coi profile delete old-profile --force  # Skip confirmation
 ```
 
-`coi profile delete` removes the whole profile directory with every file in it, not only `config.toml`. This works for user and project profiles alike. A project profile (`./.coi/profiles/NAME/`) is part of your repository, so its files show as deleted in `git status`.
+`coi profile delete` removes the whole profile directory with every file in it, not only `config.toml`. This works for user and project profiles alike. If your repository tracks a project profile (`./.coi/profiles/NAME/`), its files show as deleted in `git status`.
 
 Without `--force` (`-f`), coi prints the profile's path and asks `Continue? [y/N]:`. Any answer other than `y` or `yes` aborts.
 
