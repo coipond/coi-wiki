@@ -22,7 +22,7 @@ Understanding how containers and sessions work in Coi.
 
 ## Effective Grants at Startup
 
-`coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names what the container can reach on the host:
+`coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names one kind of grant:
 
 - **Workspace**, **Mounts** (read-only or read-write), **Protected** (read-only paths) and **Masked** (hidden paths, only when any)
 - **Network** (the mode and what it lets through) and **Ports** (only when any are published)
@@ -32,7 +32,7 @@ Understanding how containers and sessions work in Coi.
 - **Agent** (`runs as root` or `non-root`, Docker `available` or `unavailable`)
 - **Limits** (resource limits, only when any are set)
 
-An empty Workspace, Mounts, Protected, Sockets or Env row shows `none`. The block shows what this session was granted, not what the config asks for: mounts and protections are read back from the container's devices, so a reused container's leftover mounts are listed, and a protection that failed to mount is not. `coi run` does not print this block.
+An empty Workspace, Mounts, Protected, Sockets or Env row shows `none`. The block shows what this session was granted, not what the config asks for: mounts and protections are read back from the container's devices, so a reused container's leftover mounts are listed, and a protection that failed to mount is not. If coi cannot read the container's devices, the Mounts, Protected and Masked rows fall back to what the config asks for, and the Mounts row says so. `coi run` does not print this block.
 
 ## What Gets Preserved
 
