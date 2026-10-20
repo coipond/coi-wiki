@@ -130,7 +130,7 @@ RUST_CHANNEL = "nightly"
 
 - Environment maps deep-merge (child keys win; set to `""` to clear a parent key)
 - Arrays (`mounts`, `forward_env`) fully replace if the child defines them
-- Scalars override if set by the child
+- Scalars override if set by the child, except the on-only flags `[paths] preserve_workspace_path`, `[incus] disable_shift` and `[security] disable_protection`: once a parent profile or a config file sets one to `true`, a `false` in a child profile, a selected profile or a later config file does not turn it off (see [Configuration](Configuration#configuration-hierarchy))
 - Struct sections (`limits`, `tool`, `build`, `network`) deep-merge field by field
 
 Inheritance works across config levels (a project profile can inherit from a
@@ -227,12 +227,12 @@ rust-dev   coi-rust     true        -         /home/user/myproject/.coi/profiles
 
 `IMAGE` shows `(default)` when the profile sets no image, and `INHERITS` shows the parent profile. `SOURCE` is the absolute path of the profile's `config.toml`.
 
-The built-in `default` profile is always present and reflects your resolved config (built-in defaults plus your config files). It can be used as a parent via `inherits = "default"` but cannot be edited or deleted.
+A `default` profile is always present. The built-in one reflects your resolved config (built-in defaults plus your config files) and can be used as a parent via `inherits = "default"`, but cannot be edited or deleted. A disk profile named `default` (in any location from the [Directory Structure](#directory-structure) table, for example `~/.coi/profiles/default/config.toml`) replaces the built-in one everywhere coi uses the `default` profile, and can be edited and deleted. Create its directory and `config.toml` by hand: `coi profile create default` scaffolds `~/.coi/config.toml` (or `./.coi/config.toml` with `--project`) instead.
 
 ### Selecting the Profile a Bare `coi` Uses (`[defaults] profile`)
 
-By default a plain `coi` (no `--profile`) launches the synthesized `default`
-profile — a clean clone of your global config. Set `[defaults] profile` in your
+By default a plain `coi` (no `--profile`) applies no profile: it runs with your
+resolved config (built-in defaults plus your config files). Set `[defaults] profile` in your
 trusted config to point the no-flag `coi` at a profile of your choice instead:
 
 ```toml
@@ -242,7 +242,8 @@ profile = "pickles"
 ```
 
 Now `coi shell` / `coi run` launch the `pickles` profile, while `coi --profile default`
-still gives you the clean clone of global config — so opinionated setup (git identity,
+still gives you the `default` profile (the clean clone of global config, unless a disk
+`default` profile replaces it) — so opinionated setup (git identity,
 extra tools, a custom image) lives in a profile and vanilla stays reachable.
 
 **Precedence (lowest to highest).** `[defaults] profile` is the lowest-precedence
@@ -371,7 +372,7 @@ coi profile delete rust-dev           # Interactive confirmation
 coi profile delete old-profile --force  # Skip confirmation
 ```
 
-The built-in `default` profile cannot be edited or deleted.
+The built-in `default` profile cannot be edited or deleted. A disk profile named `default` can.
 
 ## Examples
 
