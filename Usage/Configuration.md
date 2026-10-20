@@ -24,6 +24,11 @@ Settings are loaded in order, with later sources overriding earlier ones:
 
 Each layer only overrides the fields it explicitly sets. Unset fields inherit from the previous layer.
 
+Two exceptions:
+
+- **On-only flags.** `[paths] preserve_workspace_path`, `[incus] disable_shift` and `[security] disable_protection` can only be turned on. Once a layer sets one to `true`, a later layer's `false` does not turn it off. This applies to config files, profiles and profile inheritance alike. For example, with `preserve_workspace_path = true` in `~/.coi/config.toml`, a profile that sets `preserve_workspace_path = false` still mounts the workspace at its host path. To turn the flag off, remove the `true` from the earlier layer.
+- **`--profile` with another workspace or an alias.** An explicit `--profile` is applied before the project config of a workspace other than the current directory (`-w <dir>`) or of an alias launch. coi then applies the profile's `[container]` section again, but not its other sections. So the profile still wins for `[container]` (image, persistent, storage pool, build), and that project config wins for the rest (for example `[limits]`, `[tool]`, `[timezone]`). For example, if the profile sets `[limits.cpu] count = "4"` and `/path/to/project/.coi/config.toml` sets `count = "1"`, then `coi shell --profile <name>` run from that project gets 4 CPUs, and `coi shell --profile <name> -w /path/to/project` run from another directory gets 1. A profile selected with `[defaults] profile` (no `--profile` flag) is applied after that project config and wins for all sections. An untrusted project config cannot weaken network, security or git settings this way: coi strips the weakening keys from it first.
+
 There is no environment-variable config layer (as of v0.10.0): the legacy `CLAUDE_ON_INCUS_*` and `COI_LIMIT_*` overrides were removed — they silently outranked explicit config. `$COI_CONFIG`, `COI_TRUST_ALL`, `COI_CONTAINER_PREFIX` and test/debug toggles still exist (see [Environment Variables](#environment-variables)), but they select config files, gate trust, or diagnose — they do not set config keys. CLI flags are operational only (`--workspace`, `--slot`, `--resume`/`--continue`, `--profile`) and never carry configuration.
 
 ## Per-Repository Configuration
