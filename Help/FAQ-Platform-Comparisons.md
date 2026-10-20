@@ -13,7 +13,7 @@ A Docker container with a volume mount gives you filesystem isolation - but that
 | **Reverse shell detection** | No | Yes (real-time process monitoring) |
 | **Data exfiltration detection** | No | Yes (filesystem I/O + network monitoring) |
 | **Network filtering** | Basic (`--network none` or full access) | Granular (restricted/allowlist/open modes) |
-| **C2 port blocking** | No | Yes (nftables blocks known C2 ports) |
+| **C2 port detection** | No | Optional (nftables logs connections to known C2 ports, does not block them; off by default, needs `[monitoring] enabled` and `[monitoring.nft] enabled`) |
 | **Cloud metadata protection** | No | Yes (169.254.169.254 blocked) |
 | **Supply-chain attack prevention** | No | Yes (`.git/hooks`, `.vscode`, `.husky` read-only) |
 | **Automated threat response** | No | Yes (pause on HIGH, kill on CRITICAL) |
@@ -34,7 +34,7 @@ Docker Sandboxes is a Docker Desktop feature that uses microVMs for isolation on
 - **System containers, not microVMs** - One clean isolation layer vs. containers-in-VMs complexity
 - **Linux-first design** - Built for Linux from day one, not as an afterthought
 
-Beyond architectural differences, Coi includes a [security monitoring](Security-Monitoring) layer that Docker Sandboxes lack entirely. Coi monitors processes for reverse shells and credential scanning, tracks filesystem I/O for data exfiltration, and uses kernel-level nftables rules to detect and block suspicious network connections (C2 ports, cloud metadata endpoints, private network access). Threats trigger automated responses - HIGH severity events pause the container, CRITICAL events kill it - with all events logged to JSONL audit files for forensic review.
+Beyond architectural differences, Coi includes a [security monitoring](Security-Monitoring) layer that Docker Sandboxes lack entirely. It is off by default (`[monitoring] enabled`). When on, Coi monitors processes for reverse shells and credential scanning, tracks filesystem I/O for data exfiltration, and, with `[monitoring.nft] enabled`, uses kernel-level nftables rules to detect and log suspicious network connections (C2 ports, cloud metadata endpoints, private network access; see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables)). Threats trigger automated responses - HIGH severity events pause the container, CRITICAL events kill it - with all events logged to JSONL audit files for forensic review.
 
 ## How Is Coi Different From DevContainers?
 
@@ -76,7 +76,7 @@ You can run AI tools inside any Linux VM, but a plain VM provides only isolation
 | **Filesystem isolation** | Yes | Yes |
 | **Reverse shell detection** | No | Yes |
 | **Data exfiltration monitoring** | No | Yes |
-| **Network threat filtering** | Manual firewall setup | Automatic (nftables) |
+| **Network threat detection** | Manual firewall setup | Optional (nftables logging, off by default) |
 | **Credential isolation** | Manual | Automatic |
 | **Supply-chain protection** | No | Yes (read-only `.git/hooks`, `.vscode`) |
 | **Session resume** | No | Yes |
