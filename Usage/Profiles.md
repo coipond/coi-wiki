@@ -77,7 +77,7 @@ limit = "4GiB"
 max_duration = "4h"
 ```
 
-coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a `WARNING` on stderr: it would let a cloned repo pick host environment variables, often tokens, for the container. To forward them, put the profile in a trusted location: `~/.coi/profiles/` or `$(dirname $COI_CONFIG)/profiles/`.
+coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a `WARNING` on stderr: it would let a cloned repo pick host environment variables, often tokens, for the container. To forward them, put the profile in a trusted location: `~/.coi/profiles/` or `$(dirname $COI_CONFIG)/profiles/`. The same applies to `[ssh] forward_agent = true`, which would expose your host SSH agent to the container; `forward_agent = false` is honored.
 
 ### Available Fields
 
@@ -103,7 +103,7 @@ coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a
 | `[paths]` | section | Path overrides (`sessions_dir`, `storage_dir`, `logs_dir`, `preserve_workspace_path`) |
 | `[incus]` | section | Incus settings (`project`, `group`, `code_uid`, `code_user`) |
 | `[git]` | section | Git settings (`writable_hooks`, `protected_branches`, …). `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are **trusted-scope only** — ignored from a project profile |
-| `[ssh]` | section | SSH settings (`forward_agent`) |
+| `[ssh]` | section | SSH settings (`forward_agent`). `forward_agent = true` is **trusted-scope only** — ignored from a project profile; `forward_agent = false` is honored |
 | `[security]` | section | Security settings (`host_immutable`, `protected_paths`, `additional_protected_paths`, `writable_paths`, `secret_paths`, …). From a project profile only the add-only `additional_protected_paths` and `secret_paths` are honored; the rest are **trusted-scope only** |
 | `[monitoring]` | section | Security monitoring settings |
 | `[timezone]` | section | Timezone settings (`mode`, `name`) |
@@ -442,7 +442,7 @@ max_duration = "30m"
 ### Full-Stack Development
 
 ```toml
-# .coi/profiles/fullstack/config.toml
+# ~/.coi/profiles/fullstack/config.toml
 forward_env = ["GITHUB_TOKEN", "DATABASE_URL"]
 
 [container]

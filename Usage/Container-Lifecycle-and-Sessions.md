@@ -20,6 +20,20 @@ Understanding how containers and sessions work in Coi.
 
 4. **Docker/Compose support**: Session containers automatically get Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod/setxattr`) applied before the container starts, so Docker and Docker Compose work out of the box inside sessions.
 
+## Effective Grants at Startup
+
+`coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names one kind of grant:
+
+- **Workspace**, **Mounts** (read-only or read-write), **Protected** (read-only paths) and **Masked** (hidden paths, only when any)
+- **Network** (the mode and what it lets through) and **Ports** (only when any are published)
+- **Sockets** (forwarded host sockets, including the SSH agent)
+- **Env** (environment variables by name, never their values)
+- **Tool config** and **Credentials** (files copied from the host, only when any)
+- **Agent** (`runs as root` or `non-root`, Docker `available` or `unavailable`)
+- **Limits** (resource limits, only when any are set)
+
+An empty Workspace, Mounts, Protected, Sockets or Env row shows `none`. The block shows what this session was granted, not what the config asks for: mounts and protections are read back from the container's devices, so a reused container's leftover mounts are listed, and a protection that failed to mount is not. If coi cannot read the container's devices, the Mounts, Protected and Masked rows fall back to what the config asks for, and the Mounts row says so. `coi run` does not print this block.
+
 ## What Gets Preserved
 
 | Mode | Workspace Files | AI Tool Session | Container State |
@@ -83,6 +97,7 @@ The host's `SSH_AUTH_SOCK` is bridged into the container at `/tmp/ssh-agent.sock
 **Key points:**
 
 - Disabled by default (opt-in for security)
+- Trusted-scope only: `forward_agent = true` is ignored (with a warning) in a project config or project profile; set it in `~/.coi/config.toml`, a profile under `~/.coi/profiles/`, or the `COI_CONFIG` file
 - Gracefully skips if no SSH agent is running on the host
 - Works with both ephemeral and persistent containers
 - Device is replaced on persistent container re-entry
@@ -105,6 +120,7 @@ NODE_ENV = "development"
 **Key points:**
 
 - Values are read from the host at session start - never stored in config files
+- Trusted-scope only: `forward_env` is ignored (with a warning) in a project config or project profile; set it in `~/.coi/config.toml`, a profile under `~/.coi/profiles/`, or the `COI_CONFIG` file
 - Forwarded variables are passed securely via `tmux new-session -e` and `tmux set-environment` instead of being inlined as `export KEY=VAL` in the command string - secrets do not appear in `ps` output and propagate to new tmux windows/panes
 - Missing variables produce a warning but do not fail the session
 - Config values from different levels are merged (deduplicated)
