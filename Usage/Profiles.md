@@ -231,6 +231,50 @@ rust-dev   coi-rust     true        -         /home/user/myproject/.coi/profiles
 
 A `default` profile is always present. The built-in one reflects your resolved config (built-in defaults plus your config files) and can be used as a parent via `inherits = "default"`, but cannot be edited or deleted. A disk profile named `default` (in any location from the [Directory Structure](#directory-structure) table, for example `~/.coi/profiles/default/config.toml`) replaces the built-in one everywhere coi uses the `default` profile, and can be edited and deleted. Create its directory and `config.toml` by hand: `coi profile create default` scaffolds `~/.coi/config.toml` (or `./.coi/config.toml` with `--project`) instead.
 
+For scripts, `--format json` (default `text`; `--json` is an alias, see [JSON Output](Container-Operations#json-output---json)) prints the same profiles as a JSON array, sorted by name. Any other format exits with code 2. With the profiles above:
+
+```bash
+coi profile list --format json
+```
+
+```json
+[
+  {
+    "name": "default",
+    "image": "coi-default",
+    "persistent": null,
+    "source": "(built-in)"
+  },
+  {
+    "name": "hardened",
+    "image": "",
+    "persistent": false,
+    "source": "(built-in)"
+  },
+  {
+    "name": "limited",
+    "image": "",
+    "persistent": false,
+    "source": "/home/user/.coi/profiles/limited/config.toml"
+  },
+  {
+    "name": "python-ml",
+    "image": "coi-default",
+    "persistent": null,
+    "inherits": "default",
+    "source": "/home/user/myproject/.coi/profiles/python-ml/config.toml"
+  },
+  {
+    "name": "rust-dev",
+    "image": "coi-rust",
+    "persistent": true,
+    "source": "/home/user/myproject/.coi/profiles/rust-dev/config.toml"
+  }
+]
+```
+
+`image` is an empty string when the profile sets no image, and `persistent` is `null` when it is not set. `inherits` and `storage_pool` are present only when the profile sets them; `storage_pool` is not shown in the text table. Warnings such as the `forward_env` one go to stderr, not into the JSON.
+
 ### Selecting the Profile a Bare `coi` Uses (`[defaults] profile`)
 
 By default a plain `coi` (no `--profile`) applies no profile: it runs with your
