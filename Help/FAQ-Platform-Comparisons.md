@@ -10,13 +10,13 @@ A Docker container with a volume mount gives you filesystem isolation - but that
 |------------|----------------|-----|
 | **Filesystem isolation** | Yes | Yes |
 | **Credential isolation** | Manual (you decide what to mount) | Automatic (nothing exposed by default) |
-| **Reverse shell detection** | No | Yes (real-time process monitoring) |
-| **Data exfiltration detection** | No | Yes (filesystem I/O + network monitoring) |
+| **Reverse shell detection** | No | Optional (real-time process monitoring; off by default, needs `[monitoring] enabled`) |
+| **Data exfiltration detection** | No | Optional (filesystem I/O monitoring, plus nftables network logging with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) |
 | **Network filtering** | Basic (`--network none` or full access) | Granular (restricted/allowlist/open modes) |
 | **C2 port detection** | No | Optional (nftables logs connections to known C2 ports, does not block them; off by default, needs `[monitoring] enabled` and `[monitoring.nft] enabled`) |
 | **Cloud metadata protection** | No | Yes (169.254.169.254 blocked) |
 | **Supply-chain attack prevention** | No | Yes (`.git/hooks`, `.vscode`, `.husky` read-only) |
-| **Automated threat response** | No | Yes (pause on HIGH, kill on CRITICAL) |
+| **Automated threat response** | No | Optional (pause on HIGH, kill on CRITICAL; off by default, needs `[monitoring] enabled`) |
 | **Audit logging** | No | Yes (JSONL forensic logs) |
 | **Session resume** | No | Yes (conversation history + credentials restored) |
 | **File permission handling** | Manual UID mapping | Automatic UID mapping (idmapped mounts or raw.idmap, auto-selected) |
@@ -74,8 +74,8 @@ You can run AI tools inside any Linux VM, but a plain VM provides only isolation
 | Capability | Plain VM (Lima/etc.) | Coi |
 |------------|---------------------|-----|
 | **Filesystem isolation** | Yes | Yes |
-| **Reverse shell detection** | No | Yes |
-| **Data exfiltration monitoring** | No | Yes |
+| **Reverse shell detection** | No | Optional (off by default, needs `[monitoring] enabled`) |
+| **Data exfiltration monitoring** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Network threat detection** | Manual firewall setup | Optional (nftables logging, off by default) |
 | **Credential isolation** | Manual | Automatic |
 | **Supply-chain protection** | No | Yes (read-only `.git/hooks`, `.vscode`) |
