@@ -121,7 +121,7 @@ Versions, addresses, sizes and counts depend on your host.
 | **Storage** | Coi directory, sessions directory, disk space (warns if <5GB), Incus storage pools (per-pool stats and **driver**; warns if <5GB free or >80% used, fails if <2GB free or >90% used; **warns on `dir`-driver pools** — every launch re-unpacks the whole image, ~5-6s per unpacked GB; recreate the pool with zfs/btrfs, e.g. by re-running `install.sh`) |
 | **Configuration** | Config files, network mode, tool, git protected-branch guard |
 | **Status** | Running containers, saved sessions, orphaned resources (veth interfaces, nft rules/chains, iptables bridge rules) |
-| **Monitoring** | nftables availability (when NFT monitoring enabled), systemd-journal access, libsystemd, monitoring config, audit log directory, cgroup availability |
+| **Monitoring** | nftables availability, systemd journal access, libsystemd-dev (these three when NFT monitoring enabled), monitoring config, audit log directory, cgroup availability |
 | **Container Networking** | Container connectivity (DNS + HTTP to external host), network restriction verification (confirms restricted mode blocks private networks), secret masking proof, host-credential isolation proof |
 | **Optional** | DNS resolution, process monitoring capability (with `--verbose`) |
 
