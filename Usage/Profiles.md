@@ -438,7 +438,7 @@ max_duration = "30m"
 ### Full-Stack Development
 
 ```toml
-# .coi/profiles/fullstack/config.toml
+# ~/.coi/profiles/fullstack/config.toml
 forward_env = ["GITHUB_TOKEN", "DATABASE_URL"]
 
 [container]

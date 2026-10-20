@@ -55,9 +55,6 @@ persistent = true
 # alias = "my-rust-project"
 # storage_pool = ""
 
-[defaults]
-forward_env = ["CARGO_REGISTRY_TOKEN"]
-
 [defaults.environment]
 RUST_BACKTRACE = "1"
 
@@ -78,7 +75,7 @@ limit = "4GiB"
 max_duration = "4h"
 ```
 
-With this file in your repo root and a user config that sets `code_uid = 1000` and `group = "incus-admin"`, those user settings still apply - only `image`, `persistent`, `forward_env`, `environment`, and `limits` are overridden by the project config.
+With this file in your repo root and a user config that sets `code_uid = 1000` and `group = "incus-admin"`, those user settings still apply - only `image`, `persistent`, `environment`, and `limits` are overridden by the project config.
 
 ### What You Can Set In `.coi/config.toml`
 
@@ -87,7 +84,7 @@ Any section from the full config is valid in a project config:
 | Section | Example use case |
 |---------|-----------------|
 | `[container]` | Image, persistence, alias, storage pool, shutdown/readiness timeouts (but `session_name` and `docker = true` are **trusted-scope config only** — ignored from project config; `docker = false` is honored) |
-| `[defaults]` | Environment variables, `forward_env`, and `profile` — the profile a no-flag `coi` uses (`profile` is trusted-scope only; ignored with a warning from a project config). In profiles, `forward_env` is a top-level key, not under `[defaults]`. |
+| `[defaults]` | Environment variables, `forward_env`, and `profile` — the profile a no-flag `coi` uses (`forward_env` and `profile` are trusted-scope only; ignored with a warning from a project config, and `forward_env` also from a project profile). In profiles, `forward_env` is a top-level key, not under `[defaults]`. |
 | `[limits.*]` | CPU, memory, disk, and runtime limits |
 | `[tool]` | Default AI tool, permission mode, executable (`binary`) — but `context_file`, `context_json_file` and `pre_launch` are **trusted-scope config only** (ignored with a warning from a project config or a project profile) |
 | `[network]` | Network isolation mode and allowed domains (but settings that weaken isolation — `mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true` — and `[[network.hosts]]`, `dns_servers`, `allowed_ports` are **trusted-scope config only** — ignored from project config) |
@@ -98,7 +95,7 @@ Any section from the full config is valid in a project config:
 | `[defaults.env_commands]` (+ `env_command_timeout`) | Mint env vars from host commands, and the duration bounding each invocation — **trusted-scope config only** (ignored from project config) |
 | `[prompts]` | Named prompts for headless `coi run --prompt-name` — **trusted-scope config only** (ignored from project config) |
 | `[git]` | Git settings — but `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are all **trusted-scope config only** (ignored from project config; a project config can't change the protected-branch list) |
-| `[ssh]` | SSH agent forwarding |
+| `[ssh]` | SSH agent forwarding (`forward_agent = true` is **trusted-scope config only** — ignored with a warning from a project config or a project profile; `forward_agent = false` is honored) |
 | `[timezone]` | Container timezone (host, fixed, or UTC) |
 | `[security]` | Add-only protections (`additional_protected_paths`, `secret_paths`) — everything that removes or replaces protection (`protected_paths`, `writable_paths`, `disable_protection`, `host_immutable`) and `reduce_kernel_surface`/`reduce_kernel_surface_strict` are **trusted-scope config only** (ignored from project config) |
 | `[monitoring]` | Security monitoring settings |
