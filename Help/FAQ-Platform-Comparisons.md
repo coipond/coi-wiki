@@ -17,12 +17,12 @@ A Docker container with a volume mount gives you filesystem isolation - but that
 | **Cloud metadata protection** | No | Yes (169.254.169.254 blocked) |
 | **Supply-chain attack prevention** | No | Yes (`.git/hooks`, `.vscode`, `.husky` read-only) |
 | **Automated threat response** | No | Optional (pause on HIGH, kill on CRITICAL; off by default, needs `[monitoring] enabled`) |
-| **Audit logging** | No | Yes (JSONL forensic logs) |
+| **Audit logging** | No | Optional (JSONL forensic logs written by the monitors; off by default, needs `[monitoring] enabled`) |
 | **Session resume** | No | Yes (conversation history + credentials restored) |
 | **File permission handling** | Manual UID mapping | Automatic UID mapping (idmapped mounts or raw.idmap, auto-selected) |
 | **Docker-in-Docker** | Requires `--privileged` | Works unprivileged (systemd + nesting) |
 
-Docker gives you a box. Coi gives you a box with [security monitoring](Security-Monitoring) - real-time kernel-level threat detection, automated response, and forensic audit logging.
+Docker gives you a box. Coi gives you a box with [security monitoring](Security-Monitoring) - real-time kernel-level threat detection, automated response, and forensic audit logging. It is off by default (`[monitoring] enabled`).
 
 Additionally, Docker application containers run a single process without an init system. Coi uses Incus system containers with full systemd, which means Docker, systemd services, and other system-level tools work natively inside the container without privileged mode.
 
@@ -80,11 +80,11 @@ You can run AI tools inside any Linux VM, but a plain VM provides only isolation
 | **Credential isolation** | Manual | Automatic |
 | **Supply-chain protection** | No | Yes (read-only `.git/hooks`, `.vscode`) |
 | **Session resume** | No | Yes |
-| **Audit logging** | No | Yes |
+| **Audit logging** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Startup time** | 30-60 seconds | 1-2 seconds |
 | **Resource overhead** | Full VM (kernel + OS) | Container (shared kernel) |
 
-Coi's value is not just isolation - it is the [security monitoring](Security-Monitoring) layer that detects and responds to threats in real time. A VM is a locked room; Coi is a locked room with security cameras, motion sensors, and an automated response system.
+Coi's value is not just isolation - it is the [security monitoring](Security-Monitoring) layer that detects and responds to threats in real time, once you turn it on (`[monitoring] enabled`, off by default). A VM is a locked room; Coi is a locked room with security cameras, motion sensors, and an automated response system.
 
 ## Quick Comparison: Coi vs. Other Tools
 
