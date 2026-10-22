@@ -358,6 +358,7 @@ coi health
 | Message | Fix |
 |---------|-----|
 | `incus is not installed — please install Incus first` | Install Incus: see the [Linux Setup Guide](Linux-Setup-Guide) or the [macOS Setup Guide](macOS-Setup-Guide). |
+| `incus is not available — please ensure you are in the incus-admin group` | Check that your user is in the `incus-admin` group. |
 | `the incus-admin group does not exist; please install Incus` | Install Incus: see the [Linux Setup Guide](Linux-Setup-Guide) or the [macOS Setup Guide](macOS-Setup-Guide). |
 | `you have been added to the incus-admin group but your current session does not have it active yet` | Log out and back in, or run `newgrp incus-admin`. |
 | `please add your user to the incus-admin group and re-login` | Run `sudo usermod -aG incus-admin $USER`, then log out and back in, or run `newgrp incus-admin`. |
@@ -447,7 +448,7 @@ Established container connections survive the reload (conntrack state is kept, a
 
 **Cause:** The Ubuntu base image pulls in `udisks2` (as an `fwupd` dependency). `udisksd` keeps `/proc/swaps` open in its main loop to watch for swap changes. Under Incus, `/proc/swaps` is backed by `lxcfs`, so that `poll()` is a FUSE request served by a daemon on the host. When the host suspends, the kernel freezer stops `lxcfs` while the request is in flight - it can never be answered, `udisksd` wedges in uninterruptible `D` state and refuses to freeze, and after the freezer's 20 s timeout the whole suspend is aborted.
 
-**Fix:** The image build now disables and masks `udisks2` (it is disk / removable-media management, useless inside a sandbox), closing the deadlock. This shipped in 0.12.0 (#706).
+**Fix:** The image build disables and masks `udisks2` (it is disk / removable-media management, useless inside a sandbox), closing the deadlock.
 
 **What to do:**
 

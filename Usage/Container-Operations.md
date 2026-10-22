@@ -366,12 +366,12 @@ Scripts (CI, cron) can test Coi's exit code:
 |------|---------|-------------|
 | `0` | Success | |
 | `1` | Unclassified failure | Any command, for an error that has no code of its own |
-| `2` | Bad flags, arguments or format | Command checks, for example an invalid `--format` or `--slot`, or conflicting `coi run --prompt` options. An unknown flag exits `1`. |
+| `2` | Bad flags, arguments or format | Command checks, for example an invalid `--format` or `--slot`, or conflicting `coi run --prompt` options. Argument and flag parse errors (an unknown flag, a wrong number of arguments, a flag value of the wrong type) exit `1`. |
 | `3` | Incus is not installed or not reachable | `coi shell`, `coi run`, `coi build` and `coi image list`, which check Incus first. Other commands can exit `3` when an Incus call fails because Incus is missing or its daemon does not answer. See [Incus Is Not Available](Troubleshooting#incus-is-not-available). |
 | `4` | The targeted container does not exist | `coi shell --container <name>` when that container does not exist. Other commands can exit `4` when Incus reports `instance not found`. |
-| `5` | The configuration could not be loaded, parsed or validated | Every command except `coi health`, which runs with the default config instead |
+| `5` | The configuration could not be loaded, parsed or validated | Every command that loads the configuration. `coi health` runs with the default config instead; `coi validate` and `coi schema` do not load it. |
 
-`coi run` exits with the command's exit code (with `--prompt`, the agent's), so a `2`-`5` from `coi run` can also come from the command. `coi container exec --capture --format raw` also exits with the command's exit code. `coi container exists`, `coi container running` and `coi image exists` exit `1` for "no". `coi health` uses its own codes: see [System Health Check](System-Health-Check#exit-codes).
+`coi run` exits with the command's exit code (with `--prompt`, the agent's), so a `2`-`5` from `coi run` can also come from the command. `coi container exec --capture --format raw` also exits with the command's exit code. `coi container exists`, `coi container running` and `coi image exists` exit `1` for "no", and `coi validate profile` exits `1` for an invalid profile. `coi health` uses its own codes: see [System Health Check](System-Health-Check#exit-codes).
 
 ## Use Cases
 
