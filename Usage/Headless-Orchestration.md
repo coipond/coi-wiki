@@ -67,7 +67,7 @@ of a profile's config.
 
 ## Cron Example
 
-Because the run exits with the agent's status code, it drops straight into cron:
+Because the run exits with the agent's status code, it drops straight into cron. Coi's own failures use the codes in [Exit Codes](Container-Operations#exit-codes).
 
 ```cron
 # Nightly maintenance at 03:00, logged for review

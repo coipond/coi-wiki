@@ -111,6 +111,8 @@ Versions, addresses, sizes and counts depend on your host.
 - `1` = degraded (warnings but functional)
 - `2` = unhealthy (critical failures)
 
+These are `coi health`'s own codes. Other commands use the codes in [Exit Codes](Container-Operations#exit-codes).
+
 ## What Is Checked
 
 | Category | Checks |
