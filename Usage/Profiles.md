@@ -93,7 +93,7 @@ coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a
 | `[tool]` | section | AI tool config (`name`, `binary`, `permission_mode`, `context_file`, `auto_context`, `pre_launch`). `context_file`, `context_json_file` and `pre_launch` are **trusted-scope only** — stripped (with a warning) from a project profile, since they read host files into the container or run commands at every session start |
 | `[tool.claude]` | section | Claude-specific settings (`model`, `effort_level`); `model` is delivered to Claude Code as `ANTHROPIC_MODEL` |
 | `[[mounts]]` / `[[mounts.default]]` | array | Additional mount points (`host`, `container`, `readonly`). Both the flat `[[mounts]]` form and the nested `[[mounts.default]]` form are accepted here and in the main config, so a mount block reads identically in either scope — you can copy it between a profile and your top-level config verbatim |
-| `[[credentials]]` | array | Credential files to copy into the container (as of v0.10.0): `bundle = "<catalog name>"`, or ad-hoc `host`/`container`/`mode`. See [Configuration](Configuration) for the trust model |
+| `[[credentials]]` | array | Credential files to copy into the container: `bundle = "<catalog name>"`, or ad-hoc `host`/`container`/`mode`. See [Configuration](Configuration) for the trust model |
 | `[network]` | section | Network isolation (`mode`, `allowed_domains`, …). From a project profile, isolation-weakening values (`mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true`) and `hosts`, `dns_servers`, `allowed_ports` are ignored |
 | `[limits.cpu]` | section | CPU limits (`count`, `allowance`, `priority`) |
 | `[limits.memory]` | section | Memory limits (`limit`, `enforce`, `swap`) |
@@ -229,7 +229,7 @@ rust-dev   coi-rust     true        -         /home/user/myproject/.coi/profiles
 
 `IMAGE` shows `(default)` when the profile sets no image, and `INHERITS` shows the parent profile. `SOURCE` is the absolute path of the profile's `config.toml`.
 
-A `default` profile is always present. The built-in one reflects your resolved config (built-in defaults plus your config files) and can be used as a parent via `inherits = "default"`, but cannot be edited or deleted. A disk profile named `default` (in any location from the [Directory Structure](#directory-structure) table, for example `~/.coi/profiles/default/config.toml`) replaces the built-in one everywhere coi uses the `default` profile, and can be edited and deleted. Create its directory and `config.toml` by hand: `coi profile create default` scaffolds `~/.coi/config.toml` (or `./.coi/config.toml` with `--project`) instead.
+A `default` profile is always present. The built-in one reflects your resolved config (built-in defaults plus your config files) and can be used as a parent via `inherits = "default"`, but cannot be edited or deleted. A disk profile named `default` (in any location from the [Directory Structure](#directory-structure) table, for example `~/.coi/profiles/default/config.toml`) replaces the built-in one everywhere coi uses the `default` profile, and can be edited. `coi profile delete` refuses it; to drop it, remove its directory by hand. Create its directory and `config.toml` by hand: `coi profile create default` scaffolds `~/.coi/config.toml` (or `./.coi/config.toml` with `--project`) instead.
 
 For scripts, `--format json` (default `text`; `--json` is an alias, see [JSON Output](Container-Operations#json-output---json)) prints the same profiles as a JSON array, sorted by name. Any other format exits with code 2. With the profiles above:
 
@@ -387,7 +387,7 @@ The summary is not complete. It leaves out, among others, `[env_commands]`, `[pr
 coi shell --profile rust-dev
 ```
 
-Profile settings are merged into the running config. As of v0.10.0, an explicitly selected profile's `[container]` settings win over the workspace's project config (so an untrusted repo's `.coi/config.toml` cannot silently override the profile you asked for).
+Profile settings are merged into the running config. An explicitly selected profile's `[container]` settings win over the workspace's project config (so an untrusted repo's `.coi/config.toml` cannot silently override the profile you asked for).
 
 ### Create a Profile
 
@@ -396,7 +396,7 @@ coi profile create rust-dev --inherits default
 coi profile create limited --project
 ```
 
-Flags (as of v0.10.0 — profiles are authored by editing their `config.toml`, so `--image`/`--persistent` scaffolding flags are gone):
+Flags (profiles are authored by editing their `config.toml`; there are no `--image`/`--persistent` flags):
 
 - `--inherits <parent>` - set a parent profile to inherit from
 - `--user` - force creation in `~/.coi/profiles/`
@@ -420,11 +420,11 @@ coi profile delete rust-dev           # Interactive confirmation
 coi profile delete old-profile --force  # Skip confirmation
 ```
 
-`coi profile delete` removes the whole profile directory with every file in it, not only `config.toml`. This works for user and project profiles alike. If your repository tracks a project profile (`./.coi/profiles/NAME/`), its files show as deleted in `git status`.
+`coi profile delete` removes the whole profile directory with every file in it, not only `config.toml`. This works for user and project profiles alike, except a profile named `default` or `hardened`. If your repository tracks a project profile (`./.coi/profiles/NAME/`), its files show as deleted in `git status`.
 
 Without `--force` (`-f`), coi prints the profile's path and asks `Continue? [y/N]:`. Any answer other than `y` or `yes` aborts.
 
-The built-in profiles `default` and `hardened` cannot be edited or deleted.
+The built-in profiles `default` and `hardened` cannot be edited or deleted. A disk profile with one of these names replaces the built-in one; `coi profile delete` refuses it too, and its error names the profile's directory to remove by hand.
 
 ## Examples
 
