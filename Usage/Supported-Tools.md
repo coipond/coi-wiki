@@ -60,7 +60,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
 - Session storage: redirected into the workspace (`.local/share/opencode/`, via `XDG_DATA_HOME`/`XDG_STATE_HOME`; SQLite) so it survives ephemeral containers
-- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases)
+- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). coi looks up the workspace's latest opencode session and opens it with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
 
@@ -84,7 +84,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 |---------|-------------|----------|
 | Login screen | Shows if no API key | Fails if no API key |
 | Session storage | `~/.claude/` (home dir) | `.local/share/opencode/` (workspace, SQLite) |
-| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) |
+| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) opens the workspace's latest session |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
 | Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
 
@@ -196,7 +196,7 @@ forward_env = ["ANTHROPIC_API_KEY"]
 
 ## Tool Selection
 
-Tool selection is config-only (as of v0.10.0 — the `--tool` flag was removed). For per-invocation switching, use a per-tool [profile](Profiles): `coi shell --profile opencode-dev`. To switch tools inside one persistent container (keeping its code and packages), give two per-tool profiles the same `[container] session_name` — see [Running a different AI tool in the same container](Container-Lifecycle-and-Sessions#running-a-different-ai-tool-in-the-same-container-v012).
+Tool selection is config-only (the `--tool` flag was removed). For per-invocation switching, use a per-tool [profile](Profiles): `coi shell --profile opencode-dev`. To switch tools inside one persistent container (keeping its code and packages), give two per-tool profiles the same `[container] session_name` — see [Running a different AI tool in the same container](Container-Lifecycle-and-Sessions#running-a-different-ai-tool-in-the-same-container-v012).
 
 ### Per-Project (.coi/config.toml)
 
