@@ -50,7 +50,7 @@ Beyond architectural differences, Coi includes a [security monitoring](Security-
 - **DevContainers** - Application containers (Docker) without init systems
 - **Coi** - System containers (Incus) with full systemd, can run Docker inside
 
-Coi also includes [security monitoring](Security-Monitoring) that does not exist in the DevContainers ecosystem. Real-time process, filesystem, and kernel-level network monitoring detect threats like reverse shells, data exfiltration, and C2 connections - with automated container pause/kill responses based on threat severity.
+Coi also includes [security monitoring](Security-Monitoring) that does not exist in the DevContainers ecosystem. It is off by default (`[monitoring] enabled`). Real-time process, filesystem, and kernel-level network monitoring detect threats like reverse shells, data exfiltration, and C2 connections - with automated container pause/kill responses based on threat severity.
 
 ## How Is Coi Different From Distrobox?
 
@@ -65,7 +65,7 @@ Coi also includes [security monitoring](Security-Monitoring) that does not exist
 | **Security monitoring** | None | Real-time threat detection |
 | **Purpose** | Run apps from other distros | Secure AI agent isolation |
 
-Running an AI agent in Distrobox is essentially the same as running it directly on your host - it can access your SSH keys, read your `.env` files, reach your local network, and modify git hooks. Coi isolates all of these by default and adds [security monitoring](Security-Monitoring) to detect malicious behavior in real time.
+Running an AI agent in Distrobox is essentially the same as running it directly on your host - it can access your SSH keys, read your `.env` files, reach your local network, and modify git hooks. Coi isolates all of these by default and adds [security monitoring](Security-Monitoring) (`[monitoring] enabled`, off by default) to detect malicious behavior in real time.
 
 ## Can I Use Lima/limactl or a Plain VM Instead of Coi?
 
@@ -98,7 +98,7 @@ Coi's value is not just isolation - it is the [security monitoring](Security-Mon
 | **Plain VM** | General isolation | ⚠️ Manual | ❌ No | Manual | Manual | Full OS isolation without monitoring |
 | **Bare metal** | Direct execution | ❌ No (full access) | ❌ No | Manual | None | Maximum performance, trusted environments |
 
-**Choose Coi if:** You want AI to modify code without credential exposure, with real-time [security monitoring](Security-Monitoring), automatic session management, and strong isolation.
+**Choose Coi if:** You want AI to modify code without credential exposure, with real-time [security monitoring](Security-Monitoring) (`[monitoring] enabled`, off by default), automatic session management, and strong isolation.
 
 ## See Also
 
