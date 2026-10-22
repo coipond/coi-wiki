@@ -302,6 +302,11 @@ profile source. Anything more explicit wins, and the default never stacks on top
 | 3 | an alias-saved profile |
 | 4 (highest) | an explicit `--profile <name>` on the command line |
 
+The alias-saved profile comes from `coi shell --profile <name>`: when the workspace has a
+[container alias](Container-Lifecycle-and-Sessions#container-aliases), `coi shell` saves `<name>`
+for that alias in `~/.coi/aliases.json`. A later `coi shell <alias>` without `--profile` uses it.
+`coi run` keeps the saved profile.
+
 **Trusted scope only.** Honored only from trusted config (`~/.coi/config.toml` or
 `$COI_CONFIG`). A project `./.coi/config.toml` naming a default profile is ignored
 with a warning — a cloned or agent-planted repo cannot silently redirect your no-flag
