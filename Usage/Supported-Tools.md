@@ -14,7 +14,7 @@ coi shell
 ```
 
 ```toml
-# Explicit tool selection (config or profile; the --tool flag was removed in v0.10.0)
+# Explicit tool selection (config or profile; the --tool flag was removed)
 [tool]
 name = "claude"
 ```
@@ -60,7 +60,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
 - Session storage: redirected into the workspace (`.local/share/opencode/`, via `XDG_DATA_HOME`/`XDG_STATE_HOME`; SQLite) so it survives ephemeral containers
-- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases)
+- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
 
@@ -84,7 +84,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 |---------|-------------|----------|
 | Login screen | Shows if no API key | Fails if no API key |
 | Session storage | `~/.claude/` (home dir) | `.local/share/opencode/` (workspace, SQLite) |
-| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) |
+| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) resumes the saved session, then opens the workspace's latest opencode session |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
 | Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
 
@@ -196,7 +196,7 @@ forward_env = ["ANTHROPIC_API_KEY"]
 
 ## Tool Selection
 
-Tool selection is config-only (as of v0.10.0 — the `--tool` flag was removed). For per-invocation switching, use a per-tool [profile](Profiles): `coi shell --profile opencode-dev`. To switch tools inside one persistent container (keeping its code and packages), give two per-tool profiles the same `[container] session_name` — see [Running a different AI tool in the same container](Container-Lifecycle-and-Sessions#running-a-different-ai-tool-in-the-same-container-v012).
+Tool selection is config-only (the `--tool` flag was removed). For per-invocation switching, use a per-tool [profile](Profiles): `coi shell --profile opencode-dev`. To switch tools inside one persistent container (keeping its code and packages), give two per-tool profiles the same `[container] session_name` — see [Running a different AI tool in the same container](Container-Lifecycle-and-Sessions#running-a-different-ai-tool-in-the-same-container-v012).
 
 ### Per-Project (.coi/config.toml)
 
@@ -219,7 +219,7 @@ name = "opencode"
 
 ## Tool Credentials and Third-Party Providers
 
-The credential files each built-in tool needs (listed under "Configuration" above) come from Coi's embedded credential catalog and are copied into fresh containers automatically — pushed, chowned to the container user, never bind-mounted. As of v0.10.0 the same catalog serves tools that are not Coi-managed AI tools: a profile or config can reference a named bundle, or declare an ad-hoc file, via `[[credentials]]`:
+The credential files each built-in tool needs (listed under "Configuration" above) come from Coi's embedded credential catalog and are copied into fresh containers automatically — pushed, chowned to the container user, never bind-mounted. The same catalog serves tools that are not Coi-managed AI tools: a profile or config can reference a named bundle, or declare an ad-hoc file, via `[[credentials]]`:
 
 ```toml
 # e.g. a profile that runs Claude through Ollama Cloud
@@ -249,7 +249,7 @@ permission_mode = "interactive"  # "bypass" (default) or "interactive"
 - This is a cross-cutting setting that applies to whichever tool is active
 - Effort level settings (for Claude) are always injected regardless of permission mode
 - Empty or omitted value defaults to `"bypass"` for backward compatibility
-- **Auto mode under `interactive` (as of v0.12.0, #764):** earlier versions also wrote a Claude Code managed-settings policy (`disableAutoMode`) whenever the tool was Claude — the highest-precedence tier, un-overridable by any user setting — which stripped auto mode from the in-session Shift+Tab cycle even under `interactive`. That policy is now written only under `bypass`. So `interactive` is a genuinely interactive session: you get manual approval prompts by default and can opt into auto mode yourself. `bypass` is unchanged (the policy still suppresses Claude's startup auto-mode prompt).
+- **Auto mode under `interactive`:** for Claude, Coi writes the Claude Code managed-settings policy (`disableAutoMode`) only under `bypass`. That policy is the highest-precedence tier, un-overridable by any user setting, and it strips auto mode from the in-session Shift+Tab cycle. So `interactive` is a genuinely interactive session: you get manual approval prompts by default and can opt into auto mode yourself. Under `bypass` the policy suppresses Claude's startup auto-mode prompt.
 
 ## Keeping Tools Up to Date and Wrapping Them
 
