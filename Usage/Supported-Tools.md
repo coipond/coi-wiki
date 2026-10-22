@@ -60,7 +60,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
 - Session storage: redirected into the workspace (`.local/share/opencode/`, via `XDG_DATA_HOME`/`XDG_STATE_HOME`; SQLite) so it survives ephemeral containers
-- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). coi looks up the workspace's latest opencode session and opens it with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
+- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
 
@@ -84,7 +84,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 |---------|-------------|----------|
 | Login screen | Shows if no API key | Fails if no API key |
 | Session storage | `~/.claude/` (home dir) | `.local/share/opencode/` (workspace, SQLite) |
-| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) opens the workspace's latest session |
+| Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) resumes the saved session, then opens the workspace's latest opencode session |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
 | Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
 
