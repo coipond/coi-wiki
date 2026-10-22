@@ -14,7 +14,7 @@ coi shell
 ```
 
 ```toml
-# Explicit tool selection (config or profile; the --tool flag was removed in v0.10.0)
+# Explicit tool selection (config or profile; the --tool flag was removed)
 [tool]
 name = "claude"
 ```
@@ -219,7 +219,7 @@ name = "opencode"
 
 ## Tool Credentials and Third-Party Providers
 
-The credential files each built-in tool needs (listed under "Configuration" above) come from Coi's embedded credential catalog and are copied into fresh containers automatically — pushed, chowned to the container user, never bind-mounted. As of v0.10.0 the same catalog serves tools that are not Coi-managed AI tools: a profile or config can reference a named bundle, or declare an ad-hoc file, via `[[credentials]]`:
+The credential files each built-in tool needs (listed under "Configuration" above) come from Coi's embedded credential catalog and are copied into fresh containers automatically — pushed, chowned to the container user, never bind-mounted. The same catalog serves tools that are not Coi-managed AI tools: a profile or config can reference a named bundle, or declare an ad-hoc file, via `[[credentials]]`:
 
 ```toml
 # e.g. a profile that runs Claude through Ollama Cloud
@@ -249,7 +249,7 @@ permission_mode = "interactive"  # "bypass" (default) or "interactive"
 - This is a cross-cutting setting that applies to whichever tool is active
 - Effort level settings (for Claude) are always injected regardless of permission mode
 - Empty or omitted value defaults to `"bypass"` for backward compatibility
-- **Auto mode under `interactive` (as of v0.12.0, #764):** earlier versions also wrote a Claude Code managed-settings policy (`disableAutoMode`) whenever the tool was Claude — the highest-precedence tier, un-overridable by any user setting — which stripped auto mode from the in-session Shift+Tab cycle even under `interactive`. That policy is now written only under `bypass`. So `interactive` is a genuinely interactive session: you get manual approval prompts by default and can opt into auto mode yourself. `bypass` is unchanged (the policy still suppresses Claude's startup auto-mode prompt).
+- **Auto mode under `interactive`:** for Claude, Coi writes the Claude Code managed-settings policy (`disableAutoMode`) only under `bypass`. That policy is the highest-precedence tier, un-overridable by any user setting, and it strips auto mode from the in-session Shift+Tab cycle. So `interactive` is a genuinely interactive session: you get manual approval prompts by default and can opt into auto mode yourself. Under `bypass` the policy suppresses Claude's startup auto-mode prompt.
 
 ## Keeping Tools Up to Date and Wrapping Them
 
