@@ -4,7 +4,7 @@
 
 **Symptom:** The agent stops producing output entirely - no error, no progress, just silence for minutes at a time. Often happens partway through `npm install`, a `cargo build`, running tests, or any operation that writes a lot of temporary data.
 
-**Cause:** `/tmp` inside the container is full. Since v0.7 `/tmp` is disk-backed by default (`tmpfs_size = ""`), so this freeze only applies when you have set `[limits.disk] tmpfs_size` in your config (or are running an older version) - in that case `/tmp` is a tmpfs, a RAM-backed filesystem with a hard size cap. When it fills up the kernel returns `ENOSPC` to every process that tries to write. Most build tools (npm, cargo, pytest, TypeScript compilers, Docker) are not written to handle this gracefully - they freeze waiting for a write that never succeeds.
+**Cause:** `/tmp` inside the container is full. `/tmp` is disk-backed by default (`tmpfs_size = ""`), so this freeze only applies when you have set `[limits.disk] tmpfs_size` in your config - in that case `/tmp` is a tmpfs, a RAM-backed filesystem with a hard size cap. When it fills up the kernel returns `ENOSPC` to every process that tries to write. Most build tools (npm, cargo, pytest, TypeScript compilers, Docker) are not written to handle this gracefully - they freeze waiting for a write that never succeeds.
 
 Common sources of large `/tmp` usage:
 
@@ -52,7 +52,7 @@ mkdir -p "$TMPDIR"
 
 Note: `/workspace/.tmp` is on your host filesystem, so files persist after the session - add it to `.gitignore` and clean it up periodically.
 
-**Coi's built-in protection (since v0.7.0):**
+**Coi's built-in protection:**
 
 - `/tmp` defaults to the container's root virtual disk - no RAM cap, shares the storage pool
 - `/etc/tmpfiles.d/coi-tmp-cleanup.conf` in the base image removes files not accessed for 1 hour
@@ -349,6 +349,23 @@ coi health
 
 **What to do:** Coi stops waiting as soon as the container is no longer running and quotes the first errors from its start log (`lxc.log`) — read those first. See the full log with `incus info --show-log <container>`. Common causes are a missing mount source (a path in `[[mounts]]` or a protected path that was deleted) and an idmap/shift problem on the mounted filesystem (`coi health` checks both).
 
+## Incus Is Not Available
+
+**Symptom:** `coi shell`, `coi run`, `coi build` or `coi image list` stops with one of these messages and exits with code `3` (see [Exit Codes](Container-Operations#exit-codes)).
+
+**What to do:** follow the message:
+
+| Message | Fix |
+|---------|-----|
+| `incus is not installed — please install Incus first` | Install Incus: see the [Linux Setup Guide](Linux-Setup-Guide) or the [macOS Setup Guide](macOS-Setup-Guide). |
+| `incus is not available — please ensure you are in the incus-admin group` | Check that your user is in the `incus-admin` group. |
+| `the incus-admin group does not exist; please install Incus` | Install Incus: see the [Linux Setup Guide](Linux-Setup-Guide) or the [macOS Setup Guide](macOS-Setup-Guide). |
+| `you have been added to the incus-admin group but your current session does not have it active yet` | Log out and back in, or run `newgrp incus-admin`. |
+| `please add your user to the incus-admin group and re-login` | Run `sudo usermod -aG incus-admin $USER`, then log out and back in, or run `newgrp incus-admin`. |
+| `please check that the Incus daemon is running (sudo systemctl start incus)` | Start the daemon: `sudo systemctl start incus`. |
+
+`coi health` also checks Incus availability and group permissions.
+
 ## "Waiting for another coi launch of this workspace"
 
 Another `coi shell` / `coi run` for the same workspace is picking its slot at the same moment; launches take turns until each one's container is up, which usually takes a few seconds. If it waits much longer, the other launch is probably building the image. Ctrl-C cancels the wait.
@@ -359,7 +376,7 @@ Another `coi shell` / `coi run` for the same workspace is picking its slot at th
 
 **Cause:** Almost all of a session's startup is `incus` subprocesses — typically ~95%+ of wall time — and most of that is a single `incus init` that unpacks the base image. On a `dir` storage pool that one unpack can be ~70% of a `coi run` (~5-6s per unpacked GB, every session).
 
-**Check the storage pool first (v0.11.1):** `coi health` names each pool's driver in its storage line (`default (zfs): …`) and warns outright on `dir` pools. If it warns, the fix is recreating the pool with a copy-on-write driver (zfs/btrfs) — re-running `install.sh` sets one up — and startup cost drops to near-free cloning. On `dir` pools, image size is a per-session cost, so lean images pay off twice.
+**Check the storage pool first:** `coi health` names each pool's driver in its storage line (`default (zfs): …`) and warns outright on `dir` pools. If it warns, the fix is recreating the pool with a copy-on-write driver (zfs/btrfs) — re-running `install.sh` sets one up — and startup cost drops to near-free cloning. On `dir` pools, image size is a per-session cost, so lean images pay off twice.
 
 **What to do:** Set `COI_TIMING_DEBUG=1` on any command to print a wall-clock startup timeline to stderr at exit — every pipeline phase, every teardown, and each `incus` and `nft` call, nested by containment, followed by per-category totals and the slowest `incus` calls. It also shows how long coi took before its first phase (process start, config load):
 
@@ -397,7 +414,7 @@ sudo nft list ruleset | awk '/^table/ {t=$0} /^\t\t/ {r[t]++} END {for (x in r) 
 sudo firewall-cmd --get-active-zones
 ```
 
-As of v0.11.2, `coi health` detects this directly (the `firewalld_veth_bloat` check warns when dead veth registrations accumulate).
+`coi health` detects this directly (the `firewalld_veth_bloat` check warns when dead veth registrations accumulate).
 
 **Fix:**
 
@@ -412,7 +429,7 @@ sudo firewall-cmd --permanent --zone=trusted --list-interfaces   # must include 
 sudo firewall-cmd --reload
 
 # 3. Prevent recurrence — stop NM enrolling veths at all
-#    (the install script sets this up automatically as of v0.11.2):
+#    (the install script sets this up automatically):
 sudo tee /etc/NetworkManager/conf.d/99-coi-unmanaged.conf <<'EOF2'
 [keyfile]
 unmanaged-devices+=interface-name:veth*
@@ -431,7 +448,7 @@ Established container connections survive the reload (conntrack state is kept, a
 
 **Cause:** The Ubuntu base image pulls in `udisks2` (as an `fwupd` dependency). `udisksd` keeps `/proc/swaps` open in its main loop to watch for swap changes. Under Incus, `/proc/swaps` is backed by `lxcfs`, so that `poll()` is a FUSE request served by a daemon on the host. When the host suspends, the kernel freezer stops `lxcfs` while the request is in flight - it can never be answered, `udisksd` wedges in uninterruptible `D` state and refuses to freeze, and after the freezer's 20 s timeout the whole suspend is aborted.
 
-**Fix:** The image build now disables and masks `udisks2` (it is disk / removable-media management, useless inside a sandbox), closing the deadlock. This shipped in 0.12.0 (#706).
+**Fix:** The image build disables and masks `udisks2` (it is disk / removable-media management, useless inside a sandbox), closing the deadlock.
 
 **What to do:**
 

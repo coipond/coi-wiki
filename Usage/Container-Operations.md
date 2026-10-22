@@ -8,7 +8,7 @@
 # List all containers and sessions
 coi list --all
 
-# Filter by container status (as of v0.10.0)
+# Filter by container status
 coi list --running            # only Running containers
 coi list --stopped            # only Stopped containers
 coi list --status frozen      # general form; accepts every Incus instance
@@ -158,7 +158,7 @@ Key differences from `coi shell`:
 - **Suitable for piped input** - Works correctly when stdin is not a terminal
 - **Same isolation** - Uses the same container isolation, credential protection, and network modes as `coi shell`
 
-All operational session flags are supported; image and persistence come from config or the selected profile (as of v0.10.0):
+All operational session flags are supported; image and persistence come from config or the selected profile:
 
 ```bash
 coi run --profile rust-dev -- cargo test    # profile carries image/persistence/limits
@@ -170,6 +170,8 @@ With `[container] persistent = true`, `coi run` reuses its stopped container on 
 
 > **Note: Build the Image First in CI**
 > Without an interactive terminal (CI, scripts, piped input), `coi run` cannot prompt to build a missing image and fails immediately. Run `coi build` before using `coi run` in CI environments.
+
+`coi run` exits with the command's exit code; Coi's own failures use the codes in [Exit Codes](#exit-codes).
 
 ## Advanced Container Operations
 
@@ -355,6 +357,21 @@ coi hosts remove my-container db.internal          # remove by hostname
 ```
 
 For entries that should be present on every launch, declare them in `[[network.hosts]]` config instead — see [Static Host Entries](Static-Host-Entries) for the full reference and the per-mode reachability rules.
+
+## Exit Codes
+
+Scripts (CI, cron) can test Coi's exit code:
+
+| Code | Meaning | Returned by |
+|------|---------|-------------|
+| `0` | Success | |
+| `1` | Unclassified failure | Any command, for an error that has no code of its own |
+| `2` | Bad flags, arguments or format | Command checks, for example an invalid `--format` or `--slot`, or conflicting `coi run --prompt` options. Argument and flag parse errors (an unknown flag, a wrong number of arguments, a flag value of the wrong type) exit `1`. |
+| `3` | Incus is not installed or not reachable | `coi shell`, `coi run`, `coi build` and `coi image list`, which check Incus first. Other commands can exit `3` when an Incus call fails because Incus is missing or its daemon does not answer. See [Incus Is Not Available](Troubleshooting#incus-is-not-available). |
+| `4` | The targeted container does not exist | `coi shell --container <name>` when that container does not exist. Other commands can exit `4` when Incus reports `instance not found`. |
+| `5` | The configuration could not be loaded, parsed or validated | Every command that loads the configuration. `coi health` runs with the default config instead; `coi validate` and `coi schema` do not load it. |
+
+`coi run` exits with the command's exit code (with `--prompt`, the agent's), so a `2`-`5` from `coi run` can also come from the command. `coi container exec --capture --format raw` also exits with the command's exit code. `coi container exists`, `coi container running` and `coi image exists` exit `1` for "no", and `coi validate profile` exits `1` for an invalid profile. `coi health` uses its own codes: see [System Health Check](System-Health-Check#exit-codes).
 
 ## Use Cases
 
