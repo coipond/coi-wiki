@@ -62,7 +62,7 @@ Coi also includes [security monitoring](Security-Monitoring) that does not exist
 | **Network** | Shared with host | Isolated (restricted/allowlist/open) |
 | **Host filesystem** | Broadly accessible | Only workspace mounted |
 | **Credentials** | Fully exposed | Never exposed by default |
-| **Security monitoring** | None | Real-time threat detection |
+| **Security monitoring** | None | Optional (real-time threat detection; off by default, needs `[monitoring] enabled`) |
 | **Purpose** | Run apps from other distros | Secure AI agent isolation |
 
 Running an AI agent in Distrobox is essentially the same as running it directly on your host - it can access your SSH keys, read your `.env` files, reach your local network, and modify git hooks. Coi isolates all of these by default and adds [security monitoring](Security-Monitoring) (`[monitoring] enabled`, off by default) to detect malicious behavior in real time.
@@ -90,7 +90,7 @@ Coi's value is not just isolation - it is the [security monitoring](Security-Mon
 
 | Tool | Purpose | Credentials Isolated | Security Monitoring | AI Tool Support | Session Management | Best For |
 |------|---------|---------------------|---------------------|-----------------|-------------------|----------|
-| **Coi** | AI coding isolation | ✅ Yes (default) | ✅ Yes (process, filesystem, network) | Built-in | Auto save/resume | Running AI coding tools securely |
+| **Coi** | AI coding isolation | ✅ Yes (default) | ✅ Optional (process, filesystem, network with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) | Built-in | Auto save/resume | Running AI coding tools securely |
 | **Docker + Volume** | Basic isolation | ⚠️ Manual | ❌ No | Manual | Manual | Simple filesystem isolation |
 | **Docker Sandboxes** | AI tool isolation | ✅ Yes | ❌ No | Limited | Manual | macOS/Windows users (requires Docker Desktop) |
 | **DevContainers** | Dev environment | ❌ No (typically mounted) | ❌ No | Manual | Manual | Reproducible development environments |
