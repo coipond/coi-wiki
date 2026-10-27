@@ -59,7 +59,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 **Configuration:**
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
-- Session storage: opencode's data dirs (`~/.local/share/opencode/` with its SQLite session database, and `~/.local/state/opencode/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/opencode/<workspace-hash>/`, so they survive ephemeral containers and stay out of the workspace. Data that an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved there the first time the mount is added.
+- Session storage: opencode's data dirs (`~/.local/share/opencode/` with its SQLite session database, and `~/.local/state/opencode/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/opencode/<workspace-hash>/`, so they survive ephemeral containers and stay out of the workspace. Data that an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved once, to the first of opencode or [opencode2](#opencode2-opencode-v2) that mounts its data dirs on that workspace (under `tool-data/opencode/` or `tool-data/opencode2/`). If the move fails, coi warns and the data stays in the workspace.
 - Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
@@ -113,9 +113,9 @@ name = "opencode2"
 opencode2 launches like [opencode](#opencode): same flags, the same config (`~/.config/opencode/opencode.json`) and permission handling. The differences:
 
 - Binary: `opencode2` (`[tool] binary` still overrides it)
-- Session storage: the same data dirs as opencode, mounted from `~/.coi/tool-data/opencode2/<workspace-hash>/` on the host
+- Session storage: the same data dirs as opencode, mounted from `~/.coi/tool-data/opencode2/<workspace-hash>/` on the host. If opencode2 is the first to mount them on a workspace, it takes the data an older coi kept there (see [opencode](#opencode)).
 - coi's saved sessions are kept apart from opencode's (`sessions-opencode2`)
-- Resume: coi cannot look up an opencode2 session, so `coi shell --resume` (or `--continue`) starts opencode2 with `--continue`
+- Resume: `coi shell --resume` (or `--continue`) needs a saved opencode2 session for the workspace, as for the other tools (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)); opencode's saved sessions do not count, so after you switch from opencode it fails with `no previous session to resume for this workspace` until the first opencode2 session is saved. coi cannot look up the opencode2 session inside it, so it starts opencode2 with `--continue`.
 
 ### pi
 

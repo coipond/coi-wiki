@@ -225,7 +225,7 @@ By default, Coi bypasses all tool permission prompts so sessions run autonomousl
 permission_mode = "interactive"
 ```
 
-This affects Claude Code, opencode and codex - see the [Supported Tools](Supported-Tools#permission-mode) page for details on how each tool behaves in interactive mode.
+This affects Claude Code, opencode, opencode2 and codex - see the [Supported Tools](Supported-Tools#permission-mode) page for details on how each tool behaves in interactive mode.
 
 ## SSH Agent and Environment Variable Forwarding
 
