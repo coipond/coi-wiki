@@ -98,15 +98,15 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
 ```
 
 - **`command`** — the exact argv to run in the container, built from the profile's
-  tool, so it is correct for any tool (claude/codex/opencode/pi/omp). The
+  tool, so it is correct for any tool (claude/codex/opencode/opencode2/pi/omp). The
   prompt is embedded via a staged-file `"$(cat …)"` reference, so arbitrary prompt
   text (quotes, newlines, `$()`) cannot corrupt the command. Run it through a shell
   (e.g. `bash -c "<command>"`) so the substitution expands.
 - **`env`** — tool-derived environment only. Per tool:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
-  a model or effort; codex: none; opencode: `XDG_DATA_HOME` and `XDG_STATE_HOME`;
-  pi: `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The opencode, pi and
-  omp paths point under the container's workspace mount. Secrets and
+  a model or effort; codex, opencode and opencode2: none; pi:
+  `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The pi and omp paths
+  point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
   `CLAUDE_CODE_OAUTH_TOKEN`) when it execs. No auth is baked into the spec.
 
@@ -124,21 +124,21 @@ orchestrator delivers it out-of-band after launch (e.g. `tmux load-buffer <path>
 | `--container <ctr>` | **Required.** Existing container to build the launch spec for. |
 | `--session-id <id>` | **Required.** Session id for the launch. Validated as a safe token (letters, digits, `.`, `_`, `-`; starts alphanumeric; max 64) since it becomes a filename component and is joined into the shell-run command. |
 | `--prompt-file <host>` | Host file whose contents are staged as the tool's initial prompt. |
-| `--system-prompt-file <host>` | Host file staged as the tool's system prompt (only Claude supports one, via `--append-system-prompt`; codex, opencode, pi and omp reject it). |
+| `--system-prompt-file <host>` | Host file staged as the tool's system prompt (only Claude supports one, via `--append-system-prompt`; codex, opencode, opencode2, pi and omp reject it). |
 | `--json` | Print the spec as JSON (the machine-readable form orchestrators consume). |
 
 ### Resume Strategies (at Most One)
 
 | Flag | Meaning |
 |------|---------|
-| `--continue[=<id>]` | **Discover-or-fresh.** Looks up coi's **host-side** session store (`~/.coi/…`) via `DiscoverSessionID`; resumes if found, else starts fresh. Only claude and codex sessions are discoverable: for opencode, pi and omp it always starts fresh (use `--resume-latest`, or `--resume-id` for opencode). Bare `--continue` targets `--session-id`. Correct when *coi* owns session persistence. |
+| `--continue[=<id>]` | **Discover-or-fresh.** Looks up coi's **host-side** session store (`~/.coi/…`) via `DiscoverSessionID`; resumes if found, else starts fresh. Only claude and codex sessions are discoverable: for opencode, opencode2, pi and omp it always starts fresh (use `--resume-latest`, or `--resume-id` for opencode and opencode2). Bare `--continue` targets `--session-id`. Correct when *coi* owns session persistence. |
 | `--resume-id <id>` | **Assert, don't discover.** Builds a resume command for that exact id **verbatim** — no host-side lookup. For an orchestrator that owns session state itself (it restored the tool's state dir into the container and assigned the id). |
 | `--resume-latest` | **Resume-latest**, no id. Resumes the most recent conversation the tool can find. |
 
 `--continue` / `--resume-id` / `--resume-latest` are mutually exclusive (a
 usage error otherwise). Each renders in the tool's own vocabulary — e.g.
-`--resume-id` becomes claude `--resume <id>`, codex `resume <id>`, opencode
-`--session <id>`; pi/omp resume the latest conversation.
+`--resume-id` becomes claude `--resume <id>`, codex `resume <id>`, opencode and
+opencode2 `--session <id>`; pi/omp resume the latest conversation.
 
 > **No bare `--resume` on `coi tool spec`.** That name belongs to
 > coi's root `--resume` (resume a coi session by id), which is inherited here but
