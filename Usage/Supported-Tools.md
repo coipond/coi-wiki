@@ -59,7 +59,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 **Configuration:**
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
-- Session storage: redirected into the workspace (`.local/share/opencode/`, via `XDG_DATA_HOME`/`XDG_STATE_HOME`; SQLite) so it survives ephemeral containers
+- Session storage: opencode's data dirs (`~/.local/share/opencode/` with its SQLite session database, and `~/.local/state/opencode/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/opencode/<workspace-hash>/`, so they survive ephemeral containers and stay out of the workspace. Data that an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved there the first time the mount is added.
 - Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
@@ -83,10 +83,39 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 | Feature | Claude Code | opencode |
 |---------|-------------|----------|
 | Login screen | Shows if no API key | Fails if no API key |
-| Session storage | `~/.claude/` (home dir) | `.local/share/opencode/` (workspace, SQLite) |
+| Session storage | `~/.claude/` (home dir) | `~/.local/share/opencode/` (SQLite), mounted from `~/.coi/tool-data/opencode/` on the host |
 | Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) resumes the saved session, then opens the workspace's latest opencode session |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
 | Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
+
+**Not in the default image** (since 0.16) - the image installs [opencode2](#opencode2-opencode-v2) by default. To keep opencode (v1), add it to the agent set and rebuild:
+
+```toml
+[container.build]
+agents = ["claude", "opencode2", "pi", "opencode"]
+```
+```bash
+coi build --force
+```
+
+### opencode2 (OpenCode v2)
+
+OpenCode v2, installed as `opencode2` next to `opencode` (v1).
+
+```toml
+# Select opencode2 in .coi/config.toml, ~/.coi/config.toml, or a profile
+[tool]
+name = "opencode2"
+```
+
+**In the default image** since 0.16: `coi build` installs the newest stable 2.x release from the npm registry, and 2.1.0 when that lookup or download fails.
+
+opencode2 launches like [opencode](#opencode): same flags, the same config (`~/.config/opencode/opencode.json`) and permission handling. The differences:
+
+- Binary: `opencode2` (`[tool] binary` still overrides it)
+- Session storage: the same data dirs as opencode, mounted from `~/.coi/tool-data/opencode2/<workspace-hash>/` on the host
+- coi's saved sessions are kept apart from opencode's (`sessions-opencode2`)
+- Resume: coi cannot look up an opencode2 session, so `coi shell --resume` (or `--continue`) starts opencode2 with `--continue`
 
 ### pi
 
@@ -125,7 +154,7 @@ name = "omp"
 
 ```toml
 [container.build]
-agents = ["claude", "omp"]   # omit this key to install the default set (claude, opencode, pi)
+agents = ["claude", "omp"]   # omit this key to install the default set (claude, opencode2, pi)
 ```
 ```bash
 coi build --force
@@ -158,7 +187,7 @@ name = "codex"
 
 ```toml
 [container.build]
-agents = ["claude", "codex"]   # omit this key to install the default set (claude, opencode, pi)
+agents = ["claude", "codex"]   # omit this key to install the default set (claude, opencode2, pi)
 ```
 ```bash
 coi build --force

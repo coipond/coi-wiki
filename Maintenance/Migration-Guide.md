@@ -2,6 +2,37 @@
 
 This page documents breaking changes between Coi versions and how to migrate. Check this page after a `coi update` if the release notes mention configuration or behavior changes.
 
+# Upgrading to 0.16
+
+0.16.0 changes the default image: it installs OpenCode v2 (`opencode2`) instead of OpenCode v1 (`opencode`). This reaches only images built with 0.16.0.
+
+```bash
+coi update          # get the 0.16.0 binary
+coi version         # confirm 0.16.0
+coi build --force   # rebuild the image
+```
+
+## Breaking: The Image Ships opencode2 Instead of opencode
+
+The default `[container.build] agents` set is now `claude`, `opencode2`, `pi`. To keep using OpenCode v1 (`[tool] name = "opencode"`), add `"opencode"` to `agents` before you rebuild:
+
+```toml
+[container.build]
+agents = ["claude", "opencode2", "pi", "opencode"]
+```
+
+To move to v2, set `[tool] name = "opencode2"`. See [Supported Tools - opencode2](Supported-Tools#opencode2-opencode-v2).
+
+## Other Breaking Changes
+
+- **`default` and `hardened` profiles can't be deleted** - `coi profile delete` refuses both names. See [Profiles - Delete a Profile](Profiles#delete-a-profile).
+- **`coi file push -r` no longer merges into an existing directory** - it follows the same destination rules as `coi file pull`. See [File Transfer](File-Transfer#push-files-to-container).
+- **Project config can't forward host secrets** - `forward_env` and `[ssh] forward_agent = true` in a repo's `.coi/` config are ignored. Set them in `~/.coi/config.toml` or a profile under `~/.coi/profiles/`. See [Container Lifecycle and Sessions - Environment Variable Forwarding](Container-Lifecycle-and-Sessions#environment-variable-forwarding).
+
+## Notes
+
+- **opencode data moves out of the workspace** - opencode's session data is now stored on the host under `~/.coi/tool-data/opencode/`. Data an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved there automatically. See [Supported Tools - opencode](Supported-Tools#opencode).
+
 # Upgrading to 0.15
 
 0.15.0 has one breaking change, in the image: the guest `apparmor.service` is masked, so the AppArmor profiles inside the container are no longer loaded. It reaches only images built with 0.15.0 (`coi build --force`); existing images keep the old behavior until rebuilt.

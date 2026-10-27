@@ -130,8 +130,8 @@ storage_pool = ""              # empty = Incus default pool
 # script = "build.sh"
 # commands = ["apt-get update"] # Inline build commands (alternative to script)
 # compression = ""             # Image compression: "none", "gzip", "xz" ("" = Incus default)
-# agents = ["claude"]          # AI agents to install (default set: claude, opencode, pi;
-#                              # codex and omp are opt-in and must be listed explicitly)
+# agents = ["claude"]          # AI agents to install (default set: claude, opencode2, pi;
+#                              # codex, omp and opencode (v1) are opt-in and must be listed explicitly)
 # cloud_init = false           # Keep cloud-init in the built coi image. Off by default:
 #                              # it ran on every container boot and slowed starts.
 #                              # Takes effect on the next `coi build --force`.
@@ -168,7 +168,7 @@ storage_pool = ""              # empty = Incus default pool
 # nightly-maintenance = { file = "prompts/nightly.md" }
 
 [tool]
-name = "claude"              # AI coding tool: "claude", "codex", "opencode", "pi", "omp"
+name = "claude"              # AI coding tool: "claude", "codex", "opencode", "opencode2", "pi", "omp"
 permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # binary = "/workspace/scripts/claude-wrapper.sh"
 #                            # Optional: executable to launch instead of the tool's default

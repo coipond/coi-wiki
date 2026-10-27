@@ -97,7 +97,8 @@ Running in the cloud adds latency, requires syncing files, and complicates acces
 Coi supports multiple AI coding tools through its extensible tool interface. Currently supported:
 
 - **Claude Code** (default) - Anthropic's CLI agent
-- **opencode** - open-source AI coding agent
+- **opencode** - open-source AI coding agent (v1, opt-in at image build)
+- **opencode2** - OpenCode v2
 - **pi** - open-source AI coding agent
 - **codex** - OpenAI's Codex CLI (opt-in at image build)
 - **omp** - Oh My Pi

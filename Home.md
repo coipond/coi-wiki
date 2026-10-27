@@ -1,4 +1,4 @@
-Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI coding tools (Claude Code, opencode, Codex, pi, omp, and more) inside isolated Incus system containers — with credential protection, network controls, and real-time security monitoring built in.
+Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI coding tools (Claude Code, opencode, opencode2, Codex, pi, omp, and more) inside isolated Incus system containers — with credential protection, network controls, and real-time security monitoring built in.
 
 > **New to Coi?** Start with [Getting Started](Getting-Started) for a step-by-step walkthrough, then read [Architecture and Security Model](Architecture-and-Security-Model) to understand what Coi protects against and how.
 
@@ -16,7 +16,7 @@ Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI c
 - **[Best Practices](Best-Practices)** - Session modes, network selection, team workflows, and storage management
 - **[Configuration](Configuration)** - Config files, hierarchy, per-repo `.coi/config.toml`, full reference, and environment variables
 - **[Profiles](Profiles)** - Self-contained profile directories with build scripts, context files, and full config bundling
-- **[Supported Tools](Supported-Tools)** - Claude Code, opencode, Codex, pi, omp, and tool selection
+- **[Supported Tools](Supported-Tools)** - Claude Code, opencode, opencode2, Codex, pi, omp, and tool selection
   - **[Sandbox Context](Sandbox-Context)** - The `~/SANDBOX_CONTEXT.md` / `.json` environment description and auto-context injection
   - **[Adding New Tools](Adding-New-Tools)** - Implement the `Tool` interface to add a new AI assistant
 - **[Container Lifecycle and Sessions](Container-Lifecycle-and-Sessions)** - Understanding how containers and sessions work

@@ -104,9 +104,9 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
   (e.g. `bash -c "<command>"`) so the substitution expands.
 - **`env`** — tool-derived environment only. Per tool:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
-  a model or effort; codex: none; opencode: `XDG_DATA_HOME` and `XDG_STATE_HOME`;
-  pi: `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The opencode, pi and
-  omp paths point under the container's workspace mount. Secrets and
+  a model or effort; codex, opencode and opencode2: none; pi:
+  `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The pi and omp paths
+  point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
   `CLAUDE_CODE_OAUTH_TOKEN`) when it execs. No auth is baked into the spec.
 
