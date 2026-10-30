@@ -299,7 +299,6 @@ If your settings were already lost, restore from backup or recreate them. Going 
 **What to do:**
 
 - **Moving files:** use `mv`, which falls back to copy and delete; in your own code, copy the file and then delete the original.
-- **Renaming or removing the dir itself:** do it on the host, not in the container.
 
 ## Coi Refuses to Start: "security.privileged=true"
 
