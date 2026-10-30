@@ -118,6 +118,8 @@ storage_pool = ""              # empty = Incus default pool
 # alias = "myproject"          # Human-friendly name for this workspace's containers
 # shutdown_timeout = 60        # Seconds to wait for graceful shutdown before force-killing (default: 60)
 # ready_timeout = 30           # Seconds to wait for a launched container to become ready (default: 30)
+#                              # Ready: it runs a command and, if systemd is PID 1, boot has
+#                              # reached sysinit.target (after boot empties /tmp)
 #                              # Raise on slow hosts (nested virt, cold storage pools)
 # docker = true                # Docker-in-container support (nesting + syscall interception,
 #                              # default: true). false shrinks the shared-kernel attack surface.
