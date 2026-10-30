@@ -290,6 +290,17 @@ If your settings were already lost, restore from backup or recreate them. Going 
 
 **Fix:** Coi now uses a recursive copy with proper symlink handling as a fallback when `os.Rename` fails with `EXDEV`. Update to the latest version.
 
+## Parent Dir of a Protected Path Cannot Be Renamed or Removed
+
+**Symptom:** In the container, renaming or removing a dir such as `.git`, `.git/info`, `.claude` or `.codex` fails with `Device or resource busy`. Moving a file between that dir and the rest of the workspace with a plain `rename(2)` (for example Python's `os.rename`) fails with `EXDEV` (`Invalid cross-device link`).
+
+**Cause:** The dir lies between the workspace root and a protected path, so Coi mounts it over itself - see [Security Best Practices - Parent Dirs Are Pinned](Security-Best-Practices#parent-dirs-are-pinned). The pin exists only in the container. This is a different cause from [Cross-Device Link Error When Saving Session](#cross-device-link-error-when-saving-session).
+
+**What to do:**
+
+- **Moving files:** use `mv`, which falls back to copy and delete; in your own code, copy the file and then delete the original.
+- **Renaming or removing the dir itself:** do it on the host, not in the container.
+
 ## Coi Refuses to Start: "security.privileged=true"
 
 **Symptom:** `coi shell`, `coi run`, or `coi build` fails immediately with an error about `security.privileged=true` being detected.
