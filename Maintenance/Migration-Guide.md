@@ -31,7 +31,8 @@ To move to v2, set `[tool] name = "opencode2"`. See [Supported Tools - opencode2
 
 ## Notes
 
-- **opencode data moves out of the workspace** - opencode's session data is now stored on the host under `~/.coi/tool-data/<tool>/`. Data an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved once, to the first of opencode or opencode2 that runs on that workspace. If you run opencode2 there first, its dir gets the opencode v1 history. If the move fails, coi warns and the data stays in the workspace. See [Supported Tools - opencode](Supported-Tools#opencode).
+- **opencode data moves out of the workspace** - opencode's session data is now stored on the host under `~/.coi/tool-data/<tool>/`. Data an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved once, to the first of opencode or opencode2 that runs on that workspace. If the move fails, coi warns and the data stays in the workspace. See [Supported Tools - opencode](Supported-Tools#opencode).
+- **Recover opencode v1 history that opencode2 took** - if opencode2 runs first on a workspace, it takes that data and opencode starts with no sessions. A fix that moves the data to opencode only, so opencode2 never takes it, is merged ([coi #947](https://github.com/coipond/coi/pull/947)) but not in a release yet. If opencode2 on 0.16.0 already took it, the v1 sessions are in `~/.coi/tool-data/opencode2/<workspace-hash>/share/`: copy `opencode.db*` from there to `~/.coi/tool-data/opencode/<workspace-hash>/share/`, with no session running, to use them with opencode again.
 
 # Upgrading to 0.15
 
