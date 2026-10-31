@@ -37,9 +37,10 @@ prompt run is the command.
 - **`[tool] permission_mode = "bypass"`** — a headless run has no terminal to
   approve tool use, so bypass mode is required (it is the default; see
   [Configuration](Configuration)).
-- **Tool support** — supported for the `claude` and `opencode` tools; any
-  other tool exits 2 before any container work. With `opencode`, coi runs the
-  prompt with `opencode run`, and stdin piped into `coi run --prompt` does not
+- **Tool support** — supported for the `claude`, `opencode` and `opencode2`
+  tools; any other tool exits 2 before any container work. coi runs the
+  prompt with `opencode run` (`opencode`) or `opencode2 run --standalone`
+  (`opencode2`). With both tools, stdin piped into `coi run --prompt` does not
   reach the agent (`claude` still reads it).
 
 ## Named Prompts — the `[prompts]` Table
