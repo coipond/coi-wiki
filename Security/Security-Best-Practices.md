@@ -34,6 +34,23 @@ When you start a session, Coi:
 Protected paths (mounted read-only): .git/hooks, .git/config, .vscode
 ```
 
+### Parent Dirs Are Pinned
+
+Each dir between the workspace root and a protected path, and between a worktree's git common dir and its protected paths, is mounted over itself. Examples: `.git`, `.git/info`, `.claude`, `.codex`, a submodule checkout dir. Otherwise the container could rename such a dir, create it again and write the protected path in the new copy.
+
+In the container, a pinned dir:
+
+- cannot be renamed or removed (`Device or resource busy`)
+- keeps its contents writable
+- is a mount boundary: `rename(2)` of a file between it and the rest of the workspace fails with `EXDEV` (`Invalid cross-device link`)
+
+Exceptions:
+
+- A dir at or below a `secret_paths` mask is not pinned.
+- A dir that another device already mounts (for example a `[[mounts]]` entry at `/workspace/.claude`) is not pinned, because that mount already blocks the rename. Each start logs `parent dir <path> not pinned`.
+
+What to do when a rename fails: [Troubleshooting - Parent Dir of a Protected Path Cannot Be Renamed or Removed](Troubleshooting#parent-dir-of-a-protected-path-cannot-be-renamed-or-removed).
+
 ### Host-Side Immutable Protection
 
 In addition to read-only mounts, Coi applies the Linux immutable attribute (`chattr +i`) on protected paths on the host during sessions. This prevents the `unshare -m` + `umount` bypass where a container process could remount a read-only path as writable.
