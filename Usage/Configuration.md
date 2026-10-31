@@ -251,11 +251,11 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 # hostnames = ["db.internal", "db"]   # one or more names for that address
 
 # [network.logging] currently has no effect: coi reads enabled and path, but
-# writes no network log (no ~/.coi/logs/network.log). For network events, set
-# [monitoring] enabled and [monitoring.nft] enabled (needs sudo, so not with
-# [network] use_sudo = false): coi then writes them to
-# ~/.coi/audit/<container-name>-nft.jsonl. See the Security Monitoring and
-# Audit Log wiki pages.
+# writes no network log (no ~/.coi/logs/network.log). For network threat events
+# (connections the monitor flags), set [monitoring] enabled and
+# [monitoring.nft] enabled (needs sudo, so not with [network] use_sudo = false):
+# coi then writes them to ~/.coi/audit/<container-name>-nft.jsonl. See the
+# Security Monitoring and Audit Log wiki pages.
 [network.logging]
 # enabled = true                   # No effect (see above)
 # path = "~/.coi/logs/network.log" # No effect: nothing writes this file
