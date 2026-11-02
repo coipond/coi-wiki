@@ -131,6 +131,8 @@ apt install -y your-tools
 pip install your-packages
 ```
 
+> **Note:** Coi pushes only the script file into the build container, as `/tmp/build.sh`, and runs it as root. Other files in the profile directory (helper scripts, data, version lists) are not copied, so a script that sources or reads them fails. The script also gets no environment from coi: variables such as `COI_APT_MIRROR` are not forwarded to it. Keep the script self-contained: embed the data in it, or generate one bundled script before you run `coi build`.
+
 Build and use:
 
 ```bash
