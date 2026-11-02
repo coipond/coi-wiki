@@ -307,6 +307,18 @@ The alias-saved profile comes from `coi shell --profile <name>`: when the worksp
 for that alias in `~/.coi/aliases.json`. A later `coi shell <alias>` without `--profile` uses it.
 `coi run` keeps the saved profile.
 
+`coi shell` saves into the alias only a profile that came from `--profile`, from the alias
+itself or from a resume. A profile that came only from `[defaults] profile` is never saved:
+the entry keeps its earlier saved profile (or none), so a later change of `[defaults] profile`
+applies to every alias that has no saved profile. This also holds for `coi shell --resume` of
+a session whose profile came only from the default: its session metadata records this
+(`profile_from_default`). A session saved by an older coi has no such record, and its resume
+still saves its profile into the alias.
+
+An alias entry that an older coi already saved with the default profile keeps it. To replace
+it, run `coi shell <alias> --profile <name>` once, or remove its `"profile"` field from
+`~/.coi/aliases.json`.
+
 **Trusted scope only.** Honored only from trusted config (`~/.coi/config.toml` or
 `$COI_CONFIG`). A project `./.coi/config.toml` naming a default profile is ignored
 with a warning — a cloned or agent-planted repo cannot silently redirect your no-flag
