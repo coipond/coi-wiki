@@ -151,6 +151,8 @@ coi run -- pytest tests/
 coi run -- bash -c "pip install -r requirements.txt && python validate.py"
 ```
 
+Always put `--` between Coi's flags and the command. Without it, Coi reads the command's flags as its own: `coi run ls -la` fails with `unknown shorthand flag: 'l' in -la`, and a command flag that matches a Coi flag (such as `-w`, short for `--workspace`) is taken by Coi. Write `coi run -- ls -la` instead.
+
 Key differences from `coi shell`:
 
 - **No image-build prompt without a TTY** - When run from an interactive terminal, a missing image triggers the same build-it-now prompt as `coi shell`; when stdin is not a terminal (CI, pipes), the error is returned immediately instead
@@ -158,7 +160,7 @@ Key differences from `coi shell`:
 - **Suitable for piped input** - Works correctly when stdin is not a terminal
 - **Same isolation** - Uses the same container isolation, credential protection, and network modes as `coi shell`
 
-All operational session flags are supported; image and persistence come from config or the selected profile:
+All operational session flags are supported except `--resume` and `--continue`: `coi run` does not resume a tool session, and each run starts a new command. To resume a tool session, use `coi shell --resume` or `coi shell --continue` (see [Container Lifecycle and Sessions](Container-Lifecycle-and-Sessions)). Image and persistence come from config or the selected profile:
 
 ```bash
 coi run --profile rust-dev -- cargo test    # profile carries image/persistence/limits
