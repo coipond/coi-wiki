@@ -252,9 +252,9 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 # ip        = "10.0.0.5"              # IPv4 address
 # hostnames = ["db.internal", "db"]   # one or more names for that address
 
-[network.logging]
-# enabled = true                   # Network logging enabled by default
-# path = "~/.coi/logs/network.log" # Default log path
+# [network.logging] was removed: a config file or profile that still sets it loads
+# with a warning naming the file. For network threat events use [monitoring.nft]
+# (see the Security Monitoring wiki page).
 
 [mounts]
 # Default mounts applied to all sessions
