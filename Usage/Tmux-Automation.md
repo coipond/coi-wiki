@@ -121,6 +121,17 @@ coi tmux send coi-abc12345-1 "refactor module C"
 coi tmux send coi-abc12345-1 "/exit"
 ```
 
+## Mouse and Scrollback
+
+The image's `/etc/tmux.conf` turns tmux mouse mode on, so in `coi shell` the mouse wheel scrolls the session's scrollback instead of stepping through the shell history:
+
+- A plain drag selects text in tmux copy mode. For the terminal's own selection, hold Shift while you drag (Option in some macOS terminals).
+- In a pager (`less`, `man`, `git log`) or another full-screen program without mouse support, the wheel sends Up/Down keys, so it scrolls that program.
+- `coi tmux send` (and `coi shell --background` into an existing session) leaves copy mode first, so a command sent after a wheel scroll still runs.
+- Settings in your own `~/.tmux.conf` in the container win: tmux loads it after `/etc/tmux.conf`.
+
+The setting comes with the image: it takes effect after the next `coi build`. A persistent container keeps mouse mode off until it is recreated from the new image.
+
 ## Notes
 
 - Sessions use tmux internally
