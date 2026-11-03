@@ -23,6 +23,15 @@ Coi automatically mounts security-sensitive paths as read-only by default. This 
 
 In addition to this static list, Coi dynamically discovers and protects each existing per-worktree git config file (`.git/worktrees/<name>/config.worktree`) at session setup, since those are config sinks too when `extensions.worktreeConfig` is enabled.
 
+### Submodules and Nested Repositories
+
+Host git also reads the git dirs of submodules: a plain `git status` in the superproject recurses into them, so a writable submodule `config` could run a command on the host (`core.fsmonitor`). At launch Coi therefore also finds:
+
+- the git dirs of submodules (`.git/modules/**`, nested submodules included)
+- the git dirs of repositories nested up to 3 levels below the workspace root
+
+For each of them it mounts `hooks`, `config`, `config.worktree` and `info/attributes` read-only, plus the `.git` file of each submodule checkout. `writable_paths` and `disable_protection` apply to these paths as to the defaults; with `[git] writable_hooks = true` their `hooks` stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
+
 ### How It Works
 
 When you start a session, Coi:
