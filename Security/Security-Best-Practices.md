@@ -238,7 +238,7 @@ Coi rejects symlinked protected paths to prevent attacks where a symlink could t
 
 - Linked git worktrees (`.git` as a file pointing at git internals outside the workspace) are supported: Coi resolves the external gitdir and common dir, mounts the common dir so git works, and re-covers its auto-executing subpaths (`hooks`, `config`, `info/attributes`, `worktrees/*/config.worktree`) with the same read-only protection a normal repo's `.git` gets — synthesizing empty read-only placeholders for absent ones
 - A bidirectional-link guard rejects malicious `gitdir:` pointers (e.g. an untrusted repo pointing at `~/.ssh`): the external dir is mounted only if its `gitdir` back-pointer resolves to this workspace and it is a real object store; on any guard failure Coi fails closed (nothing mounted)
-- When `.git` indirection still cannot be handled (e.g. `.git` is a symlink, or a submodule's `.git` file), Coi surfaces a setup warning instead of silently skipping git path protection, and continues protecting unrelated paths like `.vscode`
+- When the workspace's own `.git` indirection still cannot be handled (e.g. the workspace's `.git` is a symlink, or a file because the workspace is itself a submodule checkout), Coi surfaces a setup warning instead of silently skipping git path protection, and continues protecting unrelated paths like `.vscode`
 - Symlinked protected paths like `.vscode -> /etc/passwd` are rejected
 
 ## Permission Mode

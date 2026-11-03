@@ -114,7 +114,7 @@ opencode2 launches like [opencode](#opencode): same flags and the same config di
 
 - Binary: `opencode2` (`[tool] binary` still overrides it)
 - Launch: coi starts opencode2 with `--standalone` (`coi run --prompt`, which needs bypass mode, runs `opencode2 run --standalone --auto`), so no background `opencode serve --service` outlives the session: opencode2's own server exits with it.
-- Config files: coi copies the host's `opencode.json` and `cli.json` (v2's TUI config, v1's `tui.json`). `opencode.jsonc` is not copied: v2 loads it after `opencode.json`, so its settings would win over the sandbox settings coi merges into `opencode.json`.
+- Config files: coi copies the host's `opencode.json` and `cli.json` (v2's TUI config) instead of opencode's `opencode.json` and `tui.json`. `opencode.jsonc` is not copied: v2 loads it after `opencode.json`, so its settings would win over the sandbox settings coi merges into `opencode.json`.
 - Permissions: in bypass mode (the default) coi also starts opencode2 with `--auto`, which approves everything that is not explicitly denied. Otherwise a v2 `permissions` rule with `ask`, in the host or the workspace config, would win over coi's v1 `permission` setting. With `permission_mode = "interactive"` coi does not pass `--auto`.
 - Session storage: the same data dirs as opencode, mounted from `~/.coi/tool-data/opencode2/<workspace-hash>/` on the host. opencode2 never takes the data an older coi kept in the workspace (see [opencode](#opencode)), and OpenCode v1 history is not imported.
 - Plan files: OpenCode v2's Plan agent writes plans to `~/.opencode/plan`. coi mounts that dir from `~/.coi/tool-data/opencode2/<workspace-hash>/plan/` on the host, so plans survive ephemeral containers. A workspace's own `.opencode/plan` is not touched. A persistent container that does not have this mount yet gets it the next time coi starts it (not with `coi shell --container`). The plans it already holds in `~/.opencode/plan` are copied to the host dir first; a plan of the same name already there is kept, and coi warns that the container's copy stays hidden. If the copy fails, coi warns and the plans stay in the container, hidden by the mount.
@@ -224,7 +224,7 @@ forward_env = ["ANTHROPIC_API_KEY"]
 
 ```bash
 # Via host config file (copied into container automatically)
-# ~/.config/opencode/opencode.json (and tui.json; cli.json for opencode2) on host is copied and merged with the permission setting
+# ~/.config/opencode/opencode.json (and tui.json; opencode2 gets cli.json instead of tui.json) on host is copied and merged with the permission setting
 ```
 
 ## Tool Selection
