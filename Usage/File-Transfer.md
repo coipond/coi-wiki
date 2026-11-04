@@ -72,7 +72,7 @@ coi file push ./temp.json my-container-2:/workspace/data.json
 
 - File ownership is preserved when possible
 - Use `-r` flag for recursive directory operations
-- Paths in containers must be absolute
+- A single file push or pull takes a container path without a leading `/` from the container root: `my-container:workspace/notes.txt` is `/workspace/notes.txt`. Use absolute container paths for clarity, and always with `-r`
 - Works with both running and stopped containers
 
 ### File Ownership and UID Shifting
