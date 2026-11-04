@@ -288,6 +288,8 @@ coi attach myproject-2           # Attach to slot 2 by alias
 
 Aliases are registered in `~/.coi/aliases.json` on first use and stored as `user.coi.alias` metadata on each container. `coi list` shows aliases next to container names.
 
+An alias can also keep a saved profile in `~/.coi/aliases.json`. `coi shell --profile <name>` saves `<name>` for the alias, and a later `coi shell <alias>` without `--profile` uses it. `coi run` keeps the saved profile. A profile that came only from `[defaults] profile` is not saved into the alias, so a change of the default reaches every alias without a saved profile. The exception is the resume of a session saved by an older coi: it still saves its profile. See [Selecting the Profile a Bare `coi` Uses](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile) for the precedence and how to reset an entry saved by an older coi.
+
 ## Named Sessions (`session_name`) — v0.11.1
 
 By default a session's identity — its container name, slot and port allocation, and the saved-session store `--resume`/`--continue` searches — is keyed on a hash of the workspace's absolute path. Setting `[container] session_name` (typically in a profile, paired with `persistent = true`) keys all of that on the name instead, so the same session continues from any workspace location: a moved checkout, or several checkouts sharing one session.
