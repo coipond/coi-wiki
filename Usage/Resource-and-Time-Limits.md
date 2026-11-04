@@ -86,7 +86,7 @@ Both `size` and `tmpfs_size` apply identically whether the container is launched
 
 `max_duration` stops the container after the specified time has elapsed since session start. Combine with `auto_stop = true` (the default) to get automatic cleanup. `stop_graceful = true` sends SIGTERM and waits for a clean exit; `stop_graceful = false` force-kills immediately.
 
-`max_processes` caps the total number of processes (threads included) the container can spawn. Useful for preventing runaway process trees. `0` means unlimited.
+`max_processes` caps the total number of processes (threads included) the container can spawn. Useful for preventing runaway process trees. `0` means unlimited. An explicit `max_processes = 0` in a higher layer (see [Precedence](#precedence)) lifts a limit set in a lower one, for example `0` in a project config over `500` in `~/.coi/config.toml`, or a child profile over its parent. A layer that does not set `max_processes` keeps the lower layer's value. `coi profile info` shows an explicit `max_processes = 0`.
 
 ## Profile-Specific Limits
 
