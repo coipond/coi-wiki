@@ -199,6 +199,8 @@ apt-get update && apt-get install -y rustup
 rustup default stable
 ```
 
+> **Note:** Coi pushes only the script file into the build container, as `/tmp/build.sh`, and runs it as root with no environment from coi. Other files in the profile directory are not copied, so a script that sources or reads them fails, and variables such as `COI_APT_MIRROR` do not reach it. Keep the script self-contained. See [Workflow 2: Profile with Build Script](Image-Management#workflow-2-profile-with-build-script).
+
 You can also use inline commands instead of a script:
 
 ```toml
