@@ -143,7 +143,7 @@ Add `--no-descriptions` to leave out the command descriptions. `coi completion <
 
 ```bash
 # Run a command non-interactively inside a Coi container
-coi run [flags] [--] <command> [args...]
+coi run [flags] [--] [command] [args...]
 
 # Examples
 coi run -- npm test
