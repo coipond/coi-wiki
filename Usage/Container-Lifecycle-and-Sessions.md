@@ -283,7 +283,8 @@ alias = "myproject"
 ```bash
 coi shell myproject              # Launch session using alias (from any directory)
 coi attach myproject             # Attach when only one slot is running
-coi kill myproject --force       # Kill by alias
+coi kill myproject --force       # Kill the one running slot; with several running, fails and lists them
+coi kill myproject-2 --force     # Kill slot 2 by alias
 coi attach myproject-2           # Attach to slot 2 by alias
 ```
 
