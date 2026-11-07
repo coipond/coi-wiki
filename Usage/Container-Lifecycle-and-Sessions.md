@@ -192,12 +192,13 @@ When a container alias is configured, every slot's container keeps its normal `c
 
 ```bash
 # Config: alias = "myproject"
-coi shell    # → coi-<hash>-1 (addressable as myproject)
+coi shell    # → coi-<hash>-1 (addressable as myproject-1)
 coi shell    # → coi-<hash>-2 (addressable as myproject-2)
 coi shell    # → coi-<hash>-3 (addressable as myproject-3)
 
 # Attach by alias
-coi attach myproject      # slot 1
+coi attach myproject      # the one running slot; with several running, fails and lists them
+coi attach myproject-1    # slot 1
 coi attach myproject-2    # slot 2
 ```
 
@@ -281,7 +282,7 @@ alias = "myproject"
 
 ```bash
 coi shell myproject              # Launch session using alias (from any directory)
-coi attach myproject             # Attach to running aliased container
+coi attach myproject             # Attach when only one slot is running
 coi kill myproject --force       # Kill by alias
 coi attach myproject-2           # Attach to slot 2 by alias
 ```
