@@ -142,13 +142,28 @@ Limits are applied with this precedence (highest to lowest):
 
 coi applies `[limits]` when it creates a container. A [persistent](Container-Lifecycle-and-Sessions#persistent-mode-container-persistent--true) container also gets the current limits each time `coi shell` or `coi run` starts it again after it was stopped:
 
-- Before the start, coi sets each limit key it manages to the current config value, and removes the key when the config value is now empty or `0`. It logs the keys it changed: `Applied resource limit changes from the current config: <keys>`. The keys are `limits.cpu`, `limits.cpu.allowance`, `limits.cpu.priority`, `limits.memory`, `limits.memory.enforce`, `limits.memory.swap`, `limits.processes`, and the root disk's `limits.read`, `limits.write`, `limits.max`, `limits.disk.priority` and `size` (named `root.<key>` in coi's messages).
-- After the start, a changed `tmpfs_size` remounts `/tmp` with the new size, and a removed `tmpfs_size` removes coi's sized `/tmp`. If the new size is smaller than what `/tmp` holds, the remount fails with a warning (`Failed to set /tmp size`); the next start of the container mounts the new size.
+- Before the start, coi sets the Incus config key of each field in the table below to the current config value, and removes the key when the value is now empty or `0`. It logs the keys it changed: `Applied resource limit changes from the current config: <keys>`.
+- After the start, a changed `tmpfs_size` remounts `/tmp` with the new size. A removed `tmpfs_size` removes the RAM-backed tmpfs, so `/tmp` is disk-backed again. If the new size is smaller than what `/tmp` holds, the remount fails with a warning (`Failed to set /tmp size`); the next start of the container mounts the new size.
 - `coi shell --container <name>` uses the container as it is and does not change its limits.
+
+| Config field | Incus key (as named in coi's messages) |
+|--------------|----------------------------------------|
+| `[limits.cpu] count` | `limits.cpu` |
+| `[limits.cpu] allowance` | `limits.cpu.allowance` |
+| `[limits.cpu] priority` | `limits.cpu.priority` |
+| `[limits.memory] limit` | `limits.memory` |
+| `[limits.memory] enforce` | `limits.memory.enforce` |
+| `[limits.memory] swap` | `limits.memory.swap` |
+| `[limits.runtime] max_processes` | `limits.processes` |
+| `[limits.disk] read` | `root.limits.read` (root disk device key `limits.read`) |
+| `[limits.disk] write` | `root.limits.write` (root disk device key `limits.write`) |
+| `[limits.disk] max` | `root.limits.max` (root disk device key `limits.max`) |
+| `[limits.disk] priority` | `root.limits.disk.priority` (root disk device key `limits.disk.priority`) |
+| `[limits.disk] size` | `root.size` (root disk device key `size`) |
 
 A container that is already running is not changed, because another session may use it. When `coi shell` reuses a running container, coi prints a warning that names the limits that differ, for example:
 
-```
+```text
 Warning: this running container has different resource limits than the current config (limits.memory); restart it (coi shutdown, then relaunch) to apply them
 ```
 
