@@ -60,7 +60,7 @@ Keeps the entire container with all modifications:
 - `coi attach` reconnects to the same container with everything intact
 - Set it in the project's `./.coi/config.toml`, your user config, or a profile — there is no CLI flag (as of v0.10.0)
 - On `--resume`, an explicitly configured `persistent` wins over the resumed session's saved mode, so config can convert a session's persistence; when unset, the saved mode is inherited
-- A stopped persistent container gets the current `[limits]` when `coi shell` or `coi run` starts it again; a running one that a session reuses keeps its limits and coi warns about the ones that differ (see [When Limits Apply](Resource-and-Time-Limits#when-limits-apply))
+- A stopped persistent container gets the current `[limits]` when `coi shell` or `coi run` starts it again; a running one keeps its limits (see [When Limits Apply](Resource-and-Time-Limits#when-limits-apply))
 
 ### `coi persist`
 
