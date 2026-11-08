@@ -138,6 +138,22 @@ Limits are applied with this precedence (highest to lowest):
 4. User config (`~/.coi/config.toml`, `[limits]` section)
 5. Unlimited (Incus defaults)
 
+## When Limits Apply
+
+coi applies `[limits]` when it creates a container. A [persistent](Container-Lifecycle-and-Sessions#persistent-mode-container-persistent--true) container also gets the current limits each time `coi shell` or `coi run` starts it again after it was stopped:
+
+- Before the start, coi sets each limit key it manages to the current config value, and removes the key when the config value is now empty or `0`. It logs the keys it changed: `Applied resource limit changes from the current config: <keys>`. The keys are `limits.cpu`, `limits.cpu.allowance`, `limits.cpu.priority`, `limits.memory`, `limits.memory.enforce`, `limits.memory.swap`, `limits.processes`, and the root disk's `limits.read`, `limits.write`, `limits.max`, `limits.disk.priority` and `size` (named `root.<key>` in coi's messages).
+- After the start, a changed `tmpfs_size` remounts `/tmp` with the new size, and a removed `tmpfs_size` removes coi's sized `/tmp`. If the new size is smaller than what `/tmp` holds, the remount fails with a warning (`Failed to set /tmp size`); the next start of the container mounts the new size.
+- `coi shell --container <name>` uses the container as it is and does not change its limits.
+
+A container that is already running is not changed, because another session may use it. When `coi shell` reuses a running container, coi prints a warning that names the limits that differ, for example:
+
+```
+Warning: this running container has different resource limits than the current config (limits.memory); restart it (coi shutdown, then relaunch) to apply them
+```
+
+**A value set by hand is replaced.** A value set with `incus config set` (or `incus config device set` on the root disk) on a key coi manages is replaced or removed at the next start of a stopped persistent container. To keep a value, set it in `[limits]` in a config file or a [profile](Profiles). coi leaves keys it does not manage alone. `max_duration` is not an Incus key, so it is not affected.
+
 ## Examples
 
 **Limit resources for expensive operations:**
