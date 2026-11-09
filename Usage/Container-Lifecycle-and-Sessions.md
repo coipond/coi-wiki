@@ -205,7 +205,7 @@ coi attach myproject-2    # slot 2
 
 An alias name may itself end in `-N` (for example `app-2`). coi tries the whole argument as an alias first: `<alias>-N` addresses slot N of `<alias>` only when no alias has the whole name. What counts as "an alias has the whole name" depends on the command:
 
-- Commands that address a running container (`coi attach`, `coi kill` and the like) check the aliases of running containers and `~/.coi/aliases.json`. If `aliases.json` exists but cannot be read or parsed, they do not split the name.
+- Commands that address a running container (`coi attach`, `coi kill` and the like) check the aliases of running containers and `~/.coi/aliases.json`. If `aliases.json` exists but cannot be read or parsed, they never read `-N` as a slot: the whole argument is the alias.
 - `coi shell <alias>` checks `~/.coi/aliases.json` and the `[container] alias` in the current directory's `.coi/config.toml`. If `aliases.json` exists but cannot be read or parsed, `coi shell` fails.
 
 Slots start at 1, so `-0` is never a slot suffix: `app-0` is always read as a whole alias name.
