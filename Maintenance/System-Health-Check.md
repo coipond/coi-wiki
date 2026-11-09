@@ -22,7 +22,7 @@ coi health --verbose
 
 | Check | Fix |
 |-------|-----|
-| Permissions | Adds you to the `incus-admin` group (log out and back in for it to take effect) |
+| Permissions | Adds you to the `incus-admin` group, which is root-equivalent on the host (log out and back in for it to take effect; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group)) |
 | IP forwarding | Enables IPv4 forwarding (`net.ipv4.ip_forward=1`) |
 | nft | Configures passwordless sudo for `nft`, needed for restricted/allowlist network isolation |
 | iptables sudo | **Shown, not applied** — prints the command for you to run (see below) |

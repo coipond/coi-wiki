@@ -110,7 +110,7 @@ sudo systemctl enable --now incus.service
 sudo usermod -aG incus-admin $USER
 ```
 
-> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`.
+> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`. The group is root-equivalent on the host; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group).
 
 ```bash
 sudo incus admin init --auto
@@ -158,7 +158,7 @@ sudo systemctl enable --now incus.service
 sudo usermod -aG incus-admin $USER
 ```
 
-> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`.
+> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`. The group is root-equivalent on the host; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group).
 
 ```bash
 sudo incus admin init --auto
@@ -199,7 +199,7 @@ sudo systemctl enable --now incus.service
 sudo usermod -aG incus-admin $USER
 ```
 
-> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`.
+> **Important:** You must log out and back in (or run `newgrp incus-admin`) for the group change to take effect before proceeding. Verify with: `groups | grep incus-admin`. The group is root-equivalent on the host; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group).
 
 ```bash
 sudo incus admin init --auto
