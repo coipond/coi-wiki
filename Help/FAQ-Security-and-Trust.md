@@ -76,11 +76,11 @@ One of the more fitting aspects of this workflow: Coi is often built inside Coi 
 
 ## Do You Need to Give Coi "Full Access"?
 
-**Coi itself does not need "full access" to anything.** Here is what actually happens:
+**The AI tools get limited access, but you, the host user who runs Coi, need root-equivalent access to Incus.** Here is what actually happens:
 
 **Coi requires:**
 
-- Incus permissions (you must be in the `incus-admin` group)
+- Incus permissions (you must be in the `incus-admin` group, which is root-equivalent on the host: see [Why Does Coi Need the `incus-admin` Group?](#why-does-coi-need-the-incus-admin-group))
 - Access to your workspace directory (the project you are working on)
 - Optional: passwordless sudo for `nft` for network isolation (you can decline it by setting `[network] use_sudo = false` and `mode = "open"` in config)
 
@@ -94,6 +94,17 @@ One of the more fitting aspects of this workflow: Coi is often built inside Coi 
 - ❌ **Your local network** - Blocked by default (restricted mode)
 
 You control what gets mounted. By default, Coi is locked down.
+
+## Why Does Coi Need the `incus-admin` Group?
+
+The `incus-admin` group gives full access to the Incus socket, and that is root-equivalent on the host. Incus says local socket access "always grants full access to Incus", including the ability to attach file system paths or devices to any instance and to change its security features, so you should only give it to users you would trust with root access to your system.
+
+The `incus` group alone is not enough for Coi today:
+
+- Users in the `incus` group get a restricted Incus project of their own, `user-<uid>`, and can use only that project. Coi uses the `default` project unless you set `[incus] project`, so its Incus check fails and Coi asks you to join `incus-admin`.
+- Setting `[incus] project = "user-<uid>"` does not make a default Coi container work. That project forbids syscall interception, and Coi sets `security.syscalls.intercept.mknod` and `security.syscalls.intercept.setxattr` when Docker support is on, which is the default (`[container] docker`). Incus refuses the container.
+
+This access is for Coi on the host. For what the AI tool inside the container can reach, see [Do You Need to Give Coi "Full Access"?](#do-you-need-to-give-coi-full-access) and [Architecture and Security Model](Architecture-and-Security-Model).
 
 ## See Also
 
