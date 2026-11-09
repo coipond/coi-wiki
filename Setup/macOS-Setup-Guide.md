@@ -203,7 +203,7 @@ On a Mac with several users whose homes are all shared into the VM, coi only use
 > **Note: Ubuntu Template Assumed**
 > The commands below use `apt` and assume the default Colima/Lima Ubuntu template. If you started Colima with a different distro (e.g., `colima start --image debian`), substitute your distro's package manager. The Ubuntu template is recommended for Coi — it is the most tested and matches the base image Coi builds on.
 
-Both setups below add your VM user to the `incus-admin` group. The group is root-equivalent on the machine that runs Incus, here the VM; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group).
+The Colima setup below and the [OrbStack](#orbstack) setup both add your VM user to the `incus-admin` group. The group is root-equivalent on the machine that runs Incus, here the VM; see [Why Does Coi Need the `incus-admin` Group?](FAQ-Security-and-Trust#why-does-coi-need-the-incus-admin-group).
 
 ```bash
 # Install Colima (example)
