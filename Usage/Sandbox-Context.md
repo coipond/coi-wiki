@@ -15,16 +15,16 @@ The file is rendered from a built-in template with session-specific values and r
 
 ## Auto-Context Injection
 
-By default, Coi also injects the sandbox context into each tool's native context-loading mechanism (`auto_context = true`):
+By default, Coi also injects the sandbox context into each tool's native context-loading mechanism, except goose's (`auto_context = true`):
 
 - **Claude Code**: Sandbox context is written to `~/.claude/CLAUDE.md`, which Claude auto-reads at every session start. If the host has a `CLAUDE.md` with user instructions, those are preserved: the sandbox context is written as a single marker-delimited managed block (`# BEGIN COI Sandbox Context (managed by coi - do not edit this block)` … `# END COI Sandbox Context (managed by coi)`), and injection is idempotent — each session replaces the managed block with one fresh copy, healing any duplicated pre-v0.11.1 copies, while non-managed content is left untouched.
 - **OpenCode**: The `instructions` field in `opencode.json` is set to reference `~/SANDBOX_CONTEXT.md`.
 - **Codex**: A managed block is written into the container's `~/.codex/AGENTS.md` (never the workspace `AGENTS.md`).
 - **pi**: `~/.pi/agent/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
 - **omp**: `~/.omp/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
-- **goose**: not injected.
+- **goose**: not injected. `~/SANDBOX_CONTEXT.md` is still created, but goose does not read it by itself.
 
-This means AI tools automatically have full sandbox awareness without users needing to manually reference `~/SANDBOX_CONTEXT.md`.
+This means these tools automatically have full sandbox awareness without users needing to manually reference `~/SANDBOX_CONTEXT.md`.
 
 To disable (the `~/SANDBOX_CONTEXT.md` file is still created):
 

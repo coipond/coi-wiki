@@ -245,18 +245,6 @@ The build installs goose v1.57.0 from its release tarball and checks the tarball
 - Resume: `coi shell --resume` needs a saved goose session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). coi then looks up the workspace's latest goose session and runs `goose session --resume --session-id <id>`; when it finds none, it starts a new goose session.
 - `coi run --prompt` does not support goose: it exits with code 2 (`tool "goose" cannot run a prompt headlessly via coi run`).
 
-### Tool Not Installed
-
-If the configured tool is not in the container, `coi shell` and `coi run --prompt` print this instead of bash's `command not found`:
-
-```text
-coi: <binary> not found in this container. If <tool> is missing from the image, add it to [container.build] agents, run coi build --force, then recreate a persistent container.
-```
-
-`coi run --prompt` then exits with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt. `coi shell` with `[shell] use_tmux = false` prints `Error: exit status 127` and exits with code 1.
-
-The check runs after the [`[tool] pre_launch`](#keeping-tools-up-to-date-and-wrapping-them) commands, so a tool that they install still starts. A persistent container keeps the image it was created from, so it gets a tool added to `agents` only when it is recreated.
-
 ## Passing API Keys
 
 For opencode, pi, and other tools that require API keys:
@@ -345,6 +333,18 @@ pre_launch = ["claude update"]                     # run before the tool starts,
 
 See [Configuration → Running commands before the agent](Configuration#running-commands-before-the-agent-pre_launch) and [Replacing the tool's executable](Configuration#replacing-the-tools-executable-binary).
 
+## Tool Not Installed
+
+If the configured tool is not in the container, `coi shell` and `coi run --prompt` print this instead of bash's `command not found`:
+
+```text
+coi: <binary> not found in this container. If <tool> is missing from the image, add it to [container.build] agents, run coi build --force, then recreate a persistent container.
+```
+
+`coi run --prompt` then exits with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt. `coi shell` with `[shell] use_tmux = false` prints `Error: exit status 127` and exits with code 1.
+
+The check runs after the [`[tool] pre_launch`](#keeping-tools-up-to-date-and-wrapping-them) commands, so a tool that they install still starts. A persistent container keeps the image it was created from, so it gets a tool added to `agents` only when it is recreated.
+
 ## Adding New Tools
 
 Coi's tool abstraction (the `Tool` interface plus optional capability interfaces) makes it straightforward to add a new AI coding assistant.
@@ -353,7 +353,7 @@ Coi's tool abstraction (the `Tool` interface plus optional capability interfaces
 
 ## Sandbox Context File
 
-Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system.
+Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system, except goose.
 
 **→ See [Sandbox Context](Sandbox-Context)** for what it includes, auto-context injection per tool, disabling it, and custom / JSON context files.
 
