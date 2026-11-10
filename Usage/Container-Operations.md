@@ -143,13 +143,15 @@ Add `--no-descriptions` to leave out the command descriptions. `coi completion <
 
 ```bash
 # Run a command non-interactively inside a Coi container
-coi run -- <command> [args...]
+coi run [flags] [--] [command] [args...]
 
 # Examples
 coi run -- npm test
 coi run -- pytest tests/
 coi run -- bash -c "pip install -r requirements.txt && python validate.py"
 ```
+
+Put Coi's flags before the command: everything after the command's name goes to the command, flags included. `coi run ls -la` passes `-la` to `ls`, and `coi run -w dir make` sets Coi's workspace (`coi run make -w dir` passes `-w dir` to `make`). The `--` before the command is optional.
 
 Key differences from `coi shell`:
 
@@ -158,7 +160,7 @@ Key differences from `coi shell`:
 - **Suitable for piped input** - Works correctly when stdin is not a terminal
 - **Same isolation** - Uses the same container isolation, credential protection, and network modes as `coi shell`
 
-All operational session flags are supported; image and persistence come from config or the selected profile:
+All operational session flags are supported except `--resume` and `--continue`: `coi run` does not resume a tool session, and with either flag it exits with code `2`. To resume a tool session, use `coi shell --resume` or `coi shell --continue` (see [Container Lifecycle and Sessions](Container-Lifecycle-and-Sessions)). Image and persistence come from config or the selected profile:
 
 ```bash
 coi run --profile rust-dev -- cargo test    # profile carries image/persistence/limits
