@@ -7,7 +7,7 @@ Browse by category or use the troubleshooting quick links below.
 | Category | Questions | Description |
 |----------|-----------|-------------|
 | [Platform Comparisons](FAQ-Platform-Comparisons) | 5 | How Coi differs from Docker, DevContainers, Distrobox, plain VMs, and Docker Sandboxes |
-| [Security and Trust](FAQ-Security-and-Trust) | 5 | What Coi protects against, credential handling, prompt injection, and trustworthiness |
+| [Security and Trust](FAQ-Security-and-Trust) | 6 | What Coi protects against, credential handling, prompt injection, trustworthiness, and why it needs `incus-admin` |
 | [Setup and Operation](FAQ-Setup-and-Operation) | 9 | Platform support, configuration, Docker-in-Coi, local AI models, and daily use |
 
 ## Troubleshooting Quick Links
