@@ -253,7 +253,7 @@ If the configured tool is not in the container, `coi shell` and `coi run --promp
 coi: <binary> not found in this container. If <tool> is missing from the image, add it to [container.build] agents, run coi build --force, then recreate a persistent container.
 ```
 
-`coi run --prompt`, and `coi shell` with `[shell] use_tmux = false`, then exit with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt.
+`coi run --prompt` then exits with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt. `coi shell` with `[shell] use_tmux = false` prints `Error: exit status 127` and exits with code 1.
 
 The check runs after the [`[tool] pre_launch`](#keeping-tools-up-to-date-and-wrapping-them) commands, so a tool that they install still starts. A persistent container keeps the image it was created from, so it gets a tool added to `agents` only when it is recreated.
 
