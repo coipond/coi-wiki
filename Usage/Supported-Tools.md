@@ -247,11 +247,13 @@ The build installs goose v1.57.0 from its release tarball and checks the tarball
 
 ### Tool Not Installed
 
-If the configured tool is not in the container, `coi shell` and `coi run --prompt` print this instead of bash's `command not found`, and exit with code 127:
+If the configured tool is not in the container, `coi shell` and `coi run --prompt` print this instead of bash's `command not found`:
 
 ```text
 coi: <binary> not found in this container. If <tool> is missing from the image, add it to [container.build] agents, run coi build --force, then recreate a persistent container.
 ```
+
+`coi run --prompt`, and `coi shell` with `[shell] use_tmux = false`, then exit with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt.
 
 The check runs after the [`[tool] pre_launch`](#keeping-tools-up-to-date-and-wrapping-them) commands, so a tool that they install still starts. A persistent container keeps the image it was created from, so it gets a tool added to `agents` only when it is recreated.
 
