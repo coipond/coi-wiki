@@ -133,7 +133,7 @@ storage_pool = ""              # empty = Incus default pool
 # commands = ["apt-get update"] # Inline build commands (alternative to script)
 # compression = ""             # Image compression: "none", "gzip", "xz" ("" = Incus default)
 # agents = ["claude"]          # AI agents to install (default set: claude, opencode2, pi;
-#                              # codex, omp and opencode (v1) are opt-in and must be listed explicitly)
+#                              # codex, omp, goose and opencode (v1) are opt-in and must be listed explicitly)
 # cloud_init = false           # Keep cloud-init in the built coi image. Off by default:
 #                              # it ran on every container boot and slowed starts.
 #                              # Takes effect on the next `coi build --force`.
@@ -170,7 +170,7 @@ storage_pool = ""              # empty = Incus default pool
 # nightly-maintenance = { file = "prompts/nightly.md" }
 
 [tool]
-name = "claude"              # AI coding tool: "claude", "codex", "opencode", "opencode2", "pi", "omp"
+name = "claude"              # AI coding tool: "claude", "codex", "opencode", "opencode2", "pi", "omp", "goose"
 permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # binary = "/workspace/scripts/claude-wrapper.sh"
 #                            # Optional: executable to launch instead of the tool's default
@@ -553,7 +553,7 @@ shift = true      # force an idmapped mount → host files show up owned by `cod
 
 ## Replacing the Tool's Executable (`binary`)
 
-`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `pi`, `omp`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
+`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `pi`, `omp`, `goose`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
 
 ```toml
 [tool]

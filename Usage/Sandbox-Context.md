@@ -22,6 +22,7 @@ By default, Coi also injects the sandbox context into each tool's native context
 - **Codex**: A managed block is written into the container's `~/.codex/AGENTS.md` (never the workspace `AGENTS.md`).
 - **pi**: `~/.pi/agent/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
 - **omp**: `~/.omp/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
+- **goose**: not injected.
 
 This means AI tools automatically have full sandbox awareness without users needing to manually reference `~/SANDBOX_CONTEXT.md`.
 
