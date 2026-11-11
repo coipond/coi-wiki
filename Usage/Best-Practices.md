@@ -51,7 +51,7 @@ When in doubt, start with `restricted`. If package managers fail, add the requir
 
 - **Enable monitoring for any project you did not write** — Set `[monitoring] enabled = true` in your global `~/.coi/config.toml` so it applies everywhere, then disable per-project only if you have a specific reason.
 - **Review the audit log after suspicious sessions** — `cat ~/.coi/audit/<container-name>.jsonl` before deleting the container. Once the container is gone, the audit log is the only record.
-- **Tune thresholds for large codebases** — Projects with many large files (ML datasets, compiled artifacts) may trigger the default 50MB read threshold legitimately. Increase `file_read_threshold_mb` to reduce false positives.
+- **Tune thresholds for large codebases** — Projects with many large files (ML datasets, compiled artifacts) may trigger the default read thresholds (50MB in one poll interval, or 10MB/s) legitimately. Increase `file_read_threshold_mb` and `file_read_rate_mb_per_sec` to reduce false positives.
 - **Do not disable `auto_pause_on_high`** — A paused container is recoverable (`coi unfreeze`). A killed process is not. Leave auto-pause enabled and investigate before resuming.
 
 ## Long-Running and Overnight Tasks
