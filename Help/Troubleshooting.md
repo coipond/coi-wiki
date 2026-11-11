@@ -156,7 +156,7 @@ file_read_threshold_mb = 200    # Increase from default 50MB
 
 - Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
-- Connection to known attack ports: any suspicious port with nftables monitoring, only 4444 and 5555 with process-level monitoring alone (see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
+- Connection to known attack ports: with nftables monitoring, any suspicious port on a public address or a firewall-allowed private one (other private addresses are flagged as private network access: HIGH, Pause); with process-level monitoring alone, only 4444 and 5555 (see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
 
 **Diagnosis:**
 
