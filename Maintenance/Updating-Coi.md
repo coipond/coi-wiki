@@ -53,7 +53,7 @@ sigma_source    = "https://github.com/SigmaHQ/sigma.git"
 sigma_dir       = "~/.coi/sigma"
 ```
 
-> **With the security monitor enabled, containers started after the update use the updated databases.** Running containers, and new sessions that reuse them, keep the previous ones until they stop: restart a running container to apply the update to it. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
+> **With the security monitor enabled, containers started after the update use the updated databases.** Running containers, and new sessions that reuse them, keep the previous ones until they stop: to apply the update to a running container, [stop it](Container-Lifecycle-and-Sessions#stopping-containers) and relaunch it. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
 
 ## After Updating
 
