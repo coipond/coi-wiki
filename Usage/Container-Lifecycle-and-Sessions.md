@@ -25,7 +25,7 @@ Understanding how containers and sessions work in Coi.
 `coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names one kind of grant:
 
 - **Workspace**, **Mounts** (read-only or read-write), **Protected** (read-only paths) and **Masked** (hidden paths, only when any)
-- **Network** (the mode and what it lets through) and **Ports** (only when any are published)
+- **Network** (the mode and what it lets through, for example `host services allowed (allow_host_access)`) and **Ports** (only when any are published)
 - **Sockets** (forwarded host sockets, including the SSH agent)
 - **Env** (environment variables by name, never their values)
 - **Tool config** and **Credentials** (files copied from the host, only when any)

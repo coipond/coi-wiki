@@ -63,7 +63,7 @@ Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the co
 
 ### Network Isolation
 
-Network access is controlled by host-side nftables rules in the FORWARD chain, applied per container IP address. Three modes are available:
+Network access is controlled by host-side nftables rules in the FORWARD chain (and an input chain for traffic to the host itself), applied per container IP address. Three modes are available:
 
 **`restricted` (default)** - Internet access is allowed, but all RFC1918 private network ranges are blocked. The container can reach public services but cannot reach your internal network, databases, CI systems, or other machines on your subnet. Cloud metadata endpoints (169.254.169.254) are also blocked. Connections to known C2/backdoor ports are flagged by security monitoring when it is enabled.
 
@@ -138,7 +138,7 @@ Host machine
 │   ├── Filesystem watcher
 │   └── Network watcher → ~/.coi/audit/<name>.jsonl
 │
-└── nftables (Coi-managed rules in the host FORWARD chain)
+└── nftables (Coi-managed rules in the host FORWARD and input chains)
     └── rules applied per container IP
 ```
 

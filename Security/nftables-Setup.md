@@ -40,7 +40,7 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 ## Key Points
 
 - nftables plus passwordless sudo for `nft` must be available for network isolation to work
-- Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for the allowlist DNS block) to filter container traffic
+- Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for traffic to the host itself, which holds the allowlist DNS block) to filter container traffic
 - Rules are scoped by container IP address for precise filtering
 - Rules are removed when containers are stopped/deleted
 
@@ -48,8 +48,9 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 
 - Coi gets the container's IP address from Incus
 - nftables rules are applied per container IP and evaluated in order (first match wins)
-- Restricted mode: Allow gateway, block RFC1918, allow all else
+- Restricted mode: Allow gateway (forward chain), block RFC1918, allow all else
 - Allowlist mode: Block all DNS, allow gateway DHCP only, block RFC1918 and 169.254.0.0/16, allow the allowlisted IPs on their ports, block all else
+- Traffic to the host itself (restricted and allowlist mode, unless `allow_host_access` is set): allow replies, DHCP, ping and (restricted mode only) DNS to the gateway, allow the ports of `[[network.hosts]]` and `allowed_domains` entries that name a host address, block all else; see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)
 - In open mode, if `nft` is unavailable and the host's FORWARD policy is DROP, Coi falls back to iptables bridge rules so container traffic can still be forwarded (restricted/allowlist always require nft)
 
 ## Automatic Cleanup

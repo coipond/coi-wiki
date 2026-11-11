@@ -87,7 +87,7 @@ Any section from the full config is valid in a project config:
 | `[defaults]` | Environment variables, `forward_env`, and `profile` — the profile a no-flag `coi` uses (`forward_env` and `profile` are trusted-scope only; ignored with a warning from a project config, and `forward_env` also from a project profile). In profiles, `forward_env` is a top-level key, not under `[defaults]`. |
 | `[limits.*]` | CPU, memory, disk, and runtime limits |
 | `[tool]` | Default AI tool, permission mode, executable (`binary`) — but `context_file`, `context_json_file` and `pre_launch` are **trusted-scope config only** (ignored with a warning from a project config or a project profile) |
-| `[network]` | Network isolation mode and allowed domains (but settings that weaken isolation — `mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true` — and `[[network.hosts]]`, `dns_servers`, `allowed_ports` are **trusted-scope config only** — ignored from project config) |
+| `[network]` | Network isolation mode and allowed domains (but settings that weaken isolation — `mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true`, `allow_host_access = true` — and `[[network.hosts]]`, `dns_servers`, `allowed_ports` are **trusted-scope config only** — ignored from project config) |
 | `[mounts]` | Additional mount points (out-of-workspace mounts gated behind `coi trust`) |
 | `[[sockets]]` | Forward host Unix sockets into the container (gated behind `coi trust`) |
 | `[ports]` | Publish container TCP ports on the host — `pool` + `[[ports.map]]` (gated behind `coi trust`; see [Port Publishing](Port-Publishing)) |
@@ -238,6 +238,9 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 # allowed_domains = ["github.com", "pypi.org"]       # Only used in "allowlist" mode
 # refresh_interval_minutes = 30                       # Max DNS refresh interval (actual uses DNS TTL if shorter)
 # allow_local_network_access = false                  # Allow connections from entire local network
+# allow_host_access = false                           # Let restricted/allowlist containers reach every service
+#                                                      # on the host itself (allowlist mode still blocks DNS).
+#                                                      # Trusted scope only.
 # use_sudo = true                                      # false = never invoke sudo for nft/iptables (see "Running without sudo")
 # dns_servers = ["192.168.1.2"]                        # Pin the resolvers the container may reach on port 53
 #                                                      # (restricted mode; IPv4; not valid in allowlist mode).
