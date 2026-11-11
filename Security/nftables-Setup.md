@@ -54,9 +54,9 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 
 ## Bridge Forwarding Rules at Launch
 
-Before `coi shell`, `coi run` or `coi build` starts a container, Coi checks that the host's FORWARD chain lets the Incus bridge's traffic through, so the container can get an IP over DHCP. It does this once per command. What it does depends on what sudo allows:
+Before `coi shell`, `coi run` or `coi build` starts a container, and in restricted or allowlist mode after `coi container launch` or `coi container start` starts one, Coi checks that the host's FORWARD chain lets the Incus bridge's traffic through, so the container can get an IP over DHCP. It does this once per command. What it does depends on what sudo allows:
 
-- **sudo allows `iptables`:** Coi reads the chain with `iptables -S FORWARD` and adds its two `coi-bridge-forward` ACCEPT rules (traffic in from and out to the bridge) when they are missing. It adds them even when the chain accepts the traffic now, so a DROP policy set later (for example by Docker or ufw) does not cut containers off. It then prints `Added iptables FORWARD rules for <bridge> (was missing — containers could not get IPs)`.
+- **sudo allows `iptables`:** Coi reads the chain with `iptables -S FORWARD` and adds its two `coi-bridge-forward` ACCEPT rules (traffic in from and out to the bridge) when they are missing. It adds them even when the chain accepts the traffic now, so a DROP policy set later (for example by Docker or ufw) does not cut containers off. It then prints a line that starts with `Added iptables FORWARD rules for <bridge>`.
 - **sudo refuses `iptables`** (for example, only the `coi-nft` rule is in place), and iptables is the nf_tables variant or not installed: Coi reads the chain with `nft list chain ip filter FORWARD` and adds no rules. If the chain accepts the bridge's traffic, or there is no such chain, Coi changes nothing and prints nothing. If the chain drops the traffic, Coi prints one warning.
 - **sudo refuses `iptables` and iptables is the legacy variant**, or Coi cannot read the chain: Coi prints one warning that it could not inspect the FORWARD chain, and adds no rules.
 - **`[network] use_sudo = false`:** Coi runs no sudo for this check and changes nothing.

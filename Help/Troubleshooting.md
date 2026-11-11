@@ -268,7 +268,7 @@ coi clean --orphans
 
 ## Warning: "could not ensure bridge forwarding rules"
 
-**Symptom:** `coi shell`, `coi run` or `coi build` prints one of these warnings before it starts the container:
+**Symptom:** `coi shell`, `coi run`, `coi build`, `coi container launch` or `coi container start` prints one of these warnings when it starts a container:
 
 ```text
 Warning: could not ensure bridge forwarding rules: the FORWARD chain drops <bridge>'s traffic and coi cannot add rules: ...
