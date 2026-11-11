@@ -217,7 +217,7 @@ With `allow_host_access` on, allowlist mode still blocks DNS (port 53) to the ho
 
 ### Accessing Services from the Host
 
-By default, Coi allows the host machine to access services running in containers. The container's replies to the host are host-bound traffic: in restricted and allowlist mode the input chain accepts them as replies on connections the host opened, and in open mode Coi adds no input rules. Connections the container opens to the host are filtered as described in [Container Access to Host Services](#container-access-to-host-services).
+By default, Coi allows the host machine to access services running in containers. In restricted and allowlist mode the input chain accepts the container's replies on connections the host opened; in open mode Coi adds no input rules. Connections the container opens to the host are filtered as described in [Container Access to Host Services](#container-access-to-host-services).
 
 For example, if a web server runs on port 3000 in the container:
 
@@ -243,8 +243,6 @@ allow_local_network_access = true  # Allow all RFC1918, not just gateway
 > **Warning:** When `allow_local_network_access = true`, ALL RFC1918 private network traffic is allowed - there is no RFC1918 blocking at all. A compromised AI tool can reach any machine on your local network, including internal services, NAS devices, and other development machines. Only enable this in fully trusted environments where cross-machine access is genuinely required.
 
 **Default behavior:** Only the host (gateway IP) can access container services. Other machines on your local network cannot, even if they are on the same subnet.
-
-**Note:** Replies from a container service to the host pass in every mode. A connection the container opens to the host is filtered as described in [Container Access to Host Services](#container-access-to-host-services).
 
 ### Troubleshooting Container Access
 
