@@ -20,6 +20,7 @@ coi shell  # Default behavior
 - Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
 - A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
+- A blocked TCP connection fails at once with "connection refused" (a TCP reset); other blocked traffic gets ICMP port-unreachable. Allowlist mode rejects the same way
 
 ### Allowlist Mode
 
@@ -92,8 +93,8 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 ### Important for Allowlist Mode
 
 - **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of `[[network.hosts]]` and `allowed_domains` entries that name it, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
-- **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing.
-- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject.
+- **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing. If the container runs systemd-resolved, Coi stops it until the container's next boot, so `resolvectl` does not work: names in `/etc/hosts` still resolve, and a lookup of any other name fails at once. When a running container that an allowlist session left this way is set up in restricted or open mode, Coi starts systemd-resolved again.
+- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject. In both chains, each reject has a TCP reset rule ahead of it.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
 - Subdomains must be listed explicitly (`github.com` ≠ `api.github.com`)
 - Domains behind CDNs may have many IPs that change frequently
