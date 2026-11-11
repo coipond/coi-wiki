@@ -217,7 +217,7 @@ With `allow_host_access` on, allowlist mode still blocks DNS (port 53) to the ho
 
 ### Accessing Services from the Host
 
-By default, Coi allows the host machine to access services running in containers. This works by adding an allow rule for the gateway IP (which represents the host) before the RFC1918 block rules. Since the Coi-managed nftables rules order the gateway allow rule before the RFC1918 reject rules, the gateway IP is allowed while other private IPs are still blocked. This rule is in the forward chain: connections the container opens to the host are filtered as described in [Container Access to Host Services](#container-access-to-host-services).
+By default, Coi allows the host machine to access services running in containers. The container's replies to the host are host-bound traffic: in restricted and allowlist mode the input chain accepts them as replies on connections the host opened, and in open mode Coi adds no input rules. Connections the container opens to the host are filtered as described in [Container Access to Host Services](#container-access-to-host-services).
 
 For example, if a web server runs on port 3000 in the container:
 
