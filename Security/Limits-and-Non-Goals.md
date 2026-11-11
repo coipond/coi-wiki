@@ -35,7 +35,7 @@ Coi does not pass host environment variables into the container unless you list 
 
 ### Permission Prompts Are Bypassed
 
-The AI tool runs with its permission prompts bypassed by default (`permission_mode = "bypass"`; for Claude Code, `--permission-mode bypassPermissions`). Nobody approves a command before it runs. To approve commands yourself, set `permission_mode = "interactive"` ([Permission Mode](Supported-Tools#permission-mode)).
+The AI tool runs with its permission prompts bypassed by default (`permission_mode = "bypass"`; for Claude Code, `--permission-mode bypassPermissions`). Nobody approves a command before it runs. To approve commands yourself, set `permission_mode = "interactive"` ([Permission Mode](Supported-Tools#permission-mode)). This works for Claude Code, opencode, opencode2 and Codex CLI; pi, omp and goose ignore the setting. The built-in `hardened` profile does not change this setting.
 
 ### Monitoring Is Off by Default and Only Matches Patterns
 
@@ -50,6 +50,7 @@ Before you trust Coi with a repository you did not write:
 - Assume the tool credentials in the container can leak. Use a credential you can revoke.
 - Add the workspace files your host tools run to `additional_protected_paths`.
 - Review workspace changes before you run them on the host.
+- If you watch the session and your tool supports it, set `permission_mode = "interactive"` to approve each command. This helps only if you read each command: a command that looks routine is easy to approve.
 - For an adversarial agent, put a VM or a dedicated host under Coi ([When a Container Is Not Enough](Threat-Model-Containment-Limits#when-a-container-is-not-enough)).
 
 ## See Also
