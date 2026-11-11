@@ -352,6 +352,8 @@ coi shell --profile box-codex    # re-enters the SAME box, now running Codex
 
 There is no `--tool` flag — the tool is chosen entirely by which profile you launch. Both profiles must set the same `session_name` with `persistent = true`, and both must live in trusted scope (see the trusted-scope note above).
 
+**Both tools must be in the image before the box is first created.** List them in [`[container.build] agents`](Configuration) (codex, as in the example above, is opt-in at build time). A persistent container keeps the image it was created from, so it gets a tool added to `agents` later only when it is recreated: run `coi build --force`, then recreate the container. If the selected tool is not in the container, coi says so at launch; see [Tool Not Installed](Supported-Tools#tool-not-installed).
+
 **Credentials are seeded on first switch (#708).** The first time a newly-selected tool runs in a reused container, coi seeds that tool's CLI config and credentials into it, so the tool you just switched to is authenticated even though it was never used in this container before. coi does not re-copy the original tool's config, and it never touches conversation history — history is per-tool, so each assistant keeps its own transcripts across switches.
 
 Limitations (by design in v0.11.1):
