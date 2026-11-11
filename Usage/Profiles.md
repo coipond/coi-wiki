@@ -357,7 +357,7 @@ coi profile info hardened           # summary of its settings (full list below)
 
 It is a fixed baseline that overrides a weaker base config (a global `mode = "open"` still becomes `restricted` under `--profile hardened`), ships built-in (no setup), and can be overridden by a same-named disk profile (`~/.coi/profiles/hardened/` or `.coi/profiles/hardened/`).
 
-**Limitations** (additive slice merges): the preset cannot subtract a `forward_env` you configured globally, nor re-enable protections if you globally set `disable_protection = true`. It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself, see [Permission Mode](Supported-Tools#permission-mode).
+**Limitations** (additive slice merges): the preset cannot subtract a `forward_env` you configured globally, nor re-enable protections if you globally set `disable_protection = true`. It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself in a tool that supports it, see [Permission Mode](Supported-Tools#permission-mode).
 
 ### Show Profile Details
 
