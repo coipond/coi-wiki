@@ -105,8 +105,9 @@ The in-container approach is self-contained and only affects Coi images, leaving
 
 **Common triggers:**
 
-- Large file read operations (>50MB) - could be legitimate if analyzing big files
-- Large file write operations (>50MB) - could be legitimate if creating archives
+- Large file read operations (by default more than 50MB in one poll interval, or faster than 10MB/s) - could be legitimate if analyzing big files
+- Large file write operations (same thresholds as reads) - could be legitimate if creating archives
+- A connection to a suspicious port other than 4444 or 5555, seen by process-level monitoring
 - Suspicious process patterns that match known attack tools
 
 **Diagnosis:**
@@ -141,6 +142,7 @@ For projects that legitimately need large file operations, increase the threshol
 # ~/.coi/config.toml or .coi/config.toml
 [monitoring]
 file_read_threshold_mb = 200    # Increase from default 50MB
+file_read_rate_mb_per_sec = 40  # Increase from default 10MB/s
 ```
 
 **Note:** Only increase thresholds if you understand the security implications. The defaults are set to catch most exfiltration attempts while allowing normal development work.
@@ -155,7 +157,8 @@ file_read_threshold_mb = 200    # Increase from default 50MB
 
 - Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
-- Connection to known attack ports (4444, 5555, 31337)
+- Connection to a suspicious port, seen by nftables monitoring (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
+- Connection to port 4444 or 5555, seen by process-level monitoring
 
 **Diagnosis:**
 
@@ -265,6 +268,34 @@ coi clean --orphans
 ```
 
 **Prevention:** Always stop containers via `coi shutdown` or `coi kill` rather than directly via `incus stop/delete`.
+
+## Warning: "could not ensure bridge forwarding rules"
+
+**Symptom:** `coi shell`, `coi run`, `coi build`, `coi container launch` or `coi container start` prints one of these warnings when it starts a container:
+
+```text
+Warning: could not ensure bridge forwarding rules: the FORWARD chain drops <bridge>'s traffic and coi cannot add rules: ...
+Warning: could not ensure bridge forwarding rules: could not inspect the FORWARD chain for <bridge>, no rules added: ...
+```
+
+**Cause:** Coi could not run `iptables` through sudo (for example, only the `coi-nft` rule is in place), so Coi cannot add its `coi-bridge-forward` rules (see [nftables Setup → Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)):
+
+- **"the FORWARD chain drops"**: Coi read the chain through `nft`, and it drops the bridge's traffic. The container may not get an IP.
+- **"could not inspect the FORWARD chain"**: Coi could not read the chain (for example, iptables is the legacy variant, which `nft` does not show). Coi does not know whether the traffic is dropped.
+
+**Fix:** do one of these:
+
+- Grant passwordless sudo for `iptables`, so Coi adds its rules itself. This is root-equivalent: `coi health --fix` prints the command for you to run, and does not apply it (see [System Health Check → Fixing Problems](System-Health-Check#fixing-problems---fix)).
+- Add ACCEPT rules for the bridge yourself, the same ones Coi adds:
+
+  ```bash
+  sudo iptables -I FORWARD -i incusbr0 -j ACCEPT -m comment --comment coi-bridge-forward
+  sudo iptables -I FORWARD -o incusbr0 -j ACCEPT -m comment --comment coi-bridge-forward
+  ```
+
+  Replace `incusbr0` with the bridge name from the warning.
+
+Older versions printed `Warning: could not ensure bridge forwarding rules: failed to add iptables rule: sudo: a password is required` (twice in restricted and allowlist mode) even when the chain accepted the bridge's traffic. Coi now prints nothing in that case.
 
 ## Settings.json Overwritten (Lost API Credentials)
 

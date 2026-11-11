@@ -2,7 +2,7 @@
 
 Coi provides network isolation to protect your host and private networks from container access.
 
-**Requirements:** Network isolation (restricted/allowlist modes) requires nftables (`nft`) plus the passwordless-sudo rule that `install.sh` creates (`/etc/sudoers.d/coi-nft`). Coi uses nftables rules to filter container traffic in the FORWARD chain. If nftables or passwordless sudo is not available, set `[network] mode = "open"` in config (optionally with `use_sudo = false` to disable sudo entirely), or install nftables and configure the sudoers rule.
+**Requirements:** Network isolation (restricted/allowlist modes) requires nftables (`nft`) plus the passwordless-sudo rule that `install.sh` creates (`/etc/sudoers.d/coi-nft`). Coi uses nftables rules to filter container traffic in the FORWARD chain, and traffic to the host itself in an input chain. If nftables or passwordless sudo is not available, set `[network] mode = "open"` in config (optionally with `use_sudo = false` to disable sudo entirely), or install nftables and configure the sudoers rule.
 
 ## Network Modes
 
@@ -17,6 +17,7 @@ coi shell  # Default behavior
 - Blocks: RFC1918 private networks (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
 - Blocks: Cloud metadata endpoints (169.254.0.0/16)
 - Allows: All public internet (npm, pypi, GitHub, APIs, etc.)
+- Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
 - A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
 
@@ -32,6 +33,7 @@ mode = "allowlist"
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
 - Always blocks RFC1918 private networks
+- Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
 ### Open Mode
@@ -89,9 +91,9 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 ### Important for Allowlist Mode
 
-- **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP (UDP 67/68); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
+- **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of `[[network.hosts]]` and `allowed_domains` entries that name it, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
 - **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing.
-- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject (forward and input chains) → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject.
+- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
 - Subdomains must be listed explicitly (`github.com` ≠ `api.github.com`)
 - Domains behind CDNs may have many IPs that change frequently
@@ -180,11 +182,42 @@ ports     = [443]
 
 See [Static Host Entries - A LAN Service in Allowlist Mode](Static-Host-Entries#a-lan-service-in-allowlist-mode).
 
+## Container Access to Host Services
+
+In `restricted` and `allowlist` mode, Coi also filters traffic from the container to the host itself: the bridge gateway and the host's other IPv4 addresses. The host accepts from the container only:
+
+- Replies on connections the host opened
+- DHCP (UDP 67) to the gateway
+- Ping to the gateway, rate-limited
+- DNS (UDP/TCP 53) to the gateway, in `restricted` mode only (allowlist mode blocks all DNS)
+- The ports of `[[network.hosts]]` and `allowed_domains` entries that name a host address
+
+A database or dev server that listens on the host is therefore not reachable from the container. `open` mode does not filter this traffic. If Coi cannot detect the gateway (restricted mode then starts with a warning), DHCP and DNS are accepted to any host address.
+
+To reach one host service, list the host address with its ports. In allowlist mode it can be an `allowed_domains` entry:
+
+```toml
+[network]
+mode            = "allowlist"
+allowed_domains = ["github.com", "192.168.1.10:5432"]   # 192.168.1.10 is an address of this host
+```
+
+In either mode it can be a `[[network.hosts]]` entry with `ports` (see [Static Host Entries](Static-Host-Entries)). An entry with no ports uses the global `allowed_ports`; with neither, the address stays closed and Coi prints a warning. In allowlist mode with `allow_local_network_access` off (the default), a private `[[network.hosts]]` address with neither is refused at setup with an explanation instead. In allowlist mode these entries never open ports 53 and 853 on the host. An `allowed_domains` name that resolves to a host address also stays closed, and Coi prints a warning: list the address itself.
+
+To let the container reach every service on the host, set `allow_host_access` in trusted-scope config (`~/.coi/config.toml` or `$COI_CONFIG`):
+
+```toml
+[network]
+allow_host_access = true   # default false
+```
+
+With `allow_host_access` on, allowlist mode still blocks DNS (port 53) to the host. From a project `./.coi/config.toml` or a project profile it is ignored with a warning. When it is on in restricted or allowlist mode, the Network row of the [startup grants](Container-Lifecycle-and-Sessions#effective-grants-at-startup) shows `host services allowed (allow_host_access)`.
+
 ## Host Access to Container Services
 
 ### Accessing Services from the Host
 
-By default, Coi allows the host machine to access services running in containers. This works by adding an allow rule for the gateway IP (which represents the host) before the RFC1918 block rules. Since the Coi-managed nftables rules order the gateway allow rule before the RFC1918 reject rules, the gateway IP is allowed while other private IPs are still blocked.
+By default, Coi allows the host machine to access services running in containers. In restricted and allowlist mode the input chain accepts the container's replies on connections the host opened; in open mode Coi adds no input rules. Connections the container opens to the host are filtered as described in [Container Access to Host Services](#container-access-to-host-services).
 
 For example, if a web server runs on port 3000 in the container:
 
@@ -210,8 +243,6 @@ allow_local_network_access = true  # Allow all RFC1918, not just gateway
 > **Warning:** When `allow_local_network_access = true`, ALL RFC1918 private network traffic is allowed - there is no RFC1918 blocking at all. A compromised AI tool can reach any machine on your local network, including internal services, NAS devices, and other development machines. Only enable this in fully trusted environments where cross-machine access is genuinely required.
 
 **Default behavior:** Only the host (gateway IP) can access container services. Other machines on your local network cannot, even if they are on the same subnet.
-
-**Note:** Nftables rules filter forwarded container traffic. In restricted mode all traffic from the container to the gateway IP is permitted to allow host-to-container communication; in allowlist mode only DHCP to the gateway is.
 
 ### Troubleshooting Container Access
 

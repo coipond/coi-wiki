@@ -94,7 +94,7 @@ coi ignores `forward_env` in a project profile (`./.coi/profiles/`) and prints a
 | `[tool.claude]` | section | Claude-specific settings (`model`, `effort_level`); `model` is delivered to Claude Code as `ANTHROPIC_MODEL` |
 | `[[mounts]]` / `[[mounts.default]]` | array | Additional mount points (`host`, `container`, `readonly`). Both the flat `[[mounts]]` form and the nested `[[mounts.default]]` form are accepted here and in the main config, so a mount block reads identically in either scope — you can copy it between a profile and your top-level config verbatim |
 | `[[credentials]]` | array | Credential files to copy into the container: `bundle = "<catalog name>"`, or ad-hoc `host`/`container`/`mode`. See [Configuration](Configuration) for the trust model |
-| `[network]` | section | Network isolation (`mode`, `allowed_domains`, …). From a project profile, isolation-weakening values (`mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true`) and `hosts`, `dns_servers`, `allowed_ports` are ignored |
+| `[network]` | section | Network isolation (`mode`, `allowed_domains`, …). From a project profile, isolation-weakening values (`mode = "open"`, `block_private_networks = false`, `block_metadata_endpoint = false`, `allow_local_network_access = true`, `allow_host_access = true`) and `hosts`, `dns_servers`, `allowed_ports` are ignored |
 | `[limits.cpu]` | section | CPU limits (`count`, `allowance`, `priority`) |
 | `[limits.memory]` | section | Memory limits (`limit`, `enforce`, `swap`) |
 | `[limits.disk]` | section | Disk limits: IO rates (`read`, `write`, `max`), root disk `size`, `tmpfs_size` |
@@ -357,7 +357,7 @@ coi profile info hardened           # summary of its settings (full list below)
 
 It is a fixed baseline that overrides a weaker base config (a global `mode = "open"` still becomes `restricted` under `--profile hardened`), ships built-in (no setup), and can be overridden by a same-named disk profile (`~/.coi/profiles/hardened/` or `.coi/profiles/hardened/`).
 
-**Limitations** (additive slice merges): the preset cannot subtract a `forward_env` you configured globally, nor re-enable protections if you globally set `disable_protection = true`. It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed.
+**Limitations** (additive slice merges): the preset cannot subtract a `forward_env` you configured globally, nor re-enable protections if you globally set `disable_protection = true`. It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself, set `permission_mode = "interactive"`: this works for Claude Code, opencode, opencode2 and Codex CLI; pi, omp and goose ignore it ([Permission Prompts Are Bypassed](Limits-and-Non-Goals#permission-prompts-are-bypassed)).
 
 ### Show Profile Details
 
@@ -398,7 +398,7 @@ count = "4"
 
 The `WARNING` goes to stderr: coi ignores `forward_env` in a project profile, so `rust-dev` above has none.
 
-The summary is not complete. It leaves out, among others, `[env_commands]`, `[prompts]`, `[[sockets]]`, `[ports]`, `[[credentials]]`, `[shell]`, `[monitoring.nft]`, every `[network]` key except `mode` and `allowed_domains` (so not `block_private_networks`, `block_metadata_endpoint` or `allow_local_network_access`), and some keys of other sections (for example the `readonly` of a `[[mounts]]` entry). For the full settings, read the profile's `config.toml` (the `Source` line). The built-in `hardened` profile has no file: its settings are in the table under [Built-in `hardened` Profile](#built-in-hardened-profile-safe-open-for-untrusted-repos).
+The summary is not complete. It leaves out, among others, `[env_commands]`, `[prompts]`, `[[sockets]]`, `[ports]`, `[[credentials]]`, `[shell]`, `[monitoring.nft]`, every `[network]` key except `mode` and `allowed_domains` (so not `block_private_networks`, `block_metadata_endpoint`, `allow_local_network_access` or `allow_host_access`), and some keys of other sections (for example the `readonly` of a `[[mounts]]` entry). For the full settings, read the profile's `config.toml` (the `Source` line). The built-in `hardened` profile has no file: its settings are in the table under [Built-in `hardened` Profile](#built-in-hardened-profile-safe-open-for-untrusted-repos).
 
 ### Use a Profile
 
