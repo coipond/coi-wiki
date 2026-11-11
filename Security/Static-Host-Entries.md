@@ -59,6 +59,8 @@ Writing a name into `/etc/hosts` only makes it resolve — the firewall still de
 
 Metadata / link-local addresses (`169.254.0.0/16`, the cloud metadata endpoint) are refused in both enforcing modes regardless of `allow_local_network_access` — pointing a name there is a credential-theft SSRF vector.
 
+An address of the host itself (the bridge gateway or another host address) is the exception to the table: in restricted and allowlist mode the host opens it only on the entry's `ports` (else the global `allowed_ports`), whatever its class. With neither, the host stays closed to it and Coi prints a warning; a private address in allowlist mode is refused instead, as for any LAN host. In allowlist mode such an entry may not include port 53 or 853. See [Container Access to Host Services](Network-Isolation#container-access-to-host-services).
+
 ## Security Monitoring
 
 With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks (such as known attack ports) still apply to the host.
