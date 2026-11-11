@@ -1,6 +1,6 @@
 # Updating Coi
 
-`coi update` keeps two things current: the `coi` binary and the threat-detection databases (GTFOBins + Sigma) that the monitoring daemon reads. Running it with no subcommand does both, in sequence.
+`coi update` keeps two things current: the `coi` binary and the threat-detection databases (GTFOBins + Sigma) that each container's security monitor loads. Running it with no subcommand does both, in sequence.
 
 ```bash
 coi update            # update the binary AND the detection databases
@@ -38,7 +38,7 @@ coi update patterns --dry-run  # print the git commands without running them
 
 ## Updating the Detection Databases (`coi update patterns`)
 
-The combined `coi update` also refreshes the two databases the `PROC_EVENTS` monitoring daemon reads at startup:
+The combined `coi update` also refreshes the two databases each container's security monitor loads when the container starts:
 
 - **GTFOBins**: the reverse-shell / privilege-escalation binary database.
 - **Sigma**: the `rules/linux/process_creation/` rule subtree (pulled as a sparse, blobless checkout, ~300 KB).
@@ -53,7 +53,7 @@ sigma_source    = "https://github.com/SigmaHQ/sigma.git"
 sigma_dir       = "~/.coi/sigma"
 ```
 
-> **Restart the monitoring daemon after updating patterns** so it picks up the new rules. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
+> **Containers started after the update use the updated databases.** Running containers, and new sessions that reuse them, keep the previous ones until they stop: restart a running container to apply the update to it. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
 
 ## After Updating
 
@@ -85,7 +85,7 @@ rm -rf ~/.coi/gtfobins
 coi update patterns
 ```
 
-If the directory exists but is not a git repository, Coi reports exactly that and asks you to remove it and re-run — the same fix applies. Restart the monitoring daemon once the clone succeeds.
+If the directory exists but is not a git repository, Coi reports exactly that and asks you to remove it and re-run — the same fix applies.
 
 ### `coi update core` Says "already on the latest version" When It Is Not
 
@@ -95,5 +95,5 @@ If the directory exists but is not a git repository, Coi reports exactly that an
 
 - [System Health Check](System-Health-Check) — verify the environment after updating
 - [Image Management](Image-Management) — rebuilding the container image after a Coi update
-- [Security Monitoring](Security-Monitoring) — the daemon that consumes the GTFOBins + Sigma databases
+- [Security Monitoring](Security-Monitoring) — the security monitor that uses the GTFOBins + Sigma databases
 - [Migration Guide](Migration-Guide) — version-to-version upgrade notes
