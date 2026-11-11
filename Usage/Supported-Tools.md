@@ -197,7 +197,7 @@ agents = ["claude", "codex"]   # omit this key to install the default set (claud
 coi build --force
 ```
 
-If the image would be built without your configured tool (see `agents` above), coi warns when it builds the image (`coi build`, or the auto-build on `coi shell`/`coi run`), so you do not first meet it as `exit 127`. There is no check at launch.
+If the image would be built without your configured tool (see `agents` above), coi warns when it builds the image (`coi build`, or the auto-build on `coi shell`/`coi run`). If the tool is still missing at launch, see [Tool Not Installed](#tool-not-installed).
 
 **Permission mode:** `bypass` (default) maps to `--dangerously-bypass-approvals-and-sandbox` - the Incus container is the sandbox, codex's own Landlock sandbox may not work nested inside it, and the flag also skips the first-run folder-trust prompt. `interactive` keeps codex's own approval prompts (`-s workspace-write -a on-request`).
 
@@ -211,6 +211,39 @@ If the image would be built without your configured tool (see `agents` above), c
 - The workspace `.codex/config.toml` is a protected path (read-only + placeholder), like `.claude/settings.json`, so a contained agent cannot plant a host-auto-executed command (notify hooks, MCP launchers).
 
 **Authentication:** log in on the host first with `codex login`, and coi seeds `~/.codex/auth.json` into the container. If the host stores credentials in the OS keyring (no `auth.json`) or you have never logged in, authenticate inside the container with `codex login --device-auth` (needs device-auth enabled in your org) or `codex login --with-api-key` - the plain `codex login` browser flow cannot work in a container because its OAuth localhost callback is unreachable from the host browser.
+
+### goose
+
+[goose](https://goose-docs.ai), an open-source coding agent.
+
+```toml
+# Select goose in .coi/config.toml, ~/.coi/config.toml, or a profile
+[tool]
+name = "goose"
+```
+
+**Not in the default image** - goose is opt-in at build time. Add it to the agent set and rebuild:
+
+```toml
+[container.build]
+agents = ["claude", "goose"]   # omit this key to install the default set (claude, opencode2, pi)
+```
+```bash
+coi build --force
+```
+
+The build installs goose v1.57.0 from its release tarball and checks the tarball's sha256 first.
+
+**Configuration:**
+
+- Config directory: `~/.config/goose/`
+- Host files copied into the container: `config.yaml`, `secrets.yaml`, `.goosehints`, `AGENTS.md`, and the provider token files `chatgpt_codex/tokens.json`, `githubcopilot/info.json`, `gemini_oauth/tokens.json`, `xai_oauth/tokens.json`, `kimicode/token.json`. On a resume, coi also copies a token file that the saved session does not have yet.
+- Image defaults: `/etc/goose/config.yaml` turns goose telemetry off (`GOOSE_TELEMETRY_ENABLED: false`) and keeps secrets in a file, not the system keyring (`GOOSE_DISABLE_KEYRING: true`). A copied host `config.yaml` that sets these keys wins.
+- Launch: coi starts `goose session`. `permission_mode` has no effect on goose, and coi does not wire the [sandbox context](Sandbox-Context) into it.
+- Session storage: goose's data dir (`~/.local/share/goose/`, with its SQLite session database) and state dir (`~/.local/state/goose/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/goose/<workspace-hash>/`, so sessions survive ephemeral containers.
+- A saved goose session (`~/.coi/sessions-goose/`) leaves out `tls` and `roaming_node_key`, the private keys of `goose serve`, which coi does not run.
+- Resume: `coi shell --resume` needs a saved goose session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). coi then looks up the workspace's latest goose session and runs `goose session --resume --session-id <id>`; when it finds none, it starts a new goose session.
+- `coi run --prompt` does not support goose: it exits with code 2 (`tool "goose" cannot run a prompt headlessly via coi run`).
 
 ## Passing API Keys
 
@@ -300,6 +333,18 @@ pre_launch = ["claude update"]                     # run before the tool starts,
 
 See [Configuration → Running commands before the agent](Configuration#running-commands-before-the-agent-pre_launch) and [Replacing the tool's executable](Configuration#replacing-the-tools-executable-binary).
 
+## Tool Not Installed
+
+If the configured tool is not in the container, `coi shell` and `coi run --prompt` print this instead of bash's `command not found`:
+
+```text
+coi: <binary> not found in this container. If <tool> is missing from the image, add it to [container.build] agents, run coi build --force, then recreate a persistent container.
+```
+
+`coi run --prompt` then exits with code 127. `coi shell` in a tmux session (the default) shows the message in the session, then a bash prompt. `coi shell` with `[shell] use_tmux = false` prints `Error: exit status 127` and exits with code 1.
+
+The check runs after the [`[tool] pre_launch`](#keeping-tools-up-to-date-and-wrapping-them) commands, so a tool that they install still starts. A persistent container keeps the image it was created from, so it gets a tool added to `agents` only when it is recreated.
+
 ## Adding New Tools
 
 Coi's tool abstraction (the `Tool` interface plus optional capability interfaces) makes it straightforward to add a new AI coding assistant.
@@ -308,7 +353,7 @@ Coi's tool abstraction (the `Tool` interface plus optional capability interfaces
 
 ## Sandbox Context File
 
-Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system.
+Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system, except goose.
 
 **→ See [Sandbox Context](Sandbox-Context)** for what it includes, auto-context injection per tool, disabling it, and custom / JSON context files.
 

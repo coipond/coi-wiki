@@ -172,7 +172,7 @@ Slots are allocated automatically when you run `coi shell`:
 - If slot 1 is already running, slot 2 is created
 - If slots 1 and 2 are running, slot 3 is created
 
-By default slots are allocated automatically — each `coi shell` in a new terminal picks the next available number. You can also pin a specific slot with `--slot N` (`0` means auto-allocate).
+By default slots are allocated automatically — each `coi shell` in a new terminal picks the next available number. You can also pin a specific slot with `--slot N` (`0` means auto-allocate). If slot N is in use, coi takes the next free slot up to 10, else the lowest free slot from 1, and prints `Slot N is occupied, using slot M instead`. It fails only when all 10 slots are in use (`all 10 slots are in use`).
 
 Launches of the same workspace started at the same moment (`coi shell` or `coi run`, e.g. from a script) take turns picking a slot until each one's container is up, so every launch gets its own container. A launch that has to wait prints `Waiting for another coi launch of this workspace to pick its slot...`; Ctrl-C cancels the wait. Different workspaces never wait on each other.
 
