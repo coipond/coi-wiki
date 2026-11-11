@@ -27,7 +27,7 @@ Profile directories are scanned in these locations:
 | `./.coi/profiles/NAME/config.toml` | project (untrusted) |
 | `$(dirname $COI_CONFIG)/profiles/NAME/config.toml` | when `COI_CONFIG` is set (trusted) |
 
-Profiles are read when each coi command starts. A profile directory removed while that happens (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
+`coi profile`, `coi health`, `coi build` and `coi clean` read every profile. Every other command reads only the profile it applies (`--profile`, an alias or resume profile, or the `[defaults] profile` in `coi shell`, `coi run`, `coi attach`, `coi monitor`, `coi snapshot` and `coi container launch/start`) and the profiles it inherits from. A command that applies no profile, such as `coi container list` or `coi version`, reads none. A broken profile fails `coi profile`, `coi build` and `coi clean` (`coi health` then runs with the default config). Any other command fails on it only when the command applies that profile or one that inherits from it (`failed to load config: invalid configuration: ...`, exit code `5`, see [Exit Codes](Container-Operations#exit-codes)). A profile directory removed while it is read (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
 
 Profiles from all discovered locations are merged into a single namespace. If the same profile name is defined in more than one location, Coi refuses to start and asks you to rename one so it is always unambiguous which profile is being applied. Operational CLI flags (`--slot`, `--workspace`, `--resume`) are per-invocation choices, not configuration, and never conflict with profile settings.
 
