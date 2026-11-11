@@ -100,9 +100,11 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
 
 - **`command`** — the exact argv to run in the container, built from the profile's
   tool, so it is correct for any tool (claude/codex/opencode/opencode2/pi/omp). The
-  prompt is embedded via a staged-file `"$(cat …)"` reference, so arbitrary prompt
-  text (quotes, newlines, `$()`) cannot corrupt the command. Run it through a shell
-  (e.g. `bash -c "<command>"`) so the substitution expands.
+  claude and codex commands embed the prompt via a staged-file `"$(cat …)"`
+  reference, so arbitrary prompt text (quotes, newlines, `$()`) cannot corrupt the
+  command. Run them through a shell (e.g. `bash -c "<command>"`) so the substitution
+  expands. The opencode, opencode2, pi, omp and goose commands carry no prompt: see
+  [Prompt Delivery for Tools That Cannot Embed It](#prompt-delivery-for-tools-that-cannot-embed-it).
 - **`env`** — tool-derived environment only. Per tool:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
   a model or effort; codex, opencode and opencode2: none; pi:
