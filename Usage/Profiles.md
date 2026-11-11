@@ -27,7 +27,7 @@ Profile directories are scanned in these locations:
 | `./.coi/profiles/NAME/config.toml` | project (untrusted) |
 | `$(dirname $COI_CONFIG)/profiles/NAME/config.toml` | when `COI_CONFIG` is set (trusted) |
 
-`coi profile`, `coi health`, `coi build` and `coi clean` read every profile. Every other command reads only the profile it applies (`--profile`, an alias or resume profile, or the `[defaults] profile` in `coi shell`, `coi run`, `coi attach`, `coi monitor`, `coi snapshot` and `coi container launch/start`) and the profiles it inherits from. A command that applies no profile, such as `coi container list` or `coi version`, reads none. A broken profile fails `coi profile`, `coi build` and `coi clean` (`coi health` then runs with the default config). Any other command fails on it only when the command applies that profile or one that inherits from it (the error contains `invalid configuration:`, exit code `5`, see [Exit Codes](Container-Operations#exit-codes)). A profile directory removed while it is read (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
+`coi profile`, `coi health`, `coi build` and `coi clean` read every profile. Every other command reads only the profile it applies (`--profile`, an alias-saved or `--resume`-remembered profile, or the [`[defaults] profile`](#selecting-the-profile-a-bare-coi-uses-defaults-profile) in `coi shell`, `coi run`, `coi attach`, `coi monitor`, `coi snapshot` and `coi container launch/start`) and the profiles it inherits from. A command that applies no profile, such as `coi container list` or `coi version`, reads none. A profile with invalid TOML or a setting the [JSON Schema](#json-schema) rejects fails `coi profile`, `coi build` and `coi clean`. `coi health` does not fail on it unless it applies that profile: it uses the default config instead. Any other command fails on it only when the command applies that profile or one that inherits from it (the error contains `invalid configuration:`, exit code `5`, see [Exit Codes](Container-Operations#exit-codes)). A profile directory removed while it is read (for example by an orchestrator that creates and deletes a profile per session) is skipped as if it were not there.
 
 Profiles from all discovered locations are merged into a single namespace. If the same profile name is defined in more than one location, Coi refuses to start and asks you to rename one so it is always unambiguous which profile is being applied. Operational CLI flags (`--slot`, `--workspace`, `--resume`) are per-invocation choices, not configuration, and never conflict with profile settings.
 
@@ -510,9 +510,9 @@ limit = "2GiB"
 ## Validation
 
 - Profile directories without a `config.toml` are silently skipped
-- Invalid TOML in a profile `config.toml` fails a command that reads that profile, except `coi health` (see [Directory Structure](#directory-structure))
-- Missing context files are validated at `--profile` usage time (not at config load) - so a command that reads every profile does not require every referenced file to exist
-- Missing build scripts are validated at `--profile` usage time
+- Invalid TOML or a setting the JSON Schema rejects in a profile `config.toml` fails a command that reads that profile, except `coi health` (see [Directory Structure](#directory-structure))
+- Missing context files are validated when the profile is applied (not at config load) - so a command that reads every profile does not require every referenced file to exist
+- Missing build scripts are validated when the profile is applied
 - `coi profile info` displays all resolved paths (build scripts, context files) so you can verify they are correct
 
 ## JSON Schema
