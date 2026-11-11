@@ -146,12 +146,15 @@ Add `--no-descriptions` to leave out the command descriptions. `coi completion <
 coi run [flags] [--] [command] [args...]
 
 # Examples
+coi run                 # run the workspace's coi-run script
 coi run -- npm test
 coi run -- pytest tests/
 coi run -- bash -c "pip install -r requirements.txt && python validate.py"
 ```
 
 Put Coi's flags before the command: everything after the command's name goes to the command, flags included. `coi run ls -la` passes `-la` to `ls`, and `coi run -w dir make` sets Coi's workspace (`coi run make -w dir` passes `-w dir` to `make`). The `--` before the command is optional.
+
+With no command, `coi run` runs the executable `coi-run` at the workspace root inside the container, straight from the workspace mount. The script's shebang picks the interpreter (`#!/usr/bin/env bash`, Ruby, Python, ...). Coi checks the script on the host before it starts a container, and exits with code `1` when `coi-run` is missing, is not executable (fix: `chmod +x coi-run`), is a directory, or is a symlink that is dangling or resolves outside the workspace. With `--prompt`, `--prompt-file` or `--prompt-name`, `coi run` runs the AI agent on the prompt instead and does not look for `coi-run` (see [Fire-and-Forget Prompt Runs](Headless-Orchestration#fire-and-forget-prompt-runs-coi-run---prompt)).
 
 Key differences from `coi shell`:
 
