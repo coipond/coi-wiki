@@ -205,7 +205,7 @@ sudo usermod -aG incus-admin $USER
 sudo incus admin init --auto
 ```
 
-The install script installs nftables and sets up the passwordless-sudo `nft` rule that Coi requires for network isolation. ufw (Ubuntu's default firewall) can stay enabled; `coi health` warns if ufw's FORWARD policy (DROP) conflicts with container traffic (the `ufw_conflict` check), in which case Coi adds iptables bridge rules automatically.
+The install script installs nftables and sets up the passwordless-sudo `nft` rule that Coi requires for network isolation. ufw (Ubuntu's default firewall) can stay enabled; `coi health` warns if ufw's FORWARD policy (DROP) conflicts with container traffic (the `ufw_conflict` check), in which case Coi adds its iptables bridge rules if sudo allows `iptables` (see [nftables Setup → Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)).
 
 ## Common Issues Across Distros
 

@@ -269,6 +269,34 @@ coi clean --orphans
 
 **Prevention:** Always stop containers via `coi shutdown` or `coi kill` rather than directly via `incus stop/delete`.
 
+## Warning: "could not ensure bridge forwarding rules"
+
+**Symptom:** `coi shell`, `coi run`, `coi build`, `coi container launch` or `coi container start` prints one of these warnings when it starts a container:
+
+```text
+Warning: could not ensure bridge forwarding rules: the FORWARD chain drops <bridge>'s traffic and coi cannot add rules: ...
+Warning: could not ensure bridge forwarding rules: could not inspect the FORWARD chain for <bridge>, no rules added: ...
+```
+
+**Cause:** Coi could not run `iptables` through sudo (for example, only the `coi-nft` rule is in place), so Coi cannot add its `coi-bridge-forward` rules (see [nftables Setup → Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)):
+
+- **"the FORWARD chain drops"**: Coi read the chain through `nft`, and it drops the bridge's traffic. The container may not get an IP.
+- **"could not inspect the FORWARD chain"**: Coi could not read the chain (for example, iptables is the legacy variant, which `nft` does not show). Coi does not know whether the traffic is dropped.
+
+**Fix:** do one of these:
+
+- Grant passwordless sudo for `iptables`, so Coi adds its rules itself. This is root-equivalent: `coi health --fix` prints the command for you to run, and does not apply it (see [System Health Check → Fixing Problems](System-Health-Check#fixing-problems---fix)).
+- Add ACCEPT rules for the bridge yourself, the same ones Coi adds:
+
+  ```bash
+  sudo iptables -I FORWARD -i incusbr0 -j ACCEPT -m comment --comment coi-bridge-forward
+  sudo iptables -I FORWARD -o incusbr0 -j ACCEPT -m comment --comment coi-bridge-forward
+  ```
+
+  Replace `incusbr0` with the bridge name from the warning.
+
+Older versions printed `Warning: could not ensure bridge forwarding rules: failed to add iptables rule: sudo: a password is required` (twice in restricted and allowlist mode) even when the chain accepted the bridge's traffic. Coi now prints nothing in that case.
+
 ## Settings.json Overwritten (Lost API Credentials)
 
 **Symptom:** Your `~/.claude/settings.json` is overwritten with sandbox/bypass settings after running `coi shell`. Custom settings like AWS Bedrock credentials, environment variables, or personal preferences are lost.
