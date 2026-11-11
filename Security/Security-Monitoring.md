@@ -53,7 +53,7 @@ The monitoring system detects multiple threat categories:
 | Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
-| Suspicious ports | Open connections, checked each poll interval against the [nftables suspicious-port list](#network-level-threats-nftables) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
+| Suspicious ports | Open connections, checked each poll interval against the [same port list as nftables](#network-level-threats-nftables) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
 
 ### Filesystem Threats
 

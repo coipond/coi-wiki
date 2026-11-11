@@ -157,7 +157,7 @@ file_read_rate_mb_per_sec = 40  # Increase from default 10MB/s
 
 - Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
-- Connection to a known attack port, seen by nftables monitoring (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
+- Connection to a suspicious port, seen by nftables monitoring (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
 - Connection to port 4444 or 5555, seen by process-level monitoring
 
 **Diagnosis:**
