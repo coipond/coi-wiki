@@ -50,17 +50,19 @@ The monitoring system detects multiple threat categories:
 | Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, interactive shells such as `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
 | Reverse shells (interpreter one-liners) | `python -c` / `python3 -c` / `perl -e` / `ruby -e` / `php -r` **combined with a real network indicator** (a socket/tcp/udp keyword, an IP address, or a `host:port` endpoint). Severity is configurable — see [Interpreter one-liner policy](#interpreter-one-liner-policy-reverse_shell_one_liners) | CRITICAL (default) | Kill |
 | Environment scanning | Detecting reads of /proc/*/environ, credential files, language-specific env access patterns | WARNING | Alert |
-| Large file reads | File read rate exceeds threshold (default 50MB) | HIGH | Pause |
-| Large file writes | File write rate exceeds threshold (mirrors read threshold) | HIGH | Pause |
+| Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
+| Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
 
 ### Filesystem Threats
 
 | Threat | Detection Method | Severity | Response |
 |--------|-----------------|----------|----------|
-| Data exfiltration (read) | Reading >50MB of data (configurable) | HIGH | Pause |
-| Data exfiltration (write) | Writing >50MB of data (tar, dd, etc.) | HIGH | Pause |
+| Data exfiltration (read) | Reading more than `file_read_threshold_mb` (default 50 MB) in one poll interval, or faster than `file_read_rate_mb_per_sec` (default 10 MB/s) | HIGH | Pause |
+| Data exfiltration (write) | Writing (tar, dd, etc.) past the same two thresholds; there is no separate write setting | HIGH | Pause |
 | /tmp exhaustion | /tmp usage exceeds 80% | WARNING | Alert |
+
+**Note:** The read and write amounts come from the container's cgroup `io.stat`: they count all block I/O of the container, not only the workspace.
 
 ### Network-Level Threats (nftables)
 
@@ -70,6 +72,8 @@ The monitoring system detects multiple threat categories:
 | Metadata endpoint | Access to 169.254.169.254 (cloud metadata service) | CRITICAL | Kill |
 | Suspicious ports | Connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) | CRITICAL | Kill |
 | DNS anomalies | More than `dns_query_threshold` queries/min, or queries to a non-gateway, non-allowlisted resolver | WARNING | Alert |
+
+**Note:** The CRITICAL severity for suspicious ports is the nftables monitor's. The process-level monitor (`[monitoring] enabled`) also checks the container's open connections each poll interval against the same port list. It flags 4444 and 5555 as CRITICAL (Kill) and the other suspicious ports as HIGH (Pause).
 
 **Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
 

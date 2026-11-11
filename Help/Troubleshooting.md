@@ -105,8 +105,9 @@ The in-container approach is self-contained and only affects Coi images, leaving
 
 **Common triggers:**
 
-- Large file read operations (>50MB) - could be legitimate if analyzing big files
-- Large file write operations (>50MB) - could be legitimate if creating archives
+- Large file read operations (by default more than 50MB in one poll interval, or faster than 10MB/s) - could be legitimate if analyzing big files
+- Large file write operations (same thresholds as reads) - could be legitimate if creating archives
+- A connection to a suspicious port other than 4444 or 5555, seen by process-level monitoring
 - Suspicious process patterns that match known attack tools
 
 **Diagnosis:**
@@ -155,7 +156,7 @@ file_read_threshold_mb = 200    # Increase from default 50MB
 
 - Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
-- Connection to known attack ports (4444, 5555, 31337)
+- Connection to known attack ports: any suspicious port with nftables monitoring, only 4444 and 5555 with process-level monitoring alone (see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
 
 **Diagnosis:**
 
