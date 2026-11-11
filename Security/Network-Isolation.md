@@ -17,7 +17,7 @@ coi shell  # Default behavior
 - Blocks: RFC1918 private networks (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16)
 - Blocks: Cloud metadata endpoints (169.254.0.0/16)
 - Allows: All public internet (npm, pypi, GitHub, APIs, etc.)
-- Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway (see [Container Access to Host Services](#container-access-to-host-services))
+- Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
 - A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
 
@@ -33,7 +33,7 @@ mode = "allowlist"
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
 - Always blocks RFC1918 private networks
-- Blocks services on the host itself, except DHCP and ping to the gateway (see [Container Access to Host Services](#container-access-to-host-services))
+- Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
 ### Open Mode
@@ -91,7 +91,7 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 ### Important for Allowlist Mode
 
-- **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of entries that name it (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
+- **Gateway handling**: Coi automatically detects the Incus bridge gateway IP. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of entries that name it, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor separately exempts the gateway IP from its private-network check. You do not need to add it manually.
 - **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing.
 - **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject (forward and input chains) → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
@@ -202,7 +202,7 @@ mode            = "allowlist"
 allowed_domains = ["github.com", "192.168.1.10:5432"]   # 192.168.1.10 is an address of this host
 ```
 
-In either mode it can be a `[[network.hosts]]` entry with `ports` (see [Static Host Entries](Static-Host-Entries)). An entry with no ports uses the global `allowed_ports`; with neither, the address stays closed and Coi prints a warning (a private `[[network.hosts]]` address in allowlist mode is refused instead). In allowlist mode these entries never open ports 53 and 853 on the host. An `allowed_domains` name that resolves to a host address also stays closed, and Coi prints a warning: list the address itself.
+In either mode it can be a `[[network.hosts]]` entry with `ports` (see [Static Host Entries](Static-Host-Entries)). An entry with no ports uses the global `allowed_ports`; with neither, the address stays closed and Coi prints a warning (a private `[[network.hosts]]` address in allowlist mode with `allow_local_network_access` off, the default, is refused instead). In allowlist mode these entries never open ports 53 and 853 on the host. An `allowed_domains` name that resolves to a host address also stays closed, and Coi prints a warning: list the address itself.
 
 To let the container reach every service on the host, set `allow_host_access` in trusted-scope config (`~/.coi/config.toml` or `$COI_CONFIG`):
 
@@ -211,7 +211,7 @@ To let the container reach every service on the host, set `allow_host_access` in
 allow_host_access = true   # default false
 ```
 
-From a project `./.coi/config.toml` or a project profile it is ignored with a warning. When it is on in restricted or allowlist mode, the Network row of the [startup grants](Container-Lifecycle-and-Sessions#effective-grants-at-startup) shows `host services allowed (allow_host_access)`.
+Allowlist mode still blocks DNS (port 53) to the host with it. From a project `./.coi/config.toml` or a project profile it is ignored with a warning. When it is on in restricted or allowlist mode, the Network row of the [startup grants](Container-Lifecycle-and-Sessions#effective-grants-at-startup) shows `host services allowed (allow_host_access)`.
 
 ## Host Access to Container Services
 

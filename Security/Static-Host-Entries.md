@@ -28,7 +28,7 @@ ports     = [443]                  # reachable ONLY on 443
 
 This is the piece the global `allowed_ports` cannot provide (it caps every destination, internet included): restricted mode can open one LAN service on one port while the internet stays fully open, and allowlist mode can reach one LAN service while everything else stays closed. Empty `ports` inherits the global `allowed_ports` (else all ports).
 
-It takes effect where the mode actually filters that class of address - a private host in restricted or allowlist mode, a public host in allowlist mode. A `ports` scope that could never be enforced is refused at setup with an explanation rather than silently ignored: a public host in restricted mode (already reachable on every port), a private host in allowlist mode with `allow_local_network_access = true` (the whole LAN is already open on the global `allowed_ports`), or anything in open mode. At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
+It takes effect where the mode actually filters that class of address - a private host in restricted or allowlist mode, a public host in allowlist mode. A `ports` scope that could never be enforced is refused at setup with an explanation rather than silently ignored: a public host in restricted mode (already reachable on every port), a private host in allowlist mode with `allow_local_network_access = true` (the whole LAN is already open on the global `allowed_ports`), or anything in open mode. An address of the host itself is the exception: its `ports` are enforced in restricted and allowlist mode whatever its class (see [Mode-Aware Reachability](#mode-aware-reachability)). At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
 
 ### A LAN Service in Allowlist Mode
 
@@ -59,7 +59,7 @@ Writing a name into `/etc/hosts` only makes it resolve — the firewall still de
 
 Metadata / link-local addresses (`169.254.0.0/16`, the cloud metadata endpoint) are refused in both enforcing modes regardless of `allow_local_network_access` — pointing a name there is a credential-theft SSRF vector.
 
-An address of the host itself (the bridge gateway or another host address) is the exception to the table: in restricted and allowlist mode the host opens it only on the entry's `ports` (else the global `allowed_ports`), whatever its class. With neither, the host stays closed to it and Coi prints a warning; a private address in allowlist mode is refused instead, as for any LAN host. In allowlist mode such an entry may not include port 53 or 853. See [Container Access to Host Services](Network-Isolation#container-access-to-host-services).
+An address of the host itself (the bridge gateway or another host address) is the exception to the table: in restricted and allowlist mode (without `allow_host_access`) the host opens it only on the entry's `ports` (else the global `allowed_ports`), whatever its class. With neither, the host stays closed to it and Coi prints a warning; a private address in allowlist mode is refused instead, as for any LAN host. In allowlist mode such an entry may not include port 53 or 853. See [Container Access to Host Services](Network-Isolation#container-access-to-host-services).
 
 ## Security Monitoring
 

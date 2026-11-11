@@ -239,7 +239,8 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 # refresh_interval_minutes = 30                       # Max DNS refresh interval (actual uses DNS TTL if shorter)
 # allow_local_network_access = false                  # Allow connections from entire local network
 # allow_host_access = false                           # Let restricted/allowlist containers reach every service
-#                                                      # on the host itself. Trusted scope only.
+#                                                      # on the host itself (allowlist mode still blocks DNS).
+#                                                      # Trusted scope only.
 # use_sudo = true                                      # false = never invoke sudo for nft/iptables (see "Running without sudo")
 # dns_servers = ["192.168.1.2"]                        # Pin the resolvers the container may reach on port 53
 #                                                      # (restricted mode; IPv4; not valid in allowlist mode).
