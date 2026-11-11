@@ -1,6 +1,6 @@
 # Updating Coi
 
-`coi update` keeps two things current: the `coi` binary and the threat-detection databases (GTFOBins + Sigma) that each container's security monitor loads. Running it with no subcommand does both, in sequence.
+`coi update` keeps two things current: the `coi` binary and the threat-detection databases (GTFOBins + Sigma) that the security monitor loads. Running it with no subcommand does both, in sequence.
 
 ```bash
 coi update            # update the binary AND the detection databases
@@ -38,7 +38,7 @@ coi update patterns --dry-run  # print the git commands without running them
 
 ## Updating the Detection Databases (`coi update patterns`)
 
-The combined `coi update` also refreshes the two databases each container's security monitor loads when the container starts:
+The combined `coi update` also refreshes the two databases the security monitor loads when a container starts (the monitor runs only with `[monitoring] enabled = true`, see [Enabling Security Monitoring](Security-Monitoring#enabling-security-monitoring)):
 
 - **GTFOBins**: the reverse-shell / privilege-escalation binary database.
 - **Sigma**: the `rules/linux/process_creation/` rule subtree (pulled as a sparse, blobless checkout, ~300 KB).
@@ -53,7 +53,7 @@ sigma_source    = "https://github.com/SigmaHQ/sigma.git"
 sigma_dir       = "~/.coi/sigma"
 ```
 
-> **Containers started after the update use the updated databases.** Running containers, and new sessions that reuse them, keep the previous ones until they stop: restart a running container to apply the update to it. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
+> **With the security monitor enabled, containers started after the update use the updated databases.** Running containers, and new sessions that reuse them, keep the previous ones until they stop: restart a running container to apply the update to it. Use `coi update patterns --dry-run` to preview the exact `git` commands without running them.
 
 ## After Updating
 
