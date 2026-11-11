@@ -53,6 +53,7 @@ The monitoring system detects multiple threat categories:
 | Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
+| Suspicious ports | Open connections, checked each poll interval against the [nftables suspicious-port list](#network-level-threats-nftables) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
 
 ### Filesystem Threats
 
@@ -73,7 +74,7 @@ The monitoring system detects multiple threat categories:
 | Suspicious ports | Connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) | CRITICAL | Kill |
 | DNS anomalies | More than `dns_query_threshold` queries/min, or queries to a non-gateway, non-allowlisted resolver | WARNING | Alert |
 
-**Note:** The CRITICAL severity for suspicious ports is the nftables monitor's. The process-level monitor (`[monitoring] enabled`) also checks the container's open connections each poll interval against the same port list. It flags 4444 and 5555 as CRITICAL (Kill) and the other suspicious ports as HIGH (Pause).
+**Note:** The process-level monitor checks the same ports with a different severity (see [Process-Level Threats](#process-level-threats)).
 
 **Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
 
@@ -333,7 +334,7 @@ The monitoring config, audit log directory and cgroup v2 checks always run. The 
 
 2. **Review audit logs after sessions** - Check `~/.coi/audit/<container-name>.jsonl` for any suspicious activity
 
-3. **Configure appropriate thresholds** - Adjust `file_read_threshold_mb` based on your project's normal behavior (large codebases may need higher thresholds)
+3. **Configure appropriate thresholds** - Adjust `file_read_threshold_mb` and `file_read_rate_mb_per_sec` based on your project's normal behavior (large codebases may need higher thresholds)
 
 4. **Use network isolation together** - Combine monitoring with [Network Isolation](Network-Isolation) for defense-in-depth
 

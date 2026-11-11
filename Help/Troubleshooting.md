@@ -142,6 +142,7 @@ For projects that legitimately need large file operations, increase the threshol
 # ~/.coi/config.toml or .coi/config.toml
 [monitoring]
 file_read_threshold_mb = 200    # Increase from default 50MB
+file_read_rate_mb_per_sec = 40  # Increase from default 10MB/s
 ```
 
 **Note:** Only increase thresholds if you understand the security implications. The defaults are set to catch most exfiltration attempts while allowing normal development work.
@@ -156,7 +157,8 @@ file_read_threshold_mb = 200    # Increase from default 50MB
 
 - Reverse shell patterns detected (an interactive `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `nc` with suspicious flags)
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
-- Connection to known attack ports: with nftables monitoring, any suspicious port on a public address or a firewall-allowed private one (other private addresses are flagged as private network access: HIGH, Pause); with process-level monitoring alone, only 4444 and 5555 (see [Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
+- Connection to a known attack port, seen by nftables monitoring (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
+- Connection to port 4444 or 5555, seen by process-level monitoring
 
 **Diagnosis:**
 
