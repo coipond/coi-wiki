@@ -20,7 +20,7 @@ coi shell  # Default behavior
 - Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
 - A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
-- A blocked TCP connection fails at once with "connection refused" (a TCP reset); other blocked traffic gets ICMP port-unreachable. Allowlist mode rejects the same way
+- A blocked IPv4 TCP connection fails at once with "connection refused" (a TCP reset); other blocked IPv4 traffic gets ICMP port-unreachable. Allowlist mode rejects the same way. Blocked IPv6 traffic is dropped, with no reply
 
 ### Allowlist Mode
 
