@@ -76,7 +76,7 @@ The monitoring system detects multiple threat categories:
 
 **Note:** The process-level monitor checks the same ports with a different severity (see [Process-Level Threats](#process-level-threats)).
 
-**Note:** In `open` mode, which allows LAN traffic, a connection to a private address raises no threat, so it does not pause the container even with `auto_pause_on_high` on. To keep LAN connections detected, use `restricted` or `allowlist` mode.
+**Note:** In `open` mode, which allows LAN traffic, a connection to a private address raises no private network access threat, so it does not pause the container even with `auto_pause_on_high` on. The suspicious-port check still applies: a connection to one of the C2/backdoor ports above on a LAN host is flagged. To keep LAN connections detected, use `restricted` or `allowlist` mode.
 
 **Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
 
