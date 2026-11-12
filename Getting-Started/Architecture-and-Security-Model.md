@@ -94,7 +94,7 @@ When enabled (`[monitoring] enabled = true`; off by default), Coi runs an active
 
 **Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc.
 
-**Network monitoring** - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure, cloud metadata services, and private network ranges are detected and logged even when the container is in `open` mode (requires `[monitoring.nft] enabled = true`).
+**Network monitoring** - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure and cloud metadata services are detected and logged even when the container is in `open` mode; connections to private network ranges are detected in the other modes (requires `[monitoring.nft] enabled = true`).
 
 Detected threats are classified by severity and trigger automatic responses:
 
