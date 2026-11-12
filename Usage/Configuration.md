@@ -128,7 +128,8 @@ storage_pool = ""              # empty = Incus default pool
 #                              # is older than the base it was built from
 
 [container.build]
-# base = "coi-default"
+# base = "ubuntu:26.04"        # Base to build from (default: "ubuntu:26.04" for coi-default,
+#                              # "coi-default" for a custom image)
 # script = "build.sh"
 # commands = ["apt-get update"] # Inline build commands (alternative to script)
 # compression = ""             # Image compression: "none", "gzip", "xz" ("" = Incus default)

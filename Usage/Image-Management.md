@@ -233,6 +233,17 @@ Answering `y` triggers the build inline and continues into the session. Answerin
 
 See also [Profiles - Build Scripts](Profiles#build-scripts) for per-profile build configuration.
 
+## Base Image
+
+`coi build` builds `coi-default` from Ubuntu 26.04 LTS (`ubuntu:26.04`). To build it from another base, set `base`:
+
+```toml
+[container.build]
+base = "ubuntu:24.04"
+```
+
+An existing image keeps the base it was built from: run `coi build --force` to rebuild it from `ubuntu:26.04` or the `base` you set. A custom image builds on `coi-default` unless its `base` names another image (see [Build Configuration in Project Config](#build-configuration-in-project-config)).
+
 ## cloud-init
 
 The coi image is built from Ubuntu's cloud image but ships with **cloud-init disabled**: it ran on every container boot, ahead of the network, and slowed every start. Coi containers don't need it — Incus sets the hostname and the image brings its own DHCP network config.
