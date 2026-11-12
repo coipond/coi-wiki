@@ -38,7 +38,7 @@ ThreatEvent → Responder (pause/kill) + AuditLog
 
 **HIGH Level:**
 
-- **RFC1918 private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (should be blocked by firewall), except a destination and port the container's firewall rules deliberately accept, such as a `[[network.hosts]]` LAN service
+- **RFC1918 private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (should be blocked by firewall), except a destination and port the container's firewall rules deliberately accept, such as a `[[network.hosts]]` LAN service, and except in `open` mode, which allows LAN traffic
 - **Allowlist violations** - Connections outside configured allowlist (in allowlist mode)
 
 **WARNING Level:**
@@ -190,7 +190,7 @@ NetworkEvent{
 3. JournalReader streams log (via go-systemd)
 4. LogReader parses NFT_* entries → NetworkEvent
 5. NetworkDetector analyzes event:
-   - isRFC1918(dst) → HIGH
+   - isRFC1918(dst) → HIGH (not in open mode)
    - dst == 169.254.169.254 → CRITICAL
    - isSuspiciousPort(dpt) → CRITICAL
    - inAllowlist(dst) → HIGH (if violated)
@@ -417,7 +417,7 @@ pytest tests/integration/test_nft_monitoring.py -vvs
 - ✅ DNS tunneling (query volume detection)
 - ✅ C2 connections on non-standard ports
 - ✅ Metadata endpoint access (cloud credentials)
-- ✅ Lateral movement to private networks
+- ✅ Lateral movement to private networks (not in `open` mode)
 
 **Does Not Protect Against:**
 
