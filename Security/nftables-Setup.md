@@ -70,7 +70,7 @@ Coi automatically manages firewall resources to prevent accumulation of stale co
 
 - **Cleanup on all termination paths**: Firewall rules are cleaned up during normal exit, `coi shutdown`, `coi kill`, and when the security responder auto-kills a container
 - **Orphaned resource detection**: `coi clean --orphans` scans for and removes:
-  - Orphaned veth interfaces (no master bridge)
+  - Orphaned veth interfaces (no master bridge, and not the host side of an Incus instance's NIC in any project)
   - Orphaned nft rules (for non-existent container IPs)
   - Orphaned IPv6 block rules (for containers no longer running)
   - Orphaned nftables monitoring rules and chains (when nftables monitoring is enabled)

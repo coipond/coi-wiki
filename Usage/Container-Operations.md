@@ -363,6 +363,13 @@ coi hosts remove my-container db.internal          # remove by hostname
 
 For entries that should be present on every launch, declare them in `[[network.hosts]]` config instead — see [Static Host Entries](Static-Host-Entries) for the full reference and the per-mode reachability rules.
 
+## Running Coi Next to Other Incus Containers
+
+- **Container names:** `coi list`, `coi kill --all`, `coi shutdown --all`, `coi clean`, `coi clean --pools`, `coi attach`, `coi tmux list`, `coi snapshot list` and `coi unfreeze` act only on containers whose name starts with the container prefix: `coi-` by default, or the value of `COI_CONTAINER_PREFIX` (see [Environment Variables](Configuration#environment-variables)). The prefix must be at the start of the name, so `web-coi-db` is not a Coi container. Do not start the names of your other containers with the prefix: `coi kill --all`, for example, would delete them.
+- **Profiles, networks and storage pools:** The `coi` commands do not change them. `install.sh` does: on a host with no managed network and no storage pool it runs `incus admin init --auto`, and when it creates its `zfs-pool` (or `btrfs-pool`) it sets the root disk of the `default` profile to that pool.
+- **Firewall:** Coi's network-isolation rules are in its own `ip coi` and `ip6 coi` nftables tables and match only Coi containers, by their IP or by their host-side veth (see [nftables Setup](nftables-Setup#key-points)). The `coi-bridge-forward` ACCEPT rules that Coi can add to the host's FORWARD chain apply to all traffic of the Incus bridge, including your other containers on it (see [Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)).
+- **`coi clean --orphans`:** Keeps the host-side veth of every Incus instance in every project, including the veths of routed and p2p NICs, which have no bridge. `coi health` does not count these veths as orphaned.
+
 ## Exit Codes
 
 Scripts (CI, cron) can test Coi's exit code:
