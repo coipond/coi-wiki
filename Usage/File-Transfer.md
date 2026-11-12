@@ -37,6 +37,8 @@ coi file pull -r my-container:/workspace/dist ./output
 
 A destination ending in `/` must be an existing directory. An existing directory, with or without the slash, receives the pulled entry inside it. Any other destination is the exact target and must not already exist (a single file may overwrite an existing file).
 
+A single file pull copies only a regular file. If the container path is a symlink, coi refuses the pull with `refusing to pull <path>: not a regular file` and exit code 1, on every supported Incus version, and creates nothing on the host. To get the content, pull the link's target path. A recursive pull (`-r`) leaves symlinks and special files out of the pulled tree.
+
 ## Common Use Cases
 
 ### Backup Session Data
