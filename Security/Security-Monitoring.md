@@ -80,7 +80,7 @@ The monitoring system detects multiple threat categories:
 
 **Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
 
-**Note:** The Incus bridge gateway IP is automatically excluded from RFC1918 private network checks. This prevents false-positive HIGH alerts on routine DNS/NTP traffic routed through the gateway, which could otherwise incorrectly pause or freeze the container.
+**Note:** The nftables monitor excludes the Incus bridge gateway IP from its private network check. In allowlist mode the process-level monitor also flags open connections to private and non-allowlisted addresses; it skips the gateway only on port 53 (TCP and UDP) and UDP port 67 (DHCP), as a resolver or DHCP client in the container keeps a socket to them although the firewall drops the packets. Any other port on the gateway is still flagged.
 
 ## Threat Levels
 
