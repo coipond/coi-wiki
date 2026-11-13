@@ -54,6 +54,9 @@ The monitoring system detects multiple threat categories:
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
 | Suspicious ports | Open connections, checked each poll interval against the [same port list as nftables](#network-level-threats-nftables) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
+| Private or non-allowlisted addresses | In allowlist mode only: open connections, checked each poll interval, to an RFC1918 address or an address outside the allowlist, unless the firewall allows that address on that port | HIGH | Pause |
+
+**Note:** The process-level monitor skips the Incus bridge gateway on port 53 (TCP and UDP) and UDP port 67 (DHCP). A resolver in the container keeps a socket to the DNS port, although the firewall drops DNS. The firewall accepts DHCP to the gateway. Any other port on the gateway is still flagged.
 
 ### Filesystem Threats
 
@@ -80,7 +83,7 @@ The monitoring system detects multiple threat categories:
 
 **Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
 
-**Note:** The Incus bridge gateway IP is automatically excluded from RFC1918 private network checks. This prevents false-positive HIGH alerts on routine DNS/NTP traffic routed through the gateway, which could otherwise incorrectly pause or freeze the container.
+**Note:** The nftables monitor excludes the Incus bridge gateway IP from its private network check.
 
 ## Threat Levels
 
