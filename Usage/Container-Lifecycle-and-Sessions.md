@@ -79,7 +79,7 @@ coi persist --all --force    # or -f
 
 coi asks for confirmation with `--all` and when you name more than one container; `-f`/`--force` skips it.
 
-Use `coi list` to see active containers and their persistence mode.
+After `coi persist`, `coi list` shows the container as `(persistent)` (see [List Containers](Container-Operations#list-containers)).
 
 This is useful when you started an ephemeral session but later decide you want to keep the container (e.g., after installing tools or setting up the environment).
 
