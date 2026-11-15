@@ -71,12 +71,12 @@ coi kill --all
 coi kill --all --force
 ```
 
-- `coi kill` does not take `--slot`. To kill a slot, name it as `<alias>-<N>` or use the container name.
-- `--all` takes no container names. `coi kill --slot` and `coi kill --all <name>` exit `2` before any container is touched.
-- Each alias is resolved first. An alias, or `<alias>-<N>`, that does not match exactly one running container stops `coi kill` with exit `1` before it kills anything.
-- When some of the resolved containers can't be killed (missing, or the delete fails), the others are still killed. Then `coi kill` exits `1` with `failed to kill X of Y container(s): <names>`.
+- `coi kill` does not take `--slot`: it exits `2` before any container is touched. To kill a slot, name it as `<alias>-<N>` (see [Aliases and Slots](Container-Lifecycle-and-Sessions#aliases-and-slots)) or use the container name.
+- `--all` takes no container names: `coi kill --all <name>` exits `2` before any container is touched.
+- An alias, or `<alias>-<N>`, that does not match exactly one running container makes `coi kill` exit `1` before it kills anything.
+- When some of the named containers cannot be killed (the container does not exist, or its delete fails), the others are still killed. Then `coi kill` exits `1` with `failed to kill X of Y container(s): <names>`.
 - A name given twice, or an alias and its container name, is killed once.
-- With `--all`, a container that is gone since the listing is not an error. `coi kill --all` fails only when nothing was killed.
+- With `--all`, a container deleted while `coi kill --all` runs is not an error. `coi kill --all` fails only when nothing was killed.
 
 ### Clean Up
 
