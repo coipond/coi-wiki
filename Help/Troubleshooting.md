@@ -263,7 +263,7 @@ Confirm `auto_pause_on_high: true` and `auto_kill_on_critical: true` (the text o
 # Dry run - see what would be cleaned
 coi clean --orphans --dry-run
 
-# Clean orphaned veth interfaces and stale nft rules
+# Clean orphaned veths that Coi recorded and stale nft rules
 coi clean --orphans
 ```
 
@@ -273,7 +273,7 @@ coi clean --orphans
 
 **Symptom:** A host veth with no master bridge, left by a Coi container, stays after `coi clean --orphans`, and `coi health` does not count it as orphaned.
 
-**Cause:** `coi clean --orphans` removes only veths that Coi recorded in `~/.coi/veths`. Coi did not record veths left from before it started to record veths, veths recorded in another user's `~/.coi`, or veths of `open` mode containers on a host without nft (see [Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers)).
+**Cause:** `coi clean --orphans` removes only veths that Coi recorded in `~/.coi/veths`, and Coi did not record this one (see [Container Operations → Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers) for which veths Coi does not record).
 
 **Fix:** Delete the veth by hand:
 
