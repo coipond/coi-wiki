@@ -125,6 +125,7 @@ When the same map entry `name` appears in multiple scopes (global config, profil
 | Port listed in `COI_PORTS` but `localhost:<port>` refuses | Nothing inside bound that port yet — check the agent actually started the server, and on the number from `COI_PORTS` (see also `coi list`). |
 | `[ports] declares N auto-allocated ports; at most 10 per slot` | pool + unpinned map entries exceed the block. Pin `host =` for some entries or shrink the pool. |
 | `ports.map "x" collides with "y"` | Two names sanitize to the same device/env name (`web_1` vs `web-1`). Rename one. |
+| `ports[N] (name) 'listen' must be an IP address` | A `[[ports.map]]` entry has a `listen` that is not an IP address (e.g. `"localhost"`). A config file or profile with such a value fails to load, so every coi command that loads it fails. Set an IP address, e.g. `"127.0.0.1"`. |
 | Warning: `ignoring untrusted port ...` | The `[ports]` section came from a repo's `.coi/config.toml` you haven't approved. Run `coi trust` in the workspace. |
 
 ## See Also
