@@ -263,11 +263,25 @@ Confirm `auto_pause_on_high: true` and `auto_kill_on_critical: true` (the text o
 # Dry run - see what would be cleaned
 coi clean --orphans --dry-run
 
-# Clean orphaned veth interfaces and stale nft rules
+# Clean orphaned veths that Coi recorded and stale nft rules
 coi clean --orphans
 ```
 
 **Prevention:** Always stop containers via `coi shutdown` or `coi kill` rather than directly via `incus stop/delete`.
+
+## Leftover Veth Interfaces Not Removed
+
+**Symptom:** A host veth with no master bridge, left by a Coi container, stays after `coi clean --orphans`, and `coi health` does not count it as orphaned.
+
+**Cause:** `coi clean --orphans` removes only veths that Coi recorded in `~/.coi/veths`, and Coi did not record this one (see [Container Operations → Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers) for which veths Coi does not record).
+
+**Fix:** Delete the veth by hand:
+
+```bash
+sudo ip link delete <veth>
+```
+
+Delete only a veth that you know a Coi container left: other tools (CNI plugins, manual `ip link` pairs) also make host veths with no master bridge.
 
 ## Warning: "could not ensure bridge forwarding rules"
 
