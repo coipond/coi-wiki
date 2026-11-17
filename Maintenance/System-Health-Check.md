@@ -198,7 +198,7 @@ sudo systemctl restart incus
 
 Until the line is in **both** files and Incus has been restarted, `coi health` keeps the warning and says which step is still missing.
 
-**Host UIDs of 65536 or above (e.g. FreeIPA, LDAP or AD accounts):** the secret-masking probe idmaps a test workspace into a UID-isolated container, which holds only IDs below 65536. For a larger host UID, `coi health` skips that probe with a warning that names the UID and says it is not a masking failure. Sessions map such a UID with `raw.idmap` instead. To check masking, start a session on a test repository.
+**Host UIDs of 65536 or above (e.g. FreeIPA, LDAP or AD accounts):** the secret-masking probe idmaps a test workspace into a UID-isolated container, which by default holds only IDs below 65536 (Incus' default `security.idmap.size`). For a host UID of 65536 or above, `coi health` skips that probe with a warning that names the UID and says it is not a masking failure. It uses 65536 also on a host with a custom size. Sessions map such a UID with `raw.idmap` instead. To check masking, start a session on a test repository.
 
 
 ## Updating Coi

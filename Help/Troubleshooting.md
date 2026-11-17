@@ -518,7 +518,8 @@ systemctl is-enabled udisks2.service
 
 - **Chrome / Chromium:** run with `--no-sandbox`; the container is the sandbox. Playwright's headless default needs no change.
 - **Podman / Buildah:** run them with `sudo`, or use Docker, which works unchanged.
-- **Flatpak, snaps:** install the tool another way (apt, mise, a release binary).
+- **Flatpak:** install the tool another way (apt, mise, a release binary).
+- **Snaps:** the image has no snapd ([Image Management - No snapd in the Image](Image-Management#no-snapd-in-the-image)); install the tool another way.
 
 **Verification:**
 

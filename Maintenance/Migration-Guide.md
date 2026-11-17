@@ -46,7 +46,7 @@ coi build --force   # rebuild the image to pick up the image changes
 
 ## Breaking: Guest AppArmor Profiles Are Not Loaded
 
-Docker and Playwright are unaffected. On hosts that restrict unprivileged user namespaces (Ubuntu 24.04+), a non-root user inside the container can no longer use Chrome's own sandbox (use `--no-sandbox`), rootless Podman or Buildah (use `sudo`, or Docker), or Flatpak; snaps installed in the container may fail to start. See [Image Management - AppArmor Inside the Container](Image-Management#apparmor-inside-the-container).
+Docker and Playwright are unaffected. On hosts that restrict unprivileged user namespaces (Ubuntu 24.04+), a non-root user inside the container can no longer use Chrome's own sandbox (use `--no-sandbox`), rootless Podman or Buildah (use `sudo`, or Docker), or Flatpak; snaps installed in the container may fail to start (images built by a coi newer than 0.16.0 have no snapd: see [Image Management - No snapd in the Image](Image-Management#no-snapd-in-the-image)). See [Image Management - AppArmor Inside the Container](Image-Management#apparmor-inside-the-container).
 
 ## New in 0.15 (No Action Needed)
 
