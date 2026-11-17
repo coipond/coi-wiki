@@ -100,7 +100,7 @@ coi clean --force
 # profile references; asks first unless --force. The pools themselves are kept
 coi clean --pools
 
-# Clean orphaned veths and stale nft/iptables rules
+# Clean orphaned veths that Coi recorded and stale nft/iptables rules
 coi clean --orphans
 
 # Dry run to see what would be cleaned
@@ -377,7 +377,8 @@ For entries that should be present on every launch, declare them in `[[network.h
 - **Container names:** `coi list`, `coi kill --all`, `coi shutdown --all`, `coi clean`, `coi clean --pools`, `coi attach`, `coi tmux list`, `coi snapshot list` and `coi unfreeze` act only on containers whose name starts with the container prefix: `coi-` by default, or the value of `COI_CONTAINER_PREFIX` (see [Environment Variables](Configuration#environment-variables)). The prefix must be at the start of the name, so `web-coi-db` is not a Coi container. Do not start the names of your other containers with the prefix: `coi kill --all`, for example, would delete them.
 - **Profiles, networks and storage pools:** The `coi` commands do not change them. `install.sh` does: on a host with no managed network and no storage pool it runs `incus admin init --auto`, and when it creates its `zfs-pool` (or `btrfs-pool`) it sets the root disk of the `default` profile to that pool.
 - **Firewall:** Coi's network-isolation rules are in its own `ip coi` and `ip6 coi` nftables tables and match only Coi containers, by their IP or by their host-side veth (see [nftables Setup](nftables-Setup#key-points)). The `coi-bridge-forward` ACCEPT rules that Coi can add to the host's FORWARD chain apply to all traffic of the Incus bridge, including your other containers on it (see [Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)).
-- **`coi clean --orphans`:** Keeps the host-side veth of every Incus instance in every project, including the veths of routed and p2p NICs, which have no bridge. `coi health` does not count these veths as orphaned.
+- **`coi clean --orphans`:** Removes only host-side veths that Coi recorded for its containers. Coi records a container's host veth in `~/.coi/veths` when it looks up the container's network, and drops the record when `coi clean --orphans` deletes the veth. Of the recorded veths, `coi clean --orphans` removes only those with no master bridge that no Incus instance uses: it keeps the host-side veth of every Incus instance in every project, including the veths of routed and p2p NICs, which have no bridge. `coi health` counts the same veths as orphaned.
+- **Veths Coi did not record:** `coi clean --orphans` keeps them. These are veths of other tools (CNI plugins, manual `ip link` pairs), veths left from before Coi started to record veths, veths recorded in another user's `~/.coi`, and veths of `open` mode containers on a host without nft. To remove a leftover one, see [Troubleshooting → Leftover Veth Interfaces Not Removed](Troubleshooting#leftover-veth-interfaces-not-removed).
 
 ## Exit Codes
 
