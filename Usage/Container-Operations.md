@@ -82,7 +82,7 @@ coi kill --all --force
 
 ### Shut Down Containers
 
-`coi shutdown` (alias `coi close`) stops a container gracefully, force-kills it after the grace window (`[container] shutdown_timeout`, 60 seconds by default), then deletes it, also a persistent one. See [From Outside (Host)](Container-Lifecycle-and-Sessions#from-outside-host).
+`coi shutdown` (alias `coi close`) stops a container gracefully, force-kills it after the grace window (`[container] shutdown_timeout`, 60 seconds by default), then deletes it, even a persistent one. See [From Outside (Host)](Container-Lifecycle-and-Sessions#from-outside-host).
 
 ```bash
 # Shut down specific container (graceful stop, then delete)
@@ -98,12 +98,10 @@ coi shutdown --all
 coi shutdown --all --force
 ```
 
-The same rules apply to `coi close`:
-
 - `coi shutdown` does not take `--slot`: it exits `2` before any container is touched. To shut down a slot, name it as `<alias>-<N>` (see [Aliases and Slots](Container-Lifecycle-and-Sessions#aliases-and-slots)) or use the container name.
 - `--all` takes no container names: `coi shutdown --all <name>` exits `2` before any container is touched.
 - An alias, or `<alias>-<N>`, that does not match exactly one running container makes `coi shutdown` exit `1` before it shuts down anything.
-- When some of the named containers cannot be shut down (the container does not exist, its existence check fails, or its delete fails), the others are still shut down. Then `coi shutdown` exits `1` with `failed to shut down X of Y container(s): <names>`.
+- When some of the named containers cannot be shut down (the container does not exist, coi cannot check whether it exists, or its delete fails), the others are still shut down. Then `coi shutdown` exits `1` with `failed to shut down X of Y container(s): <names>`.
 - A name given twice, or an alias and its container name, is shut down once.
 - With `--all`, a container that cannot be shut down is not an error. `coi shutdown --all` fails only when nothing was shut down.
 
