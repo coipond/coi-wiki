@@ -184,8 +184,9 @@ installs no tool hooks of its own. Write yours into the container:
 2. Write the hooks into the tool's config directory in the container home
    (`/home/code/.claude/`), with `coi container exec <ctr>` or
    [`coi file push`](File-Transfer).
-3. Get the launch command with `coi tool spec --container <ctr>` and run it
-   with `coi container exec`, as shown above.
+3. Get the launch command with
+   `coi tool spec --container <ctr> --session-id <id>` (see
+   [Synopsis](#synopsis)) and run it with `coi container exec`, as shown above.
 
 Merge your hooks into `settings.json`; do not replace the file. When the host
 has a `~/.claude` directory, coi writes the container's `settings.json` from the
