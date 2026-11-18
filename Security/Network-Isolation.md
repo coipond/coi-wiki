@@ -33,7 +33,7 @@ mode = "allowlist"
 
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
-- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set). `block_private_networks` and `block_metadata_endpoint` have no effect in this mode
+- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set), and an allowlisted address in 169.254.0.0/16, or an allowlisted name that resolves there, becomes reachable. `block_private_networks` and `block_metadata_endpoint` have no effect in this mode
 - Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
