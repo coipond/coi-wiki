@@ -24,6 +24,7 @@ Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI c
 - **[Snapshot Management](Snapshot-Management)** - Create checkpoints, rollback, and branch experiments
 - **[File Transfer](File-Transfer)** - Push/pull files between host and containers
 - **[Port Publishing](Port-Publishing)** - Publish container TCP ports on the host so agent-started services are reachable at `localhost:<port>`
+- **[Host-Side Credential Proxy](Host-Side-Credential-Proxy)** - Keep an API key on the host in a proxy that the container reaches through a host port or a forwarded socket
 - **[Tmux Automation](Tmux-Automation)** - Automate AI sessions with tmux commands
 - **[Headless Orchestration](Headless-Orchestration)** - Drive any supported tool from an external orchestrator with `coi tool spec`
 - **[Image Management](Image-Management)** - Create and manage custom images
