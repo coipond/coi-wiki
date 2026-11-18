@@ -29,7 +29,7 @@ coi list --json                    # shorthand for --format json (see below)
 #   coi-abc12345-2 (persistent)  - will be kept for reuse
 ```
 
-`coi list` reads each container's mode and workspace from its Incus config keys `user.coi.persistent` and `user.coi.workspace`. `coi shell` and `coi run` set both keys; `coi shell --container` and `coi persist` set only `user.coi.persistent`. For a container created by an older coi, which lacks `user.coi.persistent`, `coi list` reads the saved sessions of every tool in `~/.coi/sessions-<tool>/` instead, the configured tool's first; the first save found for the container wins. A `coi container launch` container entered with `coi shell --container` shows no workspace: the directory `coi shell` ran in is not mounted there.
+`coi list` reads each container's mode and workspace from its Incus config keys `user.coi.persistent` and `user.coi.workspace`. `coi shell` and `coi run` set both keys; `coi shell --container` and `coi persist` set only `user.coi.persistent`. For a container created by an older coi, which lacks `user.coi.persistent`, `coi list` instead reads the saved sessions of every tool, the configured tool's first, in `~/.coi/sessions-<tool>/`; the first saved session found for the container wins. A `coi container launch` container entered with `coi shell --container` shows no workspace: the directory `coi shell` ran in is not mounted there.
 
 ### JSON Output: `--json`
 
