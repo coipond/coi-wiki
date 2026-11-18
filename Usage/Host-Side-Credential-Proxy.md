@@ -10,7 +10,7 @@ The parts:
 
 ## Reach the Proxy Over TCP
 
-In `restricted` and `allowlist` mode the host itself is closed to the container, except for the ports of entries that name a host address (see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)). Open the proxy's port on the bridge gateway, which is an address of the host. Find the gateway address of the bridge your containers use:
+In `restricted` and `allowlist` mode, with `allow_host_access` off (the default), the host itself is closed to the container, except for the ports of entries that name a host address (see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)). Open the proxy's port on the bridge gateway, which is an address of the host. Find the gateway address of the bridge your containers use:
 
 ```bash
 incus network get incusbr0 ipv4.address   # e.g. 10.47.62.1/24
@@ -22,14 +22,14 @@ Start the proxy so that it listens on that address (`10.47.62.1:8080` in the exa
 [[network.hosts]]
 ip        = "10.47.62.1"          # the bridge gateway address
 hostnames = ["llm-proxy"]
-ports     = [8080]                # the proxy port, and nothing else on the host
+ports     = [8080]                # the proxy port
 
 [defaults.environment]
 ANTHROPIC_BASE_URL   = "http://llm-proxy:8080"
 ANTHROPIC_AUTH_TOKEN = "proxy-only-token"   # a token the proxy accepts, not the provider key
 ```
 
-- `[[network.hosts]]` writes `llm-proxy` into the container's `/etc/hosts` and opens only port 8080 on that host address. It works in `restricted` and `allowlist` mode. It is honored only from trusted-scope config (`~/.coi/config.toml` or `$COI_CONFIG`), so it cannot go in a project `.coi/config.toml` (see [Static Host Entries](Static-Host-Entries)).
+- `[[network.hosts]]` writes `llm-proxy` into the container's `/etc/hosts` and opens port 8080 on that host address; with `allow_host_access` off, no other host port is open. It works in `restricted` and `allowlist` mode. In `open` mode Coi refuses an entry with `ports` and the session does not start, so keep this entry out of config that an `open`-mode session uses. It is honored only from trusted-scope config (`~/.coi/config.toml` or `$COI_CONFIG`), so it cannot go in a project `.coi/config.toml` (see [Static Host Entries](Static-Host-Entries)).
 - The variable names come from the tool. The example uses Claude Code: `ANTHROPIC_BASE_URL` points it at the proxy, and `ANTHROPIC_AUTH_TOKEN` is the credential it sends to the proxy. Without a credential variable, Claude Code keeps sending its saved claude.ai login (see Claude Code's [Connect Claude Code to an LLM gateway](https://code.claude.com/docs/en/llm-gateway-connect)). For another tool, use its own base-URL and credential variables.
 - In `allowlist` mode the container does not need the provider's domain in `allowed_domains` for model requests: the proxy on the host sends them on. Instead of `[[network.hosts]]`, an `allowed_domains` entry with the address and port (`"10.47.62.1:8080"`) also opens the proxy; the base URL then uses the address, because allowlist mode blocks DNS and no name is written to `/etc/hosts`.
 
@@ -57,7 +57,7 @@ The proxy keeps the key out only if nothing else puts it in. For the key the pro
 
 - **The agent can use the proxy for the whole session.** It cannot read the key, but every request it sends through the proxy, a prompt-injected one too, goes out with the key. The proxy is the policy point: budgets, rate limits, allowed models and request logs are its job, not Coi's.
 - **Coi does not ship, start or watch the proxy.** You run it on the host and keep it running.
-- **Other containers can reach the proxy too.** Coi filters host access only for its own containers in `restricted` and `allowlist` mode. A container in `open` mode, or one that Coi did not start, can reach a proxy that listens on the bridge address. Make the proxy require its own token, as `ANTHROPIC_AUTH_TOKEN` above.
+- **Other containers can reach the proxy too.** Coi filters host access only for its own containers in `restricted` and `allowlist` mode with `allow_host_access` off. A container in `open` mode or with `allow_host_access` on, or one that Coi did not start, can reach a proxy that listens on the bridge address. Make the proxy require its own token, as `ANTHROPIC_AUTH_TOKEN` above.
 
 ## See Also
 
