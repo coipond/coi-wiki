@@ -221,7 +221,7 @@ coi kill myproject-2  # force-stop a specific slot by alias
 coi attach --slot 2   # attach to slot 2 of the current workspace
 ```
 
-`coi attach` without a name looks only at running containers whose name starts with the container prefix. With exactly one running, it attaches to it, even when stopped containers exist. With none, it prints `No active sessions`; with several, it lists them.
+`coi attach` without a name looks only at running Coi containers: those whose name starts with the [container prefix](Container-Operations#running-coi-next-to-other-incus-containers), `coi-` by default. With exactly one running, it attaches to it. With none, it prints `No active sessions`; with several, it lists them.
 
 Give `coi attach` either one container name or `--slot`, not both: `coi attach <name> --slot N` exits `2`, and so does a negative `--slot`. If `tmux attach` fails in the container, `coi attach` prints `No tmux session found in container.` and exits `1`; if the container still runs, it also suggests `coi attach <name> --bash`.
 
