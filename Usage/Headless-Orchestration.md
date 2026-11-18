@@ -172,31 +172,35 @@ stream, with input via `send-keys` — adding its own auth `--env`.
 
 An orchestrator often tracks the tool through hooks in the tool's own config:
 for Claude Code, `hooks` such as `PreToolUse`, `Stop` and `SessionEnd` in
-`~/.claude/settings.json`, with their scripts under `~/.claude/hooks/`. coi adds
-no tool hooks of its own and has no option to add yours. Write them into the
-container yourself:
+`~/.claude/settings.json`, with their scripts under `~/.claude/hooks/`. coi
+installs no tool hooks of its own. Write yours into the container:
 
-1. Start the container with `coi shell --background`.
+1. Start the container with `coi shell --debug --background`. Without
+   `--debug`, `--background` also starts the tool in coi's own tmux session,
+   before your hooks exist, so that instance runs without them. With `--debug`
+   the session runs `bash` instead of the tool.
 2. Write the hooks into the tool's config directory in the container home
    (`/home/code/.claude/`), with `coi container exec` or
    [`coi file push`](File-Transfer).
 3. Start the tool with the `coi tool spec` command, as shown above.
 
-Merge your hooks into `settings.json`; do not replace the file. coi writes it
-from the host `~/.claude/settings.json`, when there is one (hooks included),
-merged with its own sandbox settings, such as the bypass-permission keys. coi
-does not copy hook scripts.
+Merge your hooks into `settings.json`; do not replace the file. When the host
+has a `~/.claude` directory, coi writes the container's `settings.json` from the
+host `~/.claude/settings.json` (hooks included), merged with its own sandbox
+settings, such as the bypass-permission keys. coi does not copy
+`~/.claude/hooks/` by default; to share the host's scripts, mount that directory
+read-only (see [Mounting Additional Files](Configuration#mounting-additional-files)).
 
-Write the hooks after each start. coi writes the tool config during the start
-on a new container, and on a reused container that has no config for this tool
-yet; in a reused container, hooks written before that are lost. On `--resume`,
-or on a reused container that already has the tool's config, coi leaves the
-config as it is.
+coi writes the tool config during the start of a new container, so write the
+hooks after the start. On `--resume`, coi restores the tool config saved with
+the coi session instead; on a reused container that already has the tool's
+config, coi leaves that config as it is.
 
 Do not put the hooks in the workspace `.claude/settings.json` or
-`.claude/settings.local.json`. These are
+`.claude/settings.local.json`. By default these are
 [protected paths](Security-Best-Practices#default-protected-paths), mounted
-read-only in the container, so a write from inside the container fails.
+read-only in the container, so a write from inside the container fails
+(`writable_paths` in trusted-scope config can lift this).
 
 ## Why Not Have coi Drive the Tool?
 
