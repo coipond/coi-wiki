@@ -192,9 +192,10 @@ settings, such as the bypass-permission keys. coi does not copy
 read-only (see [Mounting Additional Files](Configuration#mounting-additional-files)).
 
 coi writes the tool config during the start of a new container, so write the
-hooks after the start. On `--resume`, coi restores the tool config saved with
-the coi session instead; on a reused container that already has the tool's
-config, coi leaves that config as it is.
+hooks after the start. On `--resume`, coi again copies the host
+`~/.claude/settings.json`, when there is one, over the container's file, so
+write the hooks again after each resume. On a reused container that already has
+the tool's config, without `--resume`, coi leaves that config as it is.
 
 Do not put the hooks in the workspace `.claude/settings.json` or
 `.claude/settings.local.json`. By default these are
