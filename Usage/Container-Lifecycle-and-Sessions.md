@@ -218,7 +218,12 @@ coi list --running    # only slots whose container is Running (as of v0.10.0;
                       # also --stopped, or --status <any Incus state>)
 coi shutdown --all    # gracefully shut down all running slots
 coi kill myproject-2  # force-stop a specific slot by alias
+coi attach --slot 2   # attach to slot 2 of the current workspace
 ```
+
+`coi attach` without a name looks only at running containers whose name starts with the container prefix. With exactly one running, it attaches to it, even when stopped containers exist. With none, it prints `No active sessions`; with several, it lists them.
+
+Give `coi attach` either one container name or `--slot`, not both: `coi attach <name> --slot N` exits `2`, and so does a negative `--slot`. If `tmux attach` fails in the container, `coi attach` prints `No tmux session found in container.` and exits `1`; if the container still runs, it also suggests `coi attach <name> --bash`.
 
 ## Example Workflows
 
