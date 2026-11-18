@@ -168,6 +168,36 @@ The orchestrator then runs that argv in its own `coi container exec -t <ctr>
 --env … -- bash -c "<command>"` inside a tmux it controls, captured to its own
 stream, with input via `send-keys` — adding its own auth `--env`.
 
+## Harness Hooks
+
+An orchestrator often tracks the tool through hooks in the tool's own config:
+for Claude Code, `hooks` such as `PreToolUse`, `Stop` and `SessionEnd` in
+`~/.claude/settings.json`, with their scripts under `~/.claude/hooks/`. coi adds
+no tool hooks of its own and has no option to add yours. Write them into the
+container yourself:
+
+1. Start the container with `coi shell --background`.
+2. Write the hooks into the tool's config directory in the container home
+   (`/home/code/.claude/`), with `coi container exec` or
+   [`coi file push`](File-Transfer).
+3. Start the tool with the `coi tool spec` command, as shown above.
+
+Merge your hooks into `settings.json`; do not replace the file. coi writes it
+from the host `~/.claude/settings.json`, when there is one (hooks included),
+merged with its own sandbox settings, such as the bypass-permission keys. coi
+does not copy hook scripts.
+
+Write the hooks after each start. coi writes the tool config during the start
+on a new container, and on a reused container that has no config for this tool
+yet; in a reused container, hooks written before that are lost. On `--resume`,
+or on a reused container that already has the tool's config, coi leaves the
+config as it is.
+
+Do not put the hooks in the workspace `.claude/settings.json` or
+`.claude/settings.local.json`. These are
+[protected paths](Security-Best-Practices#default-protected-paths), mounted
+read-only in the container, so a write from inside the container fails.
+
 ## Why Not Have coi Drive the Tool?
 
 Having coi own the runtime (launch the tool in a coi-side tmux and hand back
