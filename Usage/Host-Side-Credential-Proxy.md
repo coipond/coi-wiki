@@ -1,6 +1,6 @@
 # Host-Side Credential Proxy
 
-Coi gives the agent a credential by putting it in the container: `forward_env`, `[[credentials]]` and `[defaults.env_commands]` all place the value where every process the agent starts can read it (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)). To keep an API key out of the container, run a proxy on the host that holds the key and adds it to each request, for example an LLM gateway, and point the tool at the proxy. Coi does not ship such a proxy. This page shows how to connect a container to one with existing config.
+Coi gives the agent a credential by putting it in the container: `forward_env`, `[[credentials]]` and `[defaults.env_commands]` all place the value where every process the agent starts can read it (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)). To keep an API key out of the container, run a proxy on the host that holds the key and adds it to each request, for example an LLM gateway, and point the tool at the proxy. This page shows how to connect a container to one with existing config.
 
 The parts:
 
@@ -10,7 +10,7 @@ The parts:
 
 ## Reach the Proxy Over TCP
 
-In `restricted` and `allowlist` mode, with `allow_host_access` off (the default), the host itself is closed to the container, except for the ports of entries that name a host address (see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)). Open the proxy's port on the bridge gateway, which is an address of the host. Find the gateway address of the bridge your containers use:
+In `restricted` and `allowlist` mode, with `allow_host_access` off (the default), the host itself is closed to the container, except for the ports of `[[network.hosts]]` and `allowed_domains` entries that name a host address (see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)). Open the proxy's port on the bridge gateway, which is an address of the host. Find the gateway address of the bridge your containers use:
 
 ```bash
 incus network get incusbr0 ipv4.address   # e.g. 10.47.62.1/24
@@ -29,7 +29,9 @@ ANTHROPIC_BASE_URL   = "http://llm-proxy:8080"
 ANTHROPIC_AUTH_TOKEN = "proxy-only-token"   # a token the proxy accepts, not the provider key
 ```
 
-- `[[network.hosts]]` writes `llm-proxy` into the container's `/etc/hosts` and opens port 8080 on that host address; the entry opens no other port. It works in `restricted` and `allowlist` mode. In `open` mode Coi refuses an entry with `ports` and the session does not start, so keep this entry out of config that an `open`-mode session uses. It is honored only from trusted-scope config (`~/.coi/config.toml` or `$COI_CONFIG`), so it cannot go in a project `.coi/config.toml` (see [Static Host Entries](Static-Host-Entries)).
+- `[[network.hosts]]` writes `llm-proxy` into the container's `/etc/hosts` and opens port 8080 on that host address; the entry opens no other port. It works in `restricted` and `allowlist` mode.
+- `[[network.hosts]]` is honored only from trusted-scope config (`~/.coi/config.toml`, `$COI_CONFIG`, or a profile in `~/.coi/profiles/`), so it cannot go in a project `.coi/config.toml` (see [Static Host Entries](Static-Host-Entries)).
+- In `open` mode Coi refuses an entry with `ports` and the session does not start. If some of your sessions use `open` mode, put the example in a profile instead, `~/.coi/profiles/llm-proxy/config.toml`, with `[environment]` in place of `[defaults.environment]`, and start the proxy sessions with `coi --profile llm-proxy` (see [Profiles](Profiles)).
 - The variable names come from the tool. The example uses Claude Code: `ANTHROPIC_BASE_URL` points it at the proxy, and `ANTHROPIC_AUTH_TOKEN` is the credential it sends to the proxy. Without a credential variable, Claude Code keeps sending its saved claude.ai login (see Claude Code's [Connect Claude Code to an LLM gateway](https://code.claude.com/docs/en/llm-gateway-connect)). For another tool, use its own base-URL and credential variables.
 - In `allowlist` mode the container does not need the provider's domain in `allowed_domains` for model requests: the proxy on the host sends them on. Instead of `[[network.hosts]]`, an `allowed_domains` entry with the address and port (`"10.47.62.1:8080"`) also opens the proxy; the base URL then uses the address, because allowlist mode blocks DNS and no name is written to `/etc/hosts`.
 
@@ -44,14 +46,15 @@ container = "/run/llm-proxy.sock"       # absolute path in the container
 env       = "LLM_PROXY_SOCK"            # optional: env var set to the container path
 ```
 
-- The client in the container must connect to a Unix socket. A tool that takes only an `http://` or `https://` base URL cannot use this path; use TCP.
+- Coi only places the socket in the container and, with `env`, sets `LLM_PROXY_SOCK` to its path. The client that talks to the proxy must open the socket itself, for example `curl --unix-socket "$LLM_PROXY_SOCK" http://localhost/`.
+- Claude Code takes its base URL as an `http://` or `https://` URL (`ANTHROPIC_BASE_URL`), so use the TCP path for it, and for any other tool that takes only such a URL.
 - The socket in the container is owned by the `code` user with mode `0600`.
 - If the host socket does not exist when the session starts, Coi prints `Socket forwarding skipped: ... not accessible` and starts the session without it. Start the proxy first.
 - `[[sockets]]` entries from a project `.coi/config.toml` apply only after `coi trust` (see [Configuration](Configuration#what-you-can-set-in-coiconfigtoml)).
 
 ## Keep the Key Out of the Container
 
-The proxy keeps the key out only if nothing else puts it in. For the key the proxy holds, remove every other way it enters the container: `forward_env`, `[[credentials]]`, `[defaults.env_commands]` and `[defaults.environment]`. Coi also copies the tool's own credential files in (for Claude Code, `~/.claude/.credentials.json`); the proxy does not change that.
+The proxy keeps the key out only if nothing else puts it in. For the key the proxy holds, remove every other way it enters the container: `forward_env`, `[[credentials]]`, `[defaults.env_commands]` and `[defaults.environment]`. Coi also copies the tool's own credential files in. For Claude Code that is `~/.claude/.credentials.json`, your claude.ai login: a credential separate from the key the proxy holds. With `ANTHROPIC_AUTH_TOKEN` set, Claude Code sends the token, not the login, but the login file is still readable in the container. The proxy does not protect it (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)).
 
 ## Limits
 
