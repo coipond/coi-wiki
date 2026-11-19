@@ -60,7 +60,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
 - Session storage: opencode's data dirs (`~/.local/share/opencode/` with its SQLite session database, and `~/.local/state/opencode/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/opencode/<workspace-hash>/`, so they survive ephemeral containers and stay out of the workspace. Data that an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved once, to opencode (`tool-data/opencode/`); [opencode2](#opencode2-opencode-v2) never takes it. If the move fails, coi warns and the data stays in the workspace. If opencode2 on 0.16.0 already took it, see [Migration Guide - Upgrading to 0.16](Migration-Guide#upgrading-to-016) to move it back.
-- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
+- Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace, and when you pass both flags, a session ID wins over a bare flag (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
 
 **Requirements:**
 
