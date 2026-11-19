@@ -50,7 +50,8 @@ Restores the AI tool conversation in a fresh container:
 - Use when you want to continue a conversation but do not need installed packages
 - Container is recreated, only tool session data is restored
 - **Profile auto-restore**: The profile used when the session was originally created is automatically restored - no need to pass `--profile` again. Two sources win over it: an explicit `--profile` on resume, and the profile saved for a container alias when you resume through `coi shell <alias>`. See the [profile precedence table](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile).
-- **`--resume` and `--continue` together**: a session ID wins over a bare flag, in either order, so `coi shell --resume=<id> --continue` resumes `<id>`. When both flags name different IDs, `--resume` wins. coi prints a warning on stderr naming the session it resumes and the flag it ignores, for example `Warning: resuming session <id> from --resume; ignoring bare --continue`; the same ID in both flags prints none. If the session does not exist, coi fails with `session '<id>' not found` and prints no warning.
+- **Two forms**: `coi shell --resume` alone resumes the latest saved session of the workspace; `coi shell --resume=<id>` resumes the session `<id>` (`coi list --all` lists the saved session IDs, see [Container Operations](Container-Operations)). `--continue` is an alias of `--resume` and takes the same two forms.
+- **`--resume` and `--continue` together**: a session ID wins over a flag without one, in either order, so `coi shell --resume=<id> --continue` resumes `<id>`. When both flags name different IDs, `--resume` wins. coi prints a warning on stderr naming the session it resumes and the flag it ignores, for example `Warning: resuming session <id> from --resume; ignoring bare --continue`; the same ID in both flags prints none. If the session does not exist, coi fails with `session '<id>' not found` and prints no warning.
 - **Workspace-scoped**: Only finds sessions from the current workspace directory (security feature) — unless `session_name` is set: named sessions find their saved sessions by NAME from any workspace location (see [Named Sessions](#named-sessions-session_name--v0111))
 
 ### Persistent Mode (`[container] persistent = true`)
@@ -299,7 +300,7 @@ coi attach myproject-2           # Attach to slot 2 by alias
 
 Aliases are registered in `~/.coi/aliases.json` on first use and stored as `user.coi.alias` metadata on each container. `coi list` shows aliases next to container names.
 
-`coi shell <alias>` always uses the alias's workspace. If `-w` names another directory, coi ignores it and prints `Warning: alias '<alias>' uses workspace <dir>; ignoring -w <dir>` on stderr. A relative `-w` path to the alias's own workspace prints no warning.
+`coi shell <alias>` always uses the alias's workspace. If `-w` names another directory (compared as an absolute path), coi ignores it and prints `Warning: alias '<alias>' uses workspace <dir>; ignoring -w <dir>` on stderr.
 
 An alias can also keep a saved profile in `~/.coi/aliases.json`. `coi shell --profile <name>` saves `<name>` for the alias, and a later `coi shell <alias>` without `--profile` uses it. `coi run` keeps the saved profile. A profile that came only from `[defaults] profile` is not saved into the alias, so a change of the default reaches every alias without a saved profile. The exception is the resume of a session saved by an older coi: it still saves its profile. See [Selecting the Profile a Bare `coi` Uses](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile) for the precedence and how to reset an entry saved by an older coi.
 
