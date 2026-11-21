@@ -274,9 +274,18 @@ What changes is unprivileged user namespaces for a non-root user, on hosts that 
 | Google Chrome / Chromium, own sandbox | Fails to start its sandbox | Run with `--no-sandbox` (the container is the sandbox); Playwright's headless default already does |
 | Rootless Podman / Buildah | Cannot set up the user namespace | Run them with `sudo`, or use Docker |
 | Flatpak | Cannot start apps | None inside the container |
-| Snaps installed in the container | May fail to start | Install the tool another way (apt, mise, a release binary) |
 
 Root inside the container is unaffected, as are hosts that do not restrict unprivileged user namespaces. The mask applies to images built with 0.15.0 or later (`coi build --force`); existing images and containers keep the old behavior until rebuilt.
+
+## No snapd in the Image
+
+The Ubuntu base image ships snapd, which contacts the Snap Store as soon as a container starts. In `restricted` and `allowlist` modes the [security monitor](Security-Monitoring) could flag that connection and pause the container. So `coi build` removes snapd and pins it in apt: `snap` is not available, and apt does not install snapd or a package that needs it (such as Ubuntu's `firefox` and `chromium` packages). Install such tools another way (mise, a release binary).
+
+Images built with a coi release after 0.16.0 have no snapd. Older images keep it until `coi build --force`.
+
+## SSH Host Keys
+
+The image's `~/.ssh/known_hosts` holds the SSH host keys of github.com, gitlab.com and bitbucket.org. `coi build` gets them over HTTPS, not with `ssh-keyscan`, so the build makes no connection to port 22: the github.com keys from `https://api.github.com/meta`, the bitbucket.org keys from `https://bitbucket.org/site/ssh`, and the gitlab.com keys from the published keys built into coi. When a fetch fails or returns incomplete keys, that host gets the keys built into coi, and the build continues.
 
 ## Pre-installed Runtime Manager (mise)
 

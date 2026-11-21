@@ -198,6 +198,8 @@ sudo systemctl restart incus
 
 Until the line is in **both** files and Incus has been restarted, `coi health` keeps the warning and says which step is still missing.
 
+**Host UIDs of 65536 or above (e.g. FreeIPA, LDAP or AD accounts), outside root's range in `/etc/subuid`:** you need no fix. `coi health` cannot run its secret-masking check for such a UID, so it reports that check as a warning that names the UID and says it is not a masking failure. Sessions are not affected: they map the UID with `raw.idmap` and mask secrets as usual. `coi health` takes 65536 (Incus' default `security.idmap.size`) as the limit, also on a host that sets another size.
+
 
 ## Updating Coi
 
