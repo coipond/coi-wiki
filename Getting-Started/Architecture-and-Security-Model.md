@@ -59,7 +59,7 @@ Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the co
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies
-- SSH keys are never copied unless you explicitly enable SSH agent forwarding (`[ssh] forward_agent = true`), which forwards via a socket proxy rather than copying key material
+- SSH keys are not copied unless you list them in `[[credentials]]`; SSH agent forwarding (`[ssh] forward_agent = true`) uses a socket proxy rather than copying key material
 
 ### Network Isolation
 
