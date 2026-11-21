@@ -119,6 +119,7 @@ Coi accepts `:53` only to the listed IPv4 addresses and rejects every other off-
 - IPv4 addresses only.
 - **Not valid in allowlist mode** (which blocks all DNS by design and resolves via `/etc/hosts`); Coi fails closed if you set both.
 - **Caveat:** pinning `:53` only bites when port 443 is also constrained (allowlist mode, or `allowed_ports`), otherwise malware can still tunnel DNS-over-HTTPS on 443.
+- **Caveat:** pinning does not filter queries to the bridge's own resolver. `dig TXT example.com @1.1.1.1` is rejected, but `dig TXT example.com` goes through the container's normal DNS and still resolves, so data in a DNS record still reaches the container. Only allowlist mode blocks all DNS.
 
 ### Egress Port Allowlist (`allowed_ports`)
 
