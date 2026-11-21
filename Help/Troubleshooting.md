@@ -319,7 +319,7 @@ If your settings were already lost, restore from backup or recreate them. Going 
 
 **Symptom:** Session save fails with `EXDEV` (cross-device link) error, typically when `/tmp` and the session storage directory are on different filesystems or mount points.
 
-**Fix:** Coi now uses a recursive copy with proper symlink handling as a fallback when `os.Rename` fails with `EXDEV`. Update to the latest version.
+**Fix:** Coi now falls back to a recursive copy when `os.Rename` fails with `EXDEV`. Update to the latest version. The saved session leaves out symlinks and special files (FIFOs, sockets, device nodes).
 
 ## Parent Dir of a Protected Path Cannot Be Renamed or Removed
 
