@@ -42,7 +42,8 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 - nftables plus passwordless sudo for `nft` must be available for network isolation to work
 - Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for traffic to the host itself, which holds the allowlist DNS block) to filter container traffic
 - In restricted and allowlist modes, Coi also adds one rule per container to the forward chain of its own `ip6 coi` table: it drops all forwarded IPv6 from the container's host-side veth (see [Restricted Mode](Network-Isolation#restricted-mode-default)). If Coi cannot add this rule, container setup fails
-- The `ip coi` filter rules are scoped by container IP address. The IPv6 drop rule, and a temporary `ip coi` rule that drops all forwarded IPv4 from the container's veth from start until its IP rules are in place, match the veth name instead
+- The `ip coi` filter rules are scoped by container IP address. The IPv6 drop rule matches the host-side veth name instead
+- The boot block is a temporary `ip coi` rule that also matches the host-side veth name. It drops all forwarded IPv4 from that veth from the moment the container starts until the container's IP-scoped rules are in place
 - Rules are removed when containers are stopped/deleted
 
 ## How It Works
