@@ -362,7 +362,7 @@ writable_hooks = false  # Allow container to write .git/hooks
 
 [security]
 # host_immutable = true        # Apply chattr +i to protected paths (default: true)
-# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json", ".codex/config.toml"]
+# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".git/commondir", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json", ".codex/config.toml"]
 # additional_protected_paths = [".idea", "Makefile"]
 # writable_paths = [".claude/settings.json"]  # Remove entries from the effective protected paths so the
 #                                             # container can write them (default: none). Trusted scope only.
