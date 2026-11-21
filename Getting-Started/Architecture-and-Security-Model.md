@@ -90,7 +90,7 @@ These paths are write-protected from inside the container regardless of the netw
 
 When enabled (`[monitoring] enabled = true`; off by default), Coi runs an active monitoring process that watches AI tool behavior in real time and responds automatically to detected threats. Monitoring operates at three levels:
 
-**Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), credential scanning (access to known credential file patterns), and suspicious process trees.
+**Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), environment scanning (commands such as `env` and `printenv`, reads of `/proc/*/environ`, `os.environ` or `process.env`, and grep/awk/sed with secret-related words such as `token`), and suspicious process trees. A file watcher flags opens of `/etc/shadow`, `/etc/gshadow` and root's SSH private keys; it does not watch the agent's own credential files, such as `~/.claude/.credentials.json`.
 
 **Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc.
 
