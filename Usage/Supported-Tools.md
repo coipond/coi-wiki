@@ -244,7 +244,7 @@ The build installs goose v1.57.0 from its release tarball and checks the tarball
 - Session storage: goose's data dir (`~/.local/share/goose/`, with its SQLite session database) and state dir (`~/.local/state/goose/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/goose/<workspace-hash>/`, so sessions survive ephemeral containers.
 - A saved goose session (`~/.coi/sessions-goose/`) leaves out `tls` and `roaming_node_key`, the private keys of `goose serve`, which coi does not run.
 - Resume: `coi shell --resume` needs a saved goose session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). coi then looks up the workspace's latest goose session and runs `goose session --resume --session-id <id>`; when it finds none, it starts a new goose session.
-- `coi run --prompt` does not support goose: it exits with code 2 (`tool "goose" cannot run a prompt headlessly via coi run`).
+- Headless runs: `coi run --prompt` runs `goose run --quiet --instructions -` with the prompt on stdin (see [Fire-and-Forget Prompt Runs](Headless-Orchestration#fire-and-forget-prompt-runs-coi-run---prompt)).
 
 ## Passing API Keys
 

@@ -37,11 +37,12 @@ prompt run is the command.
 - **`[tool] permission_mode = "bypass"`** — a headless run has no terminal to
   approve tool use, so bypass mode is required (it is the default; see
   [Configuration](Configuration)).
-- **Tool support** — supported for the `claude`, `opencode` and `opencode2`
-  tools; any other tool exits 2 before any container work. coi runs the
-  prompt with `opencode run --auto` (`opencode`) or `opencode2 run
-  --standalone --auto` (`opencode2`). With both tools, stdin piped into `coi run --prompt` does not
-  reach the agent (`claude` still reads it).
+- **Tool support** — supported for the `claude`, `goose`, `opencode` and
+  `opencode2` tools; any other tool exits 2 before any container work. coi runs
+  the prompt with `goose run --quiet --instructions -` (`goose`, prompt on
+  stdin), `opencode run --auto` (`opencode`) or `opencode2 run --standalone
+  --auto` (`opencode2`). With these three tools, stdin piped into `coi run
+  --prompt` does not reach the agent (`claude` still reads it).
 
 ## Named Prompts — the `[prompts]` Table
 
@@ -107,7 +108,8 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
   [Prompt Delivery for Tools That Cannot Embed It](#prompt-delivery-for-tools-that-cannot-embed-it).
 - **`env`** — tool-derived environment only. Per tool:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
-  a model or effort; codex, opencode, opencode2 and goose: none; pi:
+  a model or effort; goose: `GOOSE_MODE` (`auto`, or `approve` when
+  `permission_mode = "interactive"`); codex, opencode and opencode2: none; pi:
   `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The pi and omp paths
   point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
