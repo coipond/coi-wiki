@@ -558,7 +558,7 @@ shift = true      # force an idmapped mount → host files show up owned by `cod
 
 ## Replacing the Tool's Executable (`binary`)
 
-`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `pi`, `omp`, `goose`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
+`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `opencode2`, `pi`, `omp`, `goose`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
 
 ```toml
 [tool]
