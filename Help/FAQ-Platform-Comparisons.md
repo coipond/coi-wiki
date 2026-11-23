@@ -98,7 +98,7 @@ Coi's value is not just isolation - it is the [security monitoring](Security-Mon
 | **Plain VM** | General isolation | ⚠️ Manual | ❌ No | Manual | Manual | Full OS isolation without monitoring |
 | **Bare metal** | Direct execution | ❌ No (full access) | ❌ No | Manual | None | Maximum performance, trusted environments |
 
-**Choose Coi if:** You want AI to modify code without access to your SSH keys or host environment variables, with real-time [security monitoring](Security-Monitoring) (`[monitoring] enabled`, off by default), automatic session management, and strong isolation.
+**Choose Coi if:** You want AI to modify code without access to your SSH keys or host environment variables (except `TERM`), with real-time [security monitoring](Security-Monitoring) (`[monitoring] enabled`, off by default), automatic session management, and strong isolation.
 
 ## See Also
 

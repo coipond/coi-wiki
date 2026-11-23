@@ -40,7 +40,7 @@ What Coi does not protect against:
 **If you are giving API keys to the AI for it to use** (e.g., AWS keys for the AI to deploy things):
 
 - **Do not do this unless you fully trust the project and AI's capabilities**
-- Coi isolation prevents credential leakage to your host, but every process in the container can read those credentials, so a compromised AI could misuse them or send them out
+- Coi isolation prevents credential leakage to your host, but the AI tool and every process it starts can read those credentials, so a compromised AI could misuse them or send them out
 - Use temporary/scoped credentials with minimal permissions
 - Prefer explicit mounting of credentials rather than storing them in the workspace
 
@@ -62,7 +62,7 @@ Fair question. Here is what makes Coi trustworthy:
 
 **Security by design:**
 
-- Host SSH keys and environment variables stay out unless you configure them (the AI tool's own credentials are copied in, and the AI tool and every process it starts can read them; see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- Host SSH keys and environment variables (except `TERM`) stay out unless you configure them (the AI tool's own credentials are copied in, and the AI tool and every process it starts can read them; see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - Network isolation with nftables (blocks private networks by default)
 - Workspace-only mounting (AI cannot access your entire filesystem)
 
@@ -88,12 +88,13 @@ One of the more fitting aspects of this workflow: Coi is often built inside Coi 
 
 - ✅ **Your workspace only** - The project directory you explicitly mount
 - ✅ **Container filesystem** - Temporary files that get deleted (ephemeral mode)
+- ✅ **The AI tool's own credentials** - Coi copies them in; the AI tool and every process it starts can read them (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - ❌ **Your SSH keys** - Not accessible unless you explicitly mount `~/.ssh`
 - ❌ **Your home directory** - Not accessible
-- ❌ **Your environment variables** - Not passed to the container unless explicitly forwarded via `forward_env` config
+- ❌ **Your environment variables** - Not passed to the container (except `TERM`) unless explicitly forwarded via `forward_env` config
 - ❌ **Your local network** - Blocked by default (restricted mode)
 
-You control what gets mounted. By default, Coi is locked down.
+You control what gets mounted.
 
 ## Why Does Coi Need the `incus-admin` Group?
 

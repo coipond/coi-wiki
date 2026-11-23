@@ -48,14 +48,14 @@ What is not accessible inside the container by default:
 
 - Your SSH keys and `~/.ssh`
 - Your home directory
-- Your shell environment variables (must be explicitly forwarded via `forward_env`)
+- Your shell environment variables except `TERM` (others must be explicitly forwarded via `forward_env`)
 - Any other host filesystem path
 
 File ownership is handled automatically: Coi selects per container between Incus idmapped (`shift=true`) mounts and a `raw.idmap` mapping, checking each mount source's filesystem before start (FUSE-family/9p sources get `raw.idmap`) and falling back automatically when a kernel or filesystem cannot do idmapped mounts. Either way the AI tool sees files owned by its `code` user without any manual `chown` or privilege escalation. On macOS VM hosts (Colima/Lima/OrbStack) see the [macOS Setup Guide](macOS-Setup-Guide) for the mechanism details.
 
 ### Credential Isolation
 
-Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start and gives them to the `code` user. The AI tool and every process it starts run as `code`, so all of them can read these credentials. The same applies to every `forward_env`, `[[credentials]]` and `environment` value. The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) turns off passwordless sudo, but does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
+Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start and gives them to the user the AI tool runs as (`code` by default, set by `[incus] code_user`; root on an image without that user). The AI tool and every process it starts run as that user, so all of them can read these credentials. The same applies to every `forward_env`, `[[credentials]]` and `environment` value. The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) turns off passwordless sudo, but does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
 
 Coi copies these files rather than bind-mounting live config directories. This means:
 
@@ -150,7 +150,7 @@ Coi contains the blast radius of AI tool compromise. It does not prevent the AI 
 
 **Prompt injection** - Malicious content in files the AI reads (README, source code, web pages) can instruct the AI to take actions it otherwise would not. Coi limits what those actions can accomplish, but it cannot detect that an instruction is malicious.
 
-**API key misuse** - If you give the AI an API key to use (e.g., AWS credentials to deploy something), a prompted AI can send those credentials to an attacker. Coi isolation only protects credentials that are not explicitly given to the AI.
+**API key misuse** - If you give the AI an API key to use (e.g., AWS credentials to deploy something), a prompted AI can send those credentials to an attacker. Coi isolation does not protect credentials given to the AI, nor the AI tool's own credentials that Coi copies in (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)).
 
 **Insecure code generation** - Coi has no visibility into the quality or security of code the AI writes. Generated code may contain SQL injection, XSS, hardcoded secrets, or other vulnerabilities.
 
