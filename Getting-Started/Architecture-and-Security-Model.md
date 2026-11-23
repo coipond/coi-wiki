@@ -55,7 +55,7 @@ File ownership is handled automatically: Coi selects per container between Incus
 
 ### Credential Handling
 
-Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start. The AI tool and every process it starts can read them, and the same holds for values you pass in with `forward_env`, `[[credentials]]` or `[environment]` ([Profiles: Available Fields](Profiles#available-fields)). The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
+Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start. The AI tool and every process it starts can read them, and the same holds for values you pass in with `forward_env`, `[[credentials]]`, `[defaults.environment]` ([Configuration](Configuration#full-config-reference)) or a profile's `[environment]` ([Profiles: Available Fields](Profiles#available-fields)). The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
 
 Coi copies these files rather than bind-mounting live config directories. This means:
 
