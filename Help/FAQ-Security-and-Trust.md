@@ -62,7 +62,7 @@ Fair question. Here is what makes Coi trustworthy:
 
 **Security by design:**
 
-- Host SSH keys and environment variables (except `TERM`) stay out unless you configure them (the AI tool's own credentials are copied in, and the AI tool and every process it starts can read them; see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- Host SSH keys and env vars (except `TERM`) stay out unless configured ([not the AI tool's own credentials](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - Network isolation with nftables (blocks private networks by default)
 - Workspace-only mounting (AI cannot access your entire filesystem)
 

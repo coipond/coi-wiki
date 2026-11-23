@@ -9,7 +9,7 @@ A Docker container with a volume mount gives you filesystem isolation - but that
 | Capability | Docker + Volume | Coi |
 |------------|----------------|-----|
 | **Filesystem isolation** | Yes | Yes |
-| **Credential isolation** | Manual (you decide what to mount) | Automatic (by default, only the AI tool's own credentials are copied in; the agent can read them) |
+| **Credential isolation** | Manual (you decide what to mount) | ⚠️ Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
 | **Reverse shell detection** | No | Optional (real-time process monitoring; off by default, needs `[monitoring] enabled`) |
 | **Data exfiltration detection** | No | Optional (filesystem I/O monitoring, plus nftables network logging with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) |
 | **Network filtering** | Basic (`--network none` or full access) | Granular (restricted/allowlist/open modes) |
@@ -43,7 +43,7 @@ Beyond architectural differences, Coi includes a [security monitoring](Security-
 **Security model:**
 
 - **DevContainers** - Your code runs in the container, but typically with your host credentials mounted
-- **Coi** - AI tools run in isolated containers with only their own credentials copied in, which the agent can read. Only your workspace is mounted, nothing else unless explicitly configured
+- **Coi** - AI tools run in isolated containers with only their own credentials copied in, which the AI tool and every process it starts can read. Only your workspace is mounted, nothing else unless explicitly configured
 
 **Architecture:**
 
@@ -77,7 +77,7 @@ You can run AI tools inside any Linux VM, but a plain VM provides only isolation
 | **Reverse shell detection** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Data exfiltration monitoring** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Network threat detection** | Manual firewall setup | Optional (nftables logging, off by default) |
-| **Credential isolation** | Manual | Automatic (only the AI tool's own credentials are copied in; the agent can read them) |
+| **Credential isolation** | Manual | ⚠️ Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
 | **Supply-chain protection** | No | Yes (read-only `.git/hooks`, `.vscode`) |
 | **Session resume** | No | Yes |
 | **Audit logging** | No | Optional (off by default, needs `[monitoring] enabled`) |
@@ -90,7 +90,7 @@ Coi's value is not just isolation - it is the [security monitoring](Security-Mon
 
 | Tool | Purpose | Credentials Isolated | Security Monitoring | AI Tool Support | Session Management | Best For |
 |------|---------|---------------------|---------------------|-----------------|-------------------|----------|
-| **Coi** | AI coding isolation | ⚠️ Partly (the AI tool's own credentials are copied in; the agent can read them) | ✅ Optional (process, filesystem, network with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) | Built-in | Auto save/resume | Running AI coding tools securely |
+| **Coi** | AI coding isolation | ⚠️ Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) | ✅ Optional (process, filesystem, network with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) | Built-in | Auto save/resume | Running AI coding tools securely |
 | **Docker + Volume** | Basic isolation | ⚠️ Manual | ❌ No | Manual | Manual | Simple filesystem isolation |
 | **Docker Sandboxes** | AI tool isolation | ✅ Yes | ❌ No | Limited | Manual | macOS/Windows users (requires Docker Desktop) |
 | **DevContainers** | Dev environment | ❌ No (typically mounted) | ❌ No | Manual | Manual | Reproducible development environments |

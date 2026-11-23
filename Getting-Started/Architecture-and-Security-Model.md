@@ -53,9 +53,9 @@ What is not accessible inside the container by default:
 
 File ownership is handled automatically: Coi selects per container between Incus idmapped (`shift=true`) mounts and a `raw.idmap` mapping, checking each mount source's filesystem before start (FUSE-family/9p sources get `raw.idmap`) and falling back automatically when a kernel or filesystem cannot do idmapped mounts. Either way the AI tool sees files owned by its `code` user without any manual `chown` or privilege escalation. On macOS VM hosts (Colima/Lima/OrbStack) see the [macOS Setup Guide](macOS-Setup-Guide) for the mechanism details.
 
-### Credential Isolation
+### Credential Handling
 
-Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start and gives them to the user the AI tool runs as (`code` by default, set by `[incus] code_user`; root on an image without that user). The AI tool and every process it starts run as that user, so all of them can read these credentials. The same applies to every `forward_env`, `[[credentials]]` and `environment` value. The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) turns off passwordless sudo, but does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
+Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start. The AI tool and every process it starts can read them, and the same holds for values you pass in with `forward_env`, `[[credentials]]` or `[environment]` ([Profiles: Available Fields](Profiles#available-fields)). The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
 
 Coi copies these files rather than bind-mounting live config directories. This means:
 
