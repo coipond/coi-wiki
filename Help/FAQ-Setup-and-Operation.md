@@ -27,7 +27,7 @@ If you are on Linux, there is no Colima involved. See the [macOS Setup Guide](ma
 **After setup:** `cd your-project && coi shell` - same simplicity as running Claude Code directly, but with:
 
 - ✅ Automatic file ownership (no permission issues)
-- ✅ Credential isolation (your SSH keys stay safe)
+- ✅ Host credential isolation (your SSH keys stay out unless you pass them in)
 - ✅ Session save/resume (continue later)
 - ✅ Parallel sessions (multiple workspaces/slots)
 - ✅ Clean environment (no host pollution)

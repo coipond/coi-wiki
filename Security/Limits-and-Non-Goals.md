@@ -47,7 +47,7 @@ Before you trust Coi with a repository you did not write:
 
 - Use `allowlist` mode, or at least set `allowed_ports`, if the agent must not reach arbitrary hosts.
 - Turn on `[monitoring]` (and `[monitoring.nft]` for network detection).
-- Assume the tool credentials in the container can leak. Use a credential you can revoke.
+- Assume the tool credentials in the container can leak. Use a short-lived or scoped token where the provider supports it, and a credential you can revoke.
 - Add the workspace files your host tools run to `additional_protected_paths`.
 - Review workspace changes before you run them on the host.
 - If you watch the session and your tool supports it, set `permission_mode = "interactive"` to approve each command. This helps only if you read each command: a command that looks routine is easy to approve.

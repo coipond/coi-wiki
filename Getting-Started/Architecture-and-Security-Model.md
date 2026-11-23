@@ -55,7 +55,9 @@ File ownership is handled automatically: Coi selects per container between Incus
 
 ### Credential Isolation
 
-Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start rather than bind-mounting live config directories. This means:
+Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start and gives them to the `code` user. The AI tool and every process it starts run as `code`, so all of them can read these credentials. The same applies to every `forward_env`, `[[credentials]]` and `environment` value. The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) turns off passwordless sudo, but does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
+
+Coi copies these files rather than bind-mounting live config directories. This means:
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies

@@ -1,4 +1,4 @@
-Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI coding tools (Claude Code, opencode, opencode2, Codex, pi, omp, goose, and more) inside isolated Incus system containers — with credential protection, network controls, and real-time security monitoring built in.
+Welcome to the Coi (Code on Incus) wiki. Coi is a session manager that runs AI coding tools (Claude Code, opencode, opencode2, Codex, pi, omp, goose, and more) inside isolated Incus system containers — with network controls and real-time security monitoring built in. Your SSH keys and host environment variables stay out unless you pass them in.
 
 > **New to Coi?** Start with [Getting Started](Getting-Started) for a step-by-step walkthrough, then read [Architecture and Security Model](Architecture-and-Security-Model) to understand what Coi protects against and how.
 

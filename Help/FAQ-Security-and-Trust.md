@@ -40,7 +40,7 @@ What Coi does not protect against:
 **If you are giving API keys to the AI for it to use** (e.g., AWS keys for the AI to deploy things):
 
 - **Do not do this unless you fully trust the project and AI's capabilities**
-- Coi isolation prevents credential leakage to your host, but a compromised AI could still misuse those credentials
+- Coi isolation prevents credential leakage to your host, but every process in the container can read those credentials, so a compromised AI could misuse them or send them out
 - Use temporary/scoped credentials with minimal permissions
 - Prefer explicit mounting of credentials rather than storing them in the workspace
 
@@ -62,7 +62,7 @@ Fair question. Here is what makes Coi trustworthy:
 
 **Security by design:**
 
-- Credentials isolated by default (not mounted unless you configure it)
+- Host SSH keys and environment variables stay out unless you configure them (the AI tool's own credentials are copied in, and the AI tool and every process it starts can read them; see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - Network isolation with nftables (blocks private networks by default)
 - Workspace-only mounting (AI cannot access your entire filesystem)
 
