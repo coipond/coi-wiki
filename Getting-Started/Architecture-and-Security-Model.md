@@ -59,7 +59,7 @@ Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the co
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies
-- SSH keys are never copied unless you explicitly enable SSH agent forwarding (`[ssh] forward_agent = true`), which forwards via a socket proxy rather than copying key material
+- SSH keys are not copied unless you list them in `[[credentials]]`; SSH agent forwarding (`[ssh] forward_agent = true`) uses a socket proxy rather than copying key material
 
 ### Network Isolation
 
@@ -90,9 +90,9 @@ These paths are write-protected from inside the container regardless of the netw
 
 When enabled (`[monitoring] enabled = true`; off by default), Coi runs an active monitoring process that watches AI tool behavior in real time and responds automatically to detected threats. Monitoring operates at three levels:
 
-**Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), credential scanning (access to known credential file patterns), and suspicious process trees.
+**Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), environment scanning (commands such as `env` or `printenv`, reads of `/proc/*/environ`), and suspicious process trees.
 
-**Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc.
+**Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc. Opening `/etc/shadow`, `/etc/gshadow` or root's SSH private keys is flagged; opening the agent's own credential files, such as `~/.claude/.credentials.json`, is not.
 
 **Network monitoring** (requires `[monitoring.nft] enabled = true`) - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure and cloud metadata services are detected and logged even when the container is in `open` mode; connections to private network ranges are detected in the other modes.
 

@@ -49,7 +49,7 @@ The monitoring system detects multiple threat categories:
 |--------|-----------------|----------|----------|
 | Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, interactive shells such as `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
 | Reverse shells (interpreter one-liners) | `python -c` / `python3 -c` / `perl -e` / `ruby -e` / `php -r` **combined with a real network indicator** (a socket/tcp/udp keyword, an IP address, or a `host:port` endpoint). Severity is configurable — see [Interpreter one-liner policy](#interpreter-one-liner-policy-reverse_shell_one_liners) | CRITICAL (default) | Kill |
-| Environment scanning | Detecting reads of /proc/*/environ, credential files, language-specific env access patterns | WARNING | Alert |
+| Environment scanning | Command lines that read the environment (`env`, `printenv`, `/proc/*/environ`, language-specific env access patterns) or run grep/awk/sed with secret-related words (`token`, `key`, `password`, ...) | WARNING | Alert |
 | Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
