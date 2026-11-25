@@ -99,8 +99,8 @@ For example, a session with every section filled prints this (wrapped here for r
 
 Empty and unset values:
 
-- An empty list is `[]`. `workspace` is `null` when the container has no workspace device, and `max_duration` is left out when no maximum is set.
-- A network setting the mode does not enforce is `null`: `host_access` and `allowed_ports` in `open` mode, `allowed_domains` outside `allowlist` mode, `dns_servers` outside `restricted` mode. `allowed_ports` and `dns_servers` are also `null` when none are set.
+- An empty list is `[]`, except in `network`, where an unset value can be `null` (next item). `workspace` is `null` when the container has no workspace device, and `max_duration` is left out when no maximum is set.
+- In `network`, a setting the mode does not enforce is `null`. For example: `lan`, `host_access`, `allowed_ports` and each host's `ports` in `open` mode, `allowed_domains` outside `allowlist` mode, `dns_servers` outside `restricted` mode. `allowed_ports`, `dns_servers` and a host's `ports` are also `null` when none are set.
 - `devices_unread` is `true` when coi could not read the container's devices and `mounts`, `protected` and `masked` show what the config asks for. `leftovers_unchecked` is `true` when coi could not check a reused or resumed container for files that earlier sessions copied in, so `credentials` and `tool_files` list only this launch's copies.
 
 ## What Gets Preserved
