@@ -42,7 +42,7 @@ With `--json`, `coi shell` prints the report as one JSON line on stderr in place
 coi shell --background --json
 ```
 
-For example, a session in `restricted` mode with the default network settings, only the workspace mounted and `.git/hooks` protected prints this (wrapped here for reading; coi prints it on one line):
+For example, a session in `restricted` mode with the default network settings, the workspace mounted, `.git/hooks` protected and nothing else granted prints this (wrapped here for reading; coi prints it on one line):
 
 ```json
 {
@@ -55,7 +55,7 @@ For example, a session in `restricted` mode with the default network settings, o
     "host_access": false, "allowed_ports": null, "dns_servers": null, "hosts": []},
   "ports": [],
   "sockets": [],
-  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": ["GIT_AUTHOR_NAME"]},
+  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": []},
   "tool_files": [],
   "credentials": [],
   "leftovers_unchecked": false,
