@@ -42,20 +42,20 @@ With `--json`, `coi shell` prints the report as one JSON line on stderr in place
 coi shell --background --json
 ```
 
-For example, a session with no workspace device and nothing granted, where coi could not read the container's devices, prints this (wrapped here for reading; coi prints it on one line):
+For example, a session in `restricted` mode with the default network settings, only the workspace mounted and `.git/hooks` protected prints this (wrapped here for reading; coi prints it on one line):
 
 ```json
 {
-  "workspace": null,
+  "workspace": {"host_path": "/home/u/proj", "container_path": "/workspace", "readonly": false},
   "mounts": [],
-  "devices_unread": true,
-  "protected": [],
+  "devices_unread": false,
+  "protected": [".git/hooks"],
   "masked": [],
-  "network": {"mode": "open", "allowed_domains": null, "lan": null, "metadata_endpoint": null,
-    "host_access": null, "allowed_ports": null, "dns_servers": null, "hosts": []},
+  "network": {"mode": "restricted", "allowed_domains": null, "lan": "blocked", "metadata_endpoint": "blocked",
+    "host_access": false, "allowed_ports": null, "dns_servers": null, "hosts": []},
   "ports": [],
   "sockets": [],
-  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": []},
+  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": ["GIT_AUTHOR_NAME"]},
   "tool_files": [],
   "credentials": [],
   "leftovers_unchecked": false,
