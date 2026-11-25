@@ -31,7 +31,7 @@ Host git also reads the git dirs of submodules: a plain `git status` in the supe
 - the git dirs of submodules (`.git/modules/**`, nested submodules included)
 - the git dirs of repositories nested up to 3 levels below the workspace root
 
-For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout. `writable_paths` and `disable_protection` apply to these paths as to the defaults; with `[git] writable_hooks = true` their `hooks` stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
+For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout. For each linked worktree of such a git dir it also mounts `worktrees/<name>/config.worktree` read-only, created empty when absent, and `worktrees/<name>/commondir` when it exists. A symlinked `worktrees` dir, or a symlinked entry in it, is skipped. `writable_paths` and `disable_protection` apply to these paths as to the defaults; with `[git] writable_hooks = true` their `hooks` stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
 
 ### How It Works
 
