@@ -9,7 +9,7 @@ A Docker container with a volume mount gives you filesystem isolation - but that
 | Capability | Docker + Volume | Coi |
 |------------|----------------|-----|
 | **Filesystem isolation** | Yes | Yes |
-| **Credential isolation** | Manual (you decide what to mount) | ⚠️ Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
+| **Credential isolation** | Manual (you decide what to mount) | Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
 | **Reverse shell detection** | No | Optional (real-time process monitoring; off by default, needs `[monitoring] enabled`) |
 | **Data exfiltration detection** | No | Optional (filesystem I/O monitoring, plus nftables network logging with `[monitoring.nft] enabled`; off by default, needs `[monitoring] enabled`) |
 | **Network filtering** | Basic (`--network none` or full access) | Granular (restricted/allowlist/open modes) |
@@ -77,7 +77,7 @@ You can run AI tools inside any Linux VM, but a plain VM provides only isolation
 | **Reverse shell detection** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Data exfiltration monitoring** | No | Optional (off by default, needs `[monitoring] enabled`) |
 | **Network threat detection** | Manual firewall setup | Optional (nftables logging, off by default) |
-| **Credential isolation** | Manual | ⚠️ Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
+| **Credential isolation** | Manual | Partly (by default, only the AI tool's own credentials are copied in; the AI tool and every process it starts can read them) |
 | **Supply-chain protection** | No | Yes (read-only `.git/hooks`, `.vscode`) |
 | **Session resume** | No | Yes |
 | **Audit logging** | No | Optional (off by default, needs `[monitoring] enabled`) |
