@@ -244,6 +244,14 @@ base = "ubuntu:24.04"
 
 An existing image keeps the base it was built from: run `coi build --force` to rebuild it from `ubuntu:26.04` or the `base` you set. A custom image builds on `coi-default` unless its `base` names another image (see [Build Configuration in Project Config](#build-configuration-in-project-config)).
 
+Coi imports each Ubuntu base it downloads as a local image with the alias `coi-ubuntu-<version>`, the base cache. After each build that creates an image, coi removes the base caches that no build still needs, such as `coi-ubuntu-24.04` after the default moved to 26.04. This includes the build that `coi shell` or `coi run` starts from its prompt. Coi keeps the base cache for:
+
+- `ubuntu:26.04`, the default base
+- each `ubuntu:<version>` set as `[container.build] base` in your config or one of its profiles
+- the base recorded in `~/.coi/image-meta.json` for each image coi built, while that image exists
+
+A base cache that an instance was created from is kept. If its image has other aliases too, coi removes only the `coi-ubuntu-<version>` alias and keeps the image. Each removal prints a line such as `Removed unused Ubuntu base image 'coi-ubuntu-24.04'`. `coi build --all` cleans up once, at the end, if it built at least one image. When the cleanup fails, coi prints a warning and the build still succeeds.
+
 ## cloud-init
 
 The coi image is built from Ubuntu's cloud image but ships with **cloud-init disabled**: it ran on every container boot, ahead of the network, and slowed every start. Coi containers don't need it — Incus sets the hostname and the image brings its own DHCP network config.
