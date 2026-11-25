@@ -6,7 +6,7 @@ Common questions about what Coi protects against, credential handling, and why C
 
 **No**, Coi does not prevent prompt injection. What Coi does protect against:
 
-- ✅ **Credential exposure** - Coi passes your SSH keys, host environment variables and credential files in only when you configure it (`forward_env`, `[[credentials]]`). Exception: the AI tool's own credentials, which Coi copies in, are readable by every process in the container (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- ✅ **Credential exposure** - Coi passes your SSH keys, host environment variables and credential files in only when you configure it (`forward_env`, `[[credentials]]`). Exception: the AI tool's own credentials, which Coi copies in if they exist on the host, are readable by the AI tool and every process it starts (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - ✅ **Host system access** - AI tools cannot access your entire filesystem, only the mounted workspace
 - ✅ **Lateral movement** - Network isolation prevents access to local network resources (in restricted mode)
 - ✅ **Remote code execution blast radius** - Built-in nftables-based network filtering limits access to private networks and metadata services in restricted mode, and allowlist mode can constrain egress to approved domains/IPs, reducing (but not eliminating) data exfiltration and command-and-control risk
@@ -33,8 +33,8 @@ What Coi does not protect against:
 **If the API key is for the AI tool itself** (e.g., Anthropic API key for Claude):
 
 - Store it in your host `~/.claude/settings.json` or similar config
-- Coi automatically copies essential config files from the host into the container during session setup
-- The copied files belong to the user that runs the AI tool and every command it starts (on Coi images, `code`, which has passwordless sudo). So any command in the container can read the key (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- During session setup, Coi copies the AI tool's essential config files into the container if they exist on the host
+- The copied files belong to the user that runs the AI tool and every command it starts (on Coi images, `code`, which has passwordless sudo). So the AI tool and every process it starts can read the key (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - **Financial blast radius:** For subscription models (e.g., Claude Pro/Max), worst case is exhausting your daily quota. For pay-per-token models, set spending caps on your API key to limit potential abuse
 
 **If you are giving API keys to the AI for it to use** (e.g., AWS keys for the AI to deploy things):
@@ -88,7 +88,7 @@ One of the more fitting aspects of this workflow: Coi is often built inside Coi 
 
 - ✅ **Your workspace only** - The project directory you explicitly mount
 - ✅ **Container filesystem** - Temporary files that get deleted (ephemeral mode)
-- ✅ **The AI tool's own credentials** - Coi copies them in; the AI tool and every process it starts can read them (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- ✅ **The AI tool's own credentials** - Coi copies them in if they exist on the host; the AI tool and every process it starts can read them (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - ❌ **Your SSH keys** - Not accessible unless you explicitly mount `~/.ssh`
 - ❌ **Your home directory** - Not accessible
 - ❌ **Your environment variables** - Not passed to the container (except `TERM`) unless explicitly forwarded via `forward_env` config
