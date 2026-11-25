@@ -22,7 +22,7 @@ Understanding how containers and sessions work in Coi.
 
 ## Effective Grants at Startup
 
-`coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names one kind of grant:
+`coi shell` prints the session's effective grants to stderr, just before `Starting session...`: by default in one block headed `Effective grants:`, with `--json` as one JSON line (see [JSON Output](#json-output---json)). Each row of the block names one kind of grant:
 
 - **Workspace**, **Mounts** (read-only or read-write), **Protected** (read-only paths) and **Masked** (hidden paths, only when any)
 - **Network** (the mode and what it lets through, for example `host services allowed (allow_host_access)`) and **Ports** (only when any are published)
@@ -34,74 +34,42 @@ Understanding how containers and sessions work in Coi.
 
 An empty Workspace, Mounts, Protected, Sockets or Env row shows `none`. The block shows what this session was granted, not what the config asks for: mounts and protections are read back from the container's devices, so a reused container's leftover mounts are listed, and a protection that failed to mount is not. If coi cannot read the container's devices, the Mounts, Protected and Masked rows fall back to what the config asks for, and the Mounts row says so. `coi run` does not print this block.
 
-### JSON Form: `--json`
+### JSON Output: `--json`
 
-With `--json`, `coi shell` prints the report as one JSON line on stderr in place of the text block, still just before `Starting session...`. An orchestrator can store it as a record of what each session can reach. The line has the same sections as the text block, with `snake_case` keys. Like the text block, it lists paths and variable names, never values or file content. It reports the grants; it does not change or enforce them.
+With `--json`, `coi shell` prints the report as one JSON line on stderr in place of the text block. An orchestrator can store it as a record of what each session can reach. The line has the same sections as the text block, with `snake_case` keys. Like the text block, it lists paths and variable names, never values or file content. It reports the grants; it does not change or enforce them.
 
 ```bash
 coi shell --background --json
 ```
 
-For example, a session with every section filled prints this (wrapped here for reading; coi prints it on one line):
+For example, a session with no workspace device and nothing granted, where coi could not read the container's devices, prints this (wrapped here for reading; coi prints it on one line):
 
 ```json
 {
-  "workspace": {"host_path": "/home/u/proj", "container_path": "/workspace", "readonly": false},
-  "mounts": [
-    {"host_path": "/data", "container_path": "/mnt/data", "readonly": true},
-    {"pool": "default", "volume": "shared", "container_path": "/shared", "readonly": false}
-  ],
-  "devices_unread": false,
-  "protected": [".git/hooks", ".husky"],
-  "masked": [".env"],
-  "network": {
-    "mode": "allowlist",
-    "allowed_domains": ["github.com", "api.anthropic.com"],
-    "lan": "blocked",
-    "metadata_endpoint": "blocked",
-    "host_access": true,
-    "allowed_ports": [443],
-    "dns_servers": null,
-    "hosts": [{"ip": "192.168.1.50", "hostnames": ["nas"], "ports": [443]}]
-  },
-  "ports": [
-    {"name": "web", "container_port": 3000, "host_port": 41000, "listen": "127.0.0.1", "pool": false},
-    {"name": "api", "container_port": 8080, "host_port": 41001, "listen": "0.0.0.0", "pool": false},
-    {"container_port": 42000, "host_port": 42000, "listen": "127.0.0.1", "pool": true}
-  ],
-  "sockets": [
-    {"host_path": "/run/user/1000/agent.sock", "container_path": "/tmp/ssh-agent.sock", "env_var": "SSH_AUTH_SOCK"},
-    {"host_path": "/run/broker.sock", "container_path": "/run/broker.sock"}
-  ],
-  "env": {
-    "launch": "attached",
-    "tool": ["ANTHROPIC_MODEL"],
-    "from_host": ["GH_TOKEN"],
-    "env_commands": ["AWS_SESSION_TOKEN"],
-    "configured": ["FOO"],
-    "container": ["GIT_AUTHOR_NAME"]
-  },
-  "tool_files": [
-    {"host_path": "/home/u/.claude/.credentials.json", "container_path": "/home/code/.claude/.credentials.json", "state": "restored"}
-  ],
-  "credentials": [
-    {"host_path": "/home/u/.aws/credentials", "container_path": "/home/code/.aws/credentials", "state": "copied"},
-    {"host_path": "/home/u/.npmrc", "container_path": "/home/code/.npmrc", "state": "earlier"},
-    {"host_path": "/home/u/.netrc", "container_path": "/home/code/.netrc", "state": "changed"},
-    {"host_path": "/home/u/.pypirc", "container_path": "/home/code/.pypirc", "state": "unverified"}
-  ],
-  "leftovers_unchecked": true,
-  "agent": {"run_as_root": true, "docker_available": false, "docker_note": "config enables it; restart the container to apply"},
-  "limits": ["cpu 2", "memory 4GiB"],
-  "max_duration": "2h"
+  "workspace": null,
+  "mounts": [],
+  "devices_unread": true,
+  "protected": [],
+  "masked": [],
+  "network": {"mode": "open", "allowed_domains": null, "lan": null, "metadata_endpoint": null,
+    "host_access": null, "allowed_ports": null, "dns_servers": null, "hosts": []},
+  "ports": [],
+  "sockets": [],
+  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": []},
+  "tool_files": [],
+  "credentials": [],
+  "leftovers_unchecked": false,
+  "agent": {"run_as_root": false, "docker_available": true},
+  "limits": []
 }
 ```
 
 Empty and unset values:
 
-- An empty list is `[]`, except in `network`, where an unset value can be `null` (next item). `workspace` is `null` when the container has no workspace device, and `max_duration` is left out when no maximum is set.
+- An empty list is `[]`, except in `network`, where an unset value can be `null`. `workspace` is `null` when the container has no workspace device, and `max_duration` is left out when no maximum is set.
 - In `network`, a setting the mode does not enforce is `null`. For example: `lan`, `host_access`, `allowed_ports` and each host's `ports` in `open` mode, `allowed_domains` outside `allowlist` mode, `dns_servers` outside `restricted` mode. `allowed_ports`, `dns_servers` and a host's `ports` are also `null` when none are set.
-- `devices_unread` is `true` when coi could not read the container's devices and `mounts`, `protected` and `masked` show what the config asks for. `leftovers_unchecked` is `true` when coi could not check a reused or resumed container for files that earlier sessions copied in, so `credentials` and `tool_files` list only this launch's copies.
+
+`devices_unread` is `true` when coi could not read the container's devices and `mounts`, `protected` and `masked` show what the config asks for. `leftovers_unchecked` is `true` when coi could not check a reused or resumed container for files that earlier sessions copied in, so `credentials` and `tool_files` list only this launch's copies.
 
 ## What Gets Preserved
 
