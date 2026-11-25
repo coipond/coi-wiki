@@ -37,11 +37,12 @@ prompt run is the command.
 - **`[tool] permission_mode = "bypass"`** — a headless run has no terminal to
   approve tool use, so bypass mode is required (it is the default; see
   [Configuration](Configuration)).
-- **Tool support** — supported for the `claude`, `opencode` and `opencode2`
-  tools; any other tool exits 2 before any container work. coi runs the
-  prompt with `opencode run --auto` (`opencode`) or `opencode2 run
-  --standalone --auto` (`opencode2`). With both tools, stdin piped into `coi run --prompt` does not
-  reach the agent (`claude` still reads it).
+- **Tool support** — supported for the `claude`, `goose`, `opencode` and
+  `opencode2` tools; any other tool exits 2 before any container work. coi runs
+  the prompt with `goose run --quiet --instructions -` (`goose`, prompt on
+  stdin), `opencode run --auto` (`opencode`) or `opencode2 run --standalone
+  --auto` (`opencode2`). With these three tools, stdin piped into `coi run
+  --prompt` does not reach the agent (`claude` still reads it).
 
 ## Named Prompts — the `[prompts]` Table
 
@@ -107,7 +108,8 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
   [Prompt Delivery for Tools That Cannot Embed It](#prompt-delivery-for-tools-that-cannot-embed-it).
 - **`env`** — tool-derived environment only. Per tool:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
-  a model or effort; codex, opencode, opencode2 and goose: none; pi:
+  a model or effort; goose: `GOOSE_MODE` (`auto`, or `approve` when
+  `permission_mode = "interactive"`); codex, opencode and opencode2: none; pi:
   `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The pi and omp paths
   point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
@@ -167,6 +169,46 @@ coi tool spec --container <ctr> \
 The orchestrator then runs that argv in its own `coi container exec -t <ctr>
 --env … -- bash -c "<command>"` inside a tmux it controls, captured to its own
 stream, with input via `send-keys` — adding its own auth `--env`.
+
+## Tool Hooks
+
+An orchestrator often tracks the tool through hooks in the tool's own config:
+for Claude Code, `hooks` such as `PreToolUse`, `Stop` and `SessionEnd` in
+`~/.claude/settings.json`, with their scripts under `~/.claude/hooks/`. coi
+installs no tool hooks of its own. Write yours into the container:
+
+1. Start the container with `coi shell --debug --background`. Without
+   `--debug`, `--background` also starts the tool in coi's own tmux session,
+   before your hooks exist, so that instance runs without them. With `--debug`
+   the session runs `bash` instead of the tool. coi prints the container name
+   (see [Container Naming](Container-Lifecycle-and-Sessions#container-naming));
+   steps 2 and 3 use it as `<ctr>`.
+2. Write the hooks into the tool's config directory in the container home
+   (`/home/code/.claude/`), with `coi container exec <ctr>` or
+   [`coi file push`](File-Transfer).
+3. Get the launch command with
+   `coi tool spec --container <ctr> --session-id <id>` (see
+   [Synopsis](#synopsis)) and run it with `coi container exec`, as shown above.
+
+Merge your hooks into `settings.json`; do not replace the file. When the host
+has a `~/.claude` directory, coi writes the container's `settings.json` from the
+host `~/.claude/settings.json` (hooks included), merged with its own sandbox
+settings, such as the bypass-permission keys. coi does not copy
+`~/.claude/hooks/` by default; to share the host's scripts, mount that directory
+read-only (see [Mounting Additional Files](Configuration#mounting-additional-files)).
+
+coi writes the tool config during the start of a new container, so write the
+hooks after the start. On `coi shell --resume`, coi again copies the host
+`~/.claude/settings.json`, when there is one, over the container's file, so
+write the hooks again after each resume. On a reused container that already has
+the tool's config, without `coi shell --resume`, coi leaves that config as it
+is.
+
+Do not put the hooks in the workspace `.claude/settings.json` or
+`.claude/settings.local.json`. By default these are
+[protected paths](Security-Best-Practices#default-protected-paths), mounted
+read-only in the container, so a write from inside the container fails
+(`writable_paths` in trusted-scope config can lift this).
 
 ## Why Not Have coi Drive the Tool?
 

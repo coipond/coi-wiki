@@ -33,7 +33,7 @@ mode = "allowlist"
 
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
-- Always blocks RFC1918 private networks
+- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set), and an allowlisted address in 169.254.0.0/16, or an allowlisted name that resolves there, becomes reachable. `block_private_networks` and `block_metadata_endpoint` have no effect in this mode
 - Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
@@ -119,6 +119,7 @@ Coi accepts `:53` only to the listed IPv4 addresses and rejects every other off-
 - IPv4 addresses only.
 - **Not valid in allowlist mode** (which blocks all DNS by design and resolves via `/etc/hosts`); Coi fails closed if you set both.
 - **Caveat:** pinning `:53` only bites when port 443 is also constrained (allowlist mode, or `allowed_ports`), otherwise malware can still tunnel DNS-over-HTTPS on 443.
+- **Caveat:** pinning does not filter queries to the bridge's own resolver. `dig TXT example.com @1.1.1.1` is rejected, but `dig TXT example.com` goes through the container's normal DNS and still resolves, so data in a DNS record still reaches the container.
 
 ### Egress Port Allowlist (`allowed_ports`)
 
@@ -241,7 +242,7 @@ For development environments where you want machines on your local network to ac
 allow_local_network_access = true  # Allow all RFC1918, not just gateway
 ```
 
-> **Warning:** When `allow_local_network_access = true`, ALL RFC1918 private network traffic is allowed - there is no RFC1918 blocking at all. A compromised AI tool can reach any machine on your local network, including internal services, NAS devices, and other development machines. Only enable this in fully trusted environments where cross-machine access is genuinely required.
+> **Warning:** When `allow_local_network_access = true`, RFC1918 private network traffic is allowed in restricted and allowlist mode, only on the `allowed_ports` if you set them (see [Egress Port Allowlist](#egress-port-allowlist-allowed_ports)). DNS (port 53) stays blocked in allowlist mode; in restricted mode with `dns_servers` set, it goes only to the pinned resolvers. A compromised AI tool can reach any machine on your local network, including internal services, NAS devices, and other development machines. Only enable this in fully trusted environments where cross-machine access is genuinely required.
 
 **Default behavior:** Only the host (gateway IP) can access container services. Other machines on your local network cannot, even if they are on the same subnet.
 
@@ -273,7 +274,7 @@ Restricted/allowlist modes need nftables plus a passwordless-sudo rule for `nft`
 
 3. **Do not add DNS servers to the allowlist** - allowlist mode resolves names on the host and blocks container DNS, so public resolvers like `8.8.8.8` and `1.1.1.1` are unnecessary.
 
-4. **Do not use `allow_local_network_access = true` without understanding the risk** - This disables all RFC1918 blocking. It is appropriate when running services on other machines in your network that the AI needs to reach, but it removes the lateral movement protection.
+4. **Do not use `allow_local_network_access = true` without understanding the risk** - This opens all RFC1918 ranges (only on the `allowed_ports`, if set). It is appropriate when running services on other machines in your network that the AI needs to reach, but it removes the lateral movement protection.
 
 5. **Combine with security monitoring** - Network isolation is a preventive control; [Security Monitoring](Security-Monitoring) is a detective control. Use both together. Monitoring logs network events even in open mode.
 

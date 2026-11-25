@@ -240,11 +240,13 @@ The build installs goose v1.57.0 from its release tarball and checks the tarball
 - Config directory: `~/.config/goose/`
 - Host files copied into the container: `config.yaml`, `secrets.yaml`, `.goosehints`, `AGENTS.md`, and the provider token files `chatgpt_codex/tokens.json`, `githubcopilot/info.json`, `gemini_oauth/tokens.json`, `xai_oauth/tokens.json`, `kimicode/token.json`. On a resume, coi also copies a token file that the saved session does not have yet.
 - Image defaults: `/etc/goose/config.yaml` turns goose telemetry off (`GOOSE_TELEMETRY_ENABLED: false`) and keeps secrets in a file, not the system keyring (`GOOSE_DISABLE_KEYRING: true`). A copied host `config.yaml` that sets these keys wins.
-- Launch: coi starts `goose session`. `permission_mode` has no effect on goose, and coi does not wire the [sandbox context](Sandbox-Context) into it.
+- Launch: coi starts `goose session`.
+- Permissions: coi sets the container env var `GOOSE_MODE` from [`permission_mode`](#permission-mode): `approve` (goose asks before every tool call) for `interactive`, `auto` otherwise. The env var wins over the mode in your goose `config.yaml`, also on a resume. `GOOSE_MODE` is goose's own approval mode, not a security control: the container is the security boundary.
+- Context injection: coi writes the [sandbox context](Sandbox-Context) as a coi-managed block into `~/.config/goose/.goosehints`, which goose loads as global hints. Your own hints in that file are kept.
 - Session storage: goose's data dir (`~/.local/share/goose/`, with its SQLite session database) and state dir (`~/.local/state/goose/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/goose/<workspace-hash>/`, so sessions survive ephemeral containers.
 - A saved goose session (`~/.coi/sessions-goose/`) leaves out `tls` and `roaming_node_key`, the private keys of `goose serve`, which coi does not run.
 - Resume: `coi shell --resume` needs a saved goose session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). coi then looks up the workspace's latest goose session and runs `goose session --resume --session-id <id>`; when it finds none, it starts a new goose session.
-- `coi run --prompt` does not support goose: it exits with code 2 (`tool "goose" cannot run a prompt headlessly via coi run`).
+- Headless runs: `coi run --prompt` runs `goose run --quiet --instructions -` with the prompt on stdin (see [Fire-and-Forget Prompt Runs](Headless-Orchestration#fire-and-forget-prompt-runs-coi-run---prompt)).
 
 ## Passing API Keys
 
@@ -354,7 +356,7 @@ Coi's tool abstraction (the `Tool` interface plus optional capability interfaces
 
 ## Sandbox Context File
 
-Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system, except goose.
+Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system.
 
 **→ See [Sandbox Context](Sandbox-Context)** for what it includes, auto-context injection per tool, disabling it, and custom / JSON context files.
 

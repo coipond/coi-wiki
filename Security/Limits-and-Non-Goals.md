@@ -35,7 +35,7 @@ Coi does not pass host environment variables into the container (except `TERM`) 
 
 ### Permission Prompts Are Bypassed
 
-The AI tool runs with its permission prompts bypassed by default (`permission_mode = "bypass"`; for Claude Code, `--permission-mode bypassPermissions`). Nobody approves a command before it runs. To approve commands yourself, set `permission_mode = "interactive"` ([Permission Mode](Supported-Tools#permission-mode)). This works for Claude Code, opencode, opencode2 and Codex CLI; pi, omp and goose ignore the setting. The built-in `hardened` profile does not change this setting.
+The AI tool runs with its permission prompts bypassed by default (`permission_mode = "bypass"`; for Claude Code, `--permission-mode bypassPermissions`). Nobody approves a command before it runs. To approve commands yourself, set `permission_mode = "interactive"` ([Permission Mode](Supported-Tools#permission-mode)). This works for Claude Code, opencode, opencode2, Codex CLI and [goose](Supported-Tools#goose); pi and omp ignore the setting. The built-in `hardened` profile does not change this setting.
 
 ### Monitoring Is Off by Default and Only Matches Patterns
 
