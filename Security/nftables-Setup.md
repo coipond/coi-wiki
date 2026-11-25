@@ -41,13 +41,15 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 
 - nftables plus passwordless sudo for `nft` must be available for network isolation to work
 - Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for traffic to the host itself, which holds the allowlist DNS block) to filter container traffic
-- Rules are scoped by container IP address for precise filtering
+- In restricted and allowlist modes, Coi also adds one rule per container to the forward chain of its own `ip6 coi` table: it drops all forwarded IPv6 from the container's host-side veth (see [Restricted Mode](Network-Isolation#restricted-mode-default)). If Coi cannot add this rule, container setup fails
+- The `ip coi` filter rules are scoped by container IP address. The IPv6 drop rule matches the host-side veth name instead
+- The boot block is a temporary `ip coi` rule that also matches the host-side veth name. It drops all forwarded IPv4 from that veth from the moment the container starts until the container's IP-scoped rules are in place
 - Rules are removed when containers are stopped/deleted
 
 ## How It Works
 
 - Coi gets the container's IP address from Incus
-- nftables rules are applied per container IP and evaluated in order (first match wins)
+- The `ip coi` filter rules are applied per container IP and evaluated in order (first match wins)
 - Restricted mode: Allow gateway (forward chain), block RFC1918, allow all else
 - Allowlist mode: Block all DNS, allow gateway DHCP only, block RFC1918 and 169.254.0.0/16 (except the ports of private `[[network.hosts]]` entries; with `allow_local_network_access`: allow RFC1918 instead, on `allowed_ports` if set), allow the allowlisted IPs on their ports, block all else
 - Traffic to the host itself (restricted and allowlist mode, unless `allow_host_access` is set): allow replies, DHCP, ping and (restricted mode only) DNS to the gateway, allow the ports of `[[network.hosts]]` and `allowed_domains` entries that name a host address, block all else; see [Container Access to Host Services](Network-Isolation#container-access-to-host-services)
