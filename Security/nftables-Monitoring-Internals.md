@@ -38,7 +38,7 @@ ThreatEvent → Responder (pause/kill) + AuditLog
 
 **HIGH Level:**
 
-- **RFC1918 private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 (should be blocked by firewall), except a destination and port the container's firewall rules deliberately accept, such as a `[[network.hosts]]` LAN service, and except in `open` mode, which allows LAN traffic
+- **Private networks** - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10 (should be blocked by firewall), except a destination and port the container's firewall rules deliberately accept, such as a `[[network.hosts]]` LAN service, and except in `open` mode, which allows LAN traffic
 - **Allowlist violations** - Connections outside configured allowlist (in allowlist mode)
 
 **WARNING Level:**
@@ -121,7 +121,7 @@ lima_host = ""                   # For macOS: "lima-default" (empty for Linux)
 NFT monitoring uses tiered rate limiting to prevent log explosion:
 
 1. **Unlimited** - Always logged:
-   - Suspicious traffic (metadata, RFC1918, C2 ports)
+   - Suspicious traffic (metadata, private networks, C2 ports)
    - DNS queries (port 53)
 
 2. **Rate Limited** - Limited to N packets/second:
@@ -139,7 +139,7 @@ When a container starts, Coi inserts LOG rules at the top of the `ip filter FORW
 # Rule 1: Always log suspicious destinations (no rate limit)
 nft insert rule ip filter FORWARD \
     ip saddr 10.47.62.50 \
-    ip daddr { 169.254.169.254, 192.168.0.0/16 } \
+    ip daddr { 169.254.169.254, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10 } \
     log prefix "NFT_SUSPICIOUS[10.47.62.50]: "
 
 # Rule 2: Always log DNS queries
@@ -190,7 +190,7 @@ NetworkEvent{
 3. JournalReader streams log (via go-systemd)
 4. LogReader parses NFT_* entries → NetworkEvent
 5. NetworkDetector analyzes event:
-   - isRFC1918(dst) → HIGH (not in open mode)
+   - IsPrivateNetworkIP(dst) → HIGH (not in open mode)
    - dst == 169.254.169.254 → CRITICAL
    - isSuspiciousPort(dpt) → CRITICAL
    - inAllowlist(dst) → HIGH (if violated)
@@ -394,7 +394,7 @@ pytest tests/integration/test_nft_monitoring.py -vvs
 **Test Coverage:**
 
 - Rule creation and deletion
-- Threat detection (metadata, RFC1918, suspicious ports, DNS)
+- Threat detection (metadata, private networks, suspicious ports, DNS)
 - Audit logging (format, content)
 - Daemon lifecycle
 - Health checks

@@ -10,7 +10,7 @@ Understanding how containers and sessions work in Coi.
 
 2. **Inside the container**: `tmux` → `bash` → `<ai-tool>`
    - When the AI tool exits, you are dropped to bash
-   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0`
+   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the notes under [Quick Task](#quick-task-default-mode) and [Long-Running Project](#long-running-project-persistent-mode))
 
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
@@ -20,11 +20,11 @@ Understanding how containers and sessions work in Coi.
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
 
-4. **Docker/Compose support**: Session containers automatically get Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod/setxattr`) applied before the container starts, so Docker and Docker Compose work out of the box inside sessions.
+4. **Docker/Compose support**: Session containers automatically get Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod/setxattr`) applied before the container starts, so Docker and Docker Compose work out of the box inside sessions, unless Docker support is disabled via `[container] docker = false`, `[security] reduce_kernel_surface`, `[security] passwordless_sudo = false`, or the built-in `hardened` profile.
 
 ## Effective Grants at Startup
 
-`coi shell` prints the session's effective grants to stderr, in one block headed `Effective grants:`, just before `Starting session...`. Each row names one kind of grant:
+`coi shell` prints the session's effective grants to stderr, just before `Starting session...`: by default in one block headed `Effective grants:`, with `--json` as one JSON line (see [JSON Output](#json-output---json)). Each row of the block names one kind of grant:
 
 - **Workspace**, **Mounts** (read-only or read-write), **Protected** (read-only paths) and **Masked** (hidden paths, only when any)
 - **Network** (the mode and what it lets through, for example `host services allowed (allow_host_access)`) and **Ports** (only when any are published)
@@ -35,6 +35,43 @@ Understanding how containers and sessions work in Coi.
 - **Limits** (resource limits, only when any are set)
 
 An empty Workspace, Mounts, Protected, Sockets or Env row shows `none`. The block shows what this session was granted, not what the config asks for: mounts and protections are read back from the container's devices, so a reused container's leftover mounts are listed, and a protection that failed to mount is not. If coi cannot read the container's devices, the Mounts, Protected and Masked rows fall back to what the config asks for, and the Mounts row says so. `coi run` does not print this block.
+
+### JSON Output: `--json`
+
+With `--json`, `coi shell` prints the report as one JSON line on stderr in place of the text block. An orchestrator can store it as a record of what each session can reach. The line has the same sections as the text block, with `snake_case` keys. Like the text block, it lists paths and variable names, never values or file content. It reports the grants; it does not change or enforce them.
+
+```bash
+coi shell --background --json
+```
+
+For example, a session in `restricted` mode with the default network settings, the workspace mounted, `.git/hooks` protected and nothing else granted prints this (wrapped here for reading; coi prints it on one line):
+
+```json
+{
+  "workspace": {"host_path": "/home/u/proj", "container_path": "/workspace", "readonly": false},
+  "mounts": [],
+  "devices_unread": false,
+  "protected": [".git/hooks"],
+  "masked": [],
+  "network": {"mode": "restricted", "allowed_domains": null, "lan": "blocked", "metadata_endpoint": "blocked",
+    "host_access": false, "allowed_ports": null, "dns_servers": null, "hosts": []},
+  "ports": [],
+  "sockets": [],
+  "env": {"launch": "started", "tool": [], "from_host": [], "env_commands": [], "configured": [], "container": []},
+  "tool_files": [],
+  "credentials": [],
+  "leftovers_unchecked": false,
+  "agent": {"run_as_root": false, "docker_available": true},
+  "limits": []
+}
+```
+
+Empty and unset values:
+
+- An empty list is `[]`, except in `network`, where an unset value can be `null`. `workspace` is `null` when the container has no workspace device, and `max_duration` is left out when no maximum is set.
+- In `network`, a setting the mode does not enforce is `null`. For example: `lan`, `host_access`, `allowed_ports` and each host's `ports` in `open` mode, `allowed_domains` outside `allowlist` mode, `dns_servers` outside `restricted` mode. `allowed_ports`, `dns_servers` and a host's `ports` are also `null` when none are set.
+
+`devices_unread` is `true` when coi could not read the container's devices and `mounts`, `protected` and `masked` show what the config asks for. `leftovers_unchecked` is `true` when coi could not check a reused or resumed container for files that earlier sessions copied in, so `credentials` and `tool_files` list only this launch's copies.
 
 ## What Gets Preserved
 
@@ -53,6 +90,8 @@ Restores the AI tool conversation in a fresh container:
 - Container is recreated, only tool session data is restored
 - **Stopped leftover container**: after a host reboot or a killed coi, a non-persistent session's container can be left stopped, holding the session's latest turns. `--resume` saves its session data first, then removes it and resumes from that copy. If the save fails, coi keeps the container and the older saved copy and stops with an error: run `--resume` again, or remove the container with `coi kill <container>` to resume from the older copy
 - **Profile auto-restore**: The profile used when the session was originally created is automatically restored - no need to pass `--profile` again. Two sources win over it: an explicit `--profile` on resume, and the profile saved for a container alias when you resume through `coi shell <alias>`. See the [profile precedence table](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile).
+- **Two forms**: `coi shell --resume` alone resumes the latest saved session of the workspace; `coi shell --resume=<id>` resumes the session `<id>` (`coi list --all` lists the saved session IDs, see [Container Operations](Container-Operations)). `--continue` is an alias of `--resume` and takes the same two forms.
+- **`--resume` and `--continue` together**: a session ID wins over a flag without one, in either order, so `coi shell --resume=<id> --continue` resumes `<id>`. When both flags name different IDs, `--resume` wins. coi prints a warning on stderr naming the session it resumes and the flag it ignores, for example `Warning: resuming session <id> from --resume; ignoring bare --continue`; the same ID in both flags prints none. If the session does not exist, coi fails with `session '<id>' not found` and prints no warning.
 - **Workspace-scoped**: Only finds sessions from the current workspace directory (security feature) — unless `session_name` is set: named sessions find their saved sessions by NAME from any workspace location (see [Named Sessions](#named-sessions-session_name--v0111))
 
 ### Persistent Mode (`[container] persistent = true`)
@@ -139,7 +178,9 @@ NODE_ENV = "development"
 
 - `exit` in bash → exits bash but keeps container running (use for temporary shell exit)
 - `Ctrl+b d` → detaches from tmux, container stays running
-- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). Coi tells `exit` from `close` immediately on leaving the session; if the image's `close` and `poweroff` commands do not mark the shutdown request, it needs a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+
+**Note:** In a session without sudo (`[security] passwordless_sudo = false`), `close` and `poweroff` print `no sudo in this session; exit the tool or run 'coi shutdown' on the host` and exit with status 1. If they fail with a sudo error instead, the image was built without this check: rebuild it with `coi build --force` to get the check and the fast exit detection (see [Old Image After Coi Update](Image-Management#old-image-after-coi-update), and [Base Image](Image-Management#base-image) for profile images). A persistent container keeps its image until it is recreated (see [Running a Different AI Tool in the Same Container](#running-a-different-ai-tool-in-the-same-container-v012)), and `coi shutdown` deletes it: see the note under [Long-Running Project](#long-running-project-persistent-mode).
 
 ### From Outside (Host)
 
@@ -224,7 +265,12 @@ coi list --running    # only slots whose container is Running (as of v0.10.0;
                       # also --stopped, or --status <any Incus state>)
 coi shutdown --all    # gracefully shut down all running slots
 coi kill myproject-2  # force-stop a specific slot by alias
+coi attach --slot 2   # attach to slot 2 of the current workspace
 ```
+
+`coi attach` with neither a name nor `--slot` looks only at running Coi containers: those whose name starts with the [container prefix](Container-Operations#running-coi-next-to-other-incus-containers), `coi-` by default. With exactly one running, it attaches to it. With none, it prints `No active sessions`; with several, it lists them.
+
+Give `coi attach` either one container name or a positive `--slot`, not both: `coi attach <name> --slot N` exits `2`, and so does a negative `--slot`. If `tmux attach` fails in the container, `coi attach` prints `No tmux session found in container.` and exits `1`; if the container still runs, it also suggests `coi attach <name> --bash`.
 
 ## Example Workflows
 
@@ -237,7 +283,7 @@ sudo poweroff                # Shutdown container → session saved, container d
 coi shell --resume           # Continue conversation in fresh container
 ```
 
-**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password.
+**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password. With `[security] passwordless_sudo = false` (as in the built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos)) there is no sudo: exit the tool and run `coi shutdown` on the host instead.
 
 ### Long-Running Project (Persistent Mode)
 
@@ -256,6 +302,8 @@ coi attach --bash            # Or open a bash shell in the workspace instead of 
 sudo poweroff                # When done, shutdown and save
 coi shell --resume           # Resume with all installed tools intact
 ```
+
+**Note:** In a session without sudo (`[security] passwordless_sudo = false`), `sudo poweroff` does not work, and `coi shutdown` deletes the persistent container. Leave the session with `exit` or `Ctrl+b d` instead: the session is saved and the container keeps running. Then stop it on the host with `coi container stop <name>` (see [Start/Stop/Delete](Container-Operations#startstopdelete)); the stopped container is kept for the next session.
 
 ### Parallel Sessions (Multi-Slot)
 
@@ -303,6 +351,8 @@ coi attach myproject-2           # Attach to slot 2 by alias
 ```
 
 Aliases are registered in `~/.coi/aliases.json` on first use and stored as `user.coi.alias` metadata on each container. `coi list` shows aliases next to container names.
+
+`coi shell <alias>` always uses the alias's workspace. If `-w` names another directory (compared as an absolute path), coi ignores it and prints `Warning: alias '<alias>' uses workspace <dir>; ignoring -w <dir>` on stderr.
 
 An alias can also keep a saved profile in `~/.coi/aliases.json`. `coi shell --profile <name>` saves `<name>` for the alias, and a later `coi shell <alias>` without `--profile` uses it. `coi run` keeps the saved profile. A profile that came only from `[defaults] profile` is not saved into the alias, so a change of the default reaches every alias without a saved profile. The exception is the resume of a session saved by an older coi: it still saves its profile. See [Selecting the Profile a Bare `coi` Uses](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile) for the precedence and how to reset an entry saved by an older coi.
 

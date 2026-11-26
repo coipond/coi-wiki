@@ -272,7 +272,7 @@ Coi provides opt-in mechanisms to selectively share host resources with containe
 
 In addition to path protection, Coi provides [network isolation](Network-Isolation) to prevent data exfiltration:
 
-- **Restricted mode** (default): Blocks access to private networks (RFC1918)
+- **Restricted mode** (default): Blocks access to private networks (RFC1918, 100.64.0.0/10)
 - **Allowlist mode**: Only allows access to specific domains
 - **Open mode**: No restrictions except the cloud metadata endpoint, blocked by default only when nftables plus passwordless sudo for `nft` are available and `use_sudo` is not `false`; otherwise it is reachable and coi warns (use only for trusted projects)
 

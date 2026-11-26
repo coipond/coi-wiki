@@ -8,7 +8,7 @@ Coi automatically injects a `~/SANDBOX_CONTEXT.md` file into every container, de
 - Network mode and restrictions
 - SSH agent availability
 - Docker availability
-- User privileges and sudo access
+- User privileges and sudo access (with `[security] passwordless_sudo = false` the file says there is no sudo, and `~/SANDBOX_CONTEXT.json` has `"sudo_available": false`)
 - Protected paths and limitations
 
 The file is rendered from a built-in template with session-specific values and regenerated on every session start (including resume), so AI tools always have current information about their environment.
