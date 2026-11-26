@@ -179,7 +179,8 @@ storage_pool = ""              # empty = Incus default pool
 
 [tool]
 name = "claude"              # AI coding tool: "claude", "codex", "opencode", "opencode2", "pi", "omp", "goose"
-permission_mode = "bypass"   # "bypass" (default) or "interactive"
+permission_mode = "bypass"   # "bypass" (default) or "interactive"; any other value warns
+                             # and runs as "bypass"
 # binary = "/workspace/scripts/claude-wrapper.sh"
 #                            # Optional: executable to launch instead of the tool's default
 #                            # (e.g. a wrapper script); it receives the tool's usual arguments.

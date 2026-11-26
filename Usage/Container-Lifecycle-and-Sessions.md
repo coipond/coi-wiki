@@ -50,6 +50,7 @@ Restores the AI tool conversation in a fresh container:
 
 - Use when you want to continue a conversation but do not need installed packages
 - Container is recreated, only tool session data is restored
+- **Stopped leftover container**: after a host reboot or a killed coi, a non-persistent session's container can be left stopped, holding the session's latest turns. `--resume` saves its session data first, then removes it and resumes from that copy. If the save fails, coi keeps the container and the older saved copy and stops with an error: run `--resume` again, or remove the container with `coi kill <container>` to resume from the older copy
 - **Profile auto-restore**: The profile used when the session was originally created is automatically restored - no need to pass `--profile` again. Two sources win over it: an explicit `--profile` on resume, and the profile saved for a container alias when you resume through `coi shell <alias>`. See the [profile precedence table](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile).
 - **Workspace-scoped**: Only finds sessions from the current workspace directory (security feature) — unless `session_name` is set: named sessions find their saved sessions by NAME from any workspace location (see [Named Sessions](#named-sessions-session_name--v0111))
 
