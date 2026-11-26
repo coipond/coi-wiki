@@ -109,6 +109,7 @@ The in-container approach is self-contained and only affects Coi images, leaving
 - Large file write operations (same thresholds as reads) - could be legitimate if creating archives
 - A connection to a suspicious port other than 4444 or 5555, seen by process-level monitoring
 - Suspicious process patterns that match known attack tools
+- A write to a persistence or credential file, such as `~/.bashrc` or a tool's credential file when the tool refreshes its token (see [Security Monitoring → Sensitive File Access](Security-Monitoring#sensitive-file-access))
 
 **Diagnosis:**
 
@@ -159,6 +160,7 @@ file_read_rate_mb_per_sec = 40  # Increase from default 10MB/s
 - Metadata endpoint access (169.254.169.254) - cloud credential theft attempt
 - Connection to a suspicious port, seen by nftables monitoring (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables))
 - Connection to port 4444 or 5555, seen by process-level monitoring
+- A shell whose input or output is a TCP connection (see [Security Monitoring](Security-Monitoring))
 
 **Diagnosis:**
 

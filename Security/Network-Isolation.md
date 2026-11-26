@@ -33,8 +33,8 @@ mode = "allowlist"
 
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
-- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set), and 169.254.0.0/16 stays rejected unless `block_metadata_endpoint = false`, which makes an allowlisted address there, or an allowlisted name that resolves there, reachable. `block_private_networks` has no effect in this mode, and `block_metadata_endpoint = false` has an effect only together with `allow_local_network_access = true`
-- Without `allow_local_network_access`, a literal IP or CIDR `allowed_domains` entry in these ranges is unreachable (unless a private `[[network.hosts]]` entry opens its ports), and coi prints a warning naming the entry when it applies the rules (`coi shell`, `coi run`, `coi container launch`). Hostnames are not checked
+- Blocks RFC1918 private networks, the shared address space 100.64.0.0/10 and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 and 100.64.0.0/10 are accepted instead (only on the `allowed_ports` if set), and 169.254.0.0/16 stays rejected unless `block_metadata_endpoint = false`, which makes an allowlisted address there, or an allowlisted name that resolves there, reachable. `block_private_networks` has no effect in this mode, and `block_metadata_endpoint = false` has an effect only together with `allow_local_network_access = true`
+- A literal IP or CIDR `allowed_domains` entry that these rules block gets a warning naming the entry when coi applies the rules (`coi shell`, `coi run`, `coi container launch`, `coi container start`): an entry in RFC1918 or 100.64.0.0/10 without `allow_local_network_access`, and an entry in 169.254.0.0/16 unless `allow_local_network_access = true` and `block_metadata_endpoint = false`. No warning for an address of the host itself (the host input chain lets it through, see [Container Access to Host Services](#container-access-to-host-services)) or for an address whose ports a private `[[network.hosts]]` entry opens. Hostnames are not checked
 - Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
@@ -48,7 +48,7 @@ mode = "open"
 ```
 
 - Blocks 169.254.0.0/16 (cloud metadata) by default; set `block_metadata_endpoint = false` to reach it
-- Without usable nft (`use_sudo = false`, or `nft` missing), coi cannot block it and warns: `coi shell` in the session log and in the grants (metadata "not blocked"), `coi run` on stderr
+- Without usable nft (`use_sudo = false`, or `nft` missing), coi cannot block it and warns: `coi shell` in the session log, `coi run` on stderr. The grants show the network as `open (no egress filtering)` (JSON: `"metadata_endpoint": "not_blocked"`)
 
 ## Running Without Sudo (`use_sudo = false`)
 
@@ -64,7 +64,7 @@ use_sudo = false
 
 With `use_sudo = false`, Coi never invokes `sudo` for network operations:
 
-- **`open` mode** runs normally (no privileged rules are needed).
+- **`open` mode** runs, but Coi cannot block 169.254.0.0/16 and warns on every session unless you set `block_metadata_endpoint = false`.
 - **`restricted` / `allowlist`** modes fail fast with a clear error — they
   cannot be enforced without sudo, and Coi does not silently downgrade to
   open (fail-closed). Switch to `mode = "open"` to proceed.
@@ -98,7 +98,7 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 - **Gateway handling**: Coi reads the gateway IP from the network that the container's `eth0` is attached to, so a container on a network other than the default one gets that network's gateway. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of `[[network.hosts]]` and `allowed_domains` entries that name it, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor does not flag the gateway's DNS and DHCP ports (see [Security Monitoring](Security-Monitoring#process-level-threats)). You do not need to add the gateway IP to `allowed_domains`.
 - **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing. If the container runs systemd-resolved, Coi stops it until the container's next boot, so `resolvectl` does not work: names in `/etc/hosts` still resolve, and a lookup of any other name fails at once. Coi also puts `files [!SUCCESS=return]` in front of the `hosts:` modules in the container's `/etc/nsswitch.conf` (or adds a `hosts:` line if there is none), so a name not in `/etc/hosts` fails without a DNS query. When a running container that an allowlist session left this way is set up in restricted or open mode, Coi starts systemd-resolved again and removes the prefix. On a container with systemd, `coi-nss-restore.service` also removes the prefix at the next boot. Changes that packages make to the `hosts:` line meanwhile (for example `libnss-mdns`, `libnss-myhostname`) are kept.
-- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → 169.254.0.0/16 reject (left out only with `allow_local_network_access` and `block_metadata_endpoint = false`) → RFC1918 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject. In both chains, each reject has a TCP reset rule ahead of it.
+- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → 169.254.0.0/16 reject (with `block_metadata_endpoint`, the default) → RFC1918 and 100.64.0.0/10 reject (or LAN accept with `allow_local_network_access`) → 169.254.0.0/16 reject (with `block_metadata_endpoint = false` and without `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject. In both chains, each reject has a TCP reset rule ahead of it.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
 - Subdomains must be listed explicitly (`github.com` ≠ `api.github.com`)
 - Domains behind CDNs may have many IPs that change frequently
@@ -147,16 +147,16 @@ mode = "allowlist"
 allowed_domains = [
     "github.com:443",            # git/HTTPS only
     "registry.npmjs.org:80,443", # a port list
-    "192.168.1.50:5000",         # the NAS web UI, and nothing else on it
-    "10.0.0.0/8:22",             # SSH into the lab subnet, but only SSH
+    "203.0.113.50:5000",         # one web UI, and nothing else on that host
+    "198.51.100.0/24:22",        # SSH into a subnet, but only SSH
     "svc.internal:8000-8100",    # a port range
     "api.anthropic.com",         # no port -> inherits allowed_ports (else all)
 ]
 ```
 
-Each destination is then reachable only on its own ports. An entry with no `:ports` inherits the global `allowed_ports` (else all ports), so existing allowlists behave unchanged. IPv4 only; a malformed port fails the session closed at startup.
+Each destination is then reachable only on its own ports. An entry with no `:ports` inherits the global `allowed_ports` (else all ports), so existing allowlists behave unchanged. IPv4 only; a malformed port fails the session closed at startup. A port suffix does not open a private address: an entry in a private range stays blocked as described in [Allowlist Mode](#allowlist-mode).
 
-> **Note:** With [Security Monitoring](Security-Monitoring) enabled, connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) are flagged even when the firewall allows them, so avoid those ports for allowlisted services. An entry that names the address and the port, such as `"10.0.0.5:8080"`, is the exception: that host and port are not flagged (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables)).
+> **Note:** With [Security Monitoring](Security-Monitoring) enabled, connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) are flagged even when the firewall allows them, so avoid those ports for allowlisted services. An `allowed_domains` entry with a port suffix is the exception, for an address (such as `"203.0.113.5:8080"`) and for a hostname (such as `"ci.example.com:8080"`): that destination on those ports is not flagged (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables)).
 
 ### The "Internet Open, LAN Only redmine:443" Recipe
 

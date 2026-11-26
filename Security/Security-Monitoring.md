@@ -33,7 +33,7 @@ enabled = true
 enabled = true
 ```
 
-`[monitoring] enabled = true` activates process-level and filesystem-level threat detection — it watches spawned processes and file I/O rates. It requires no additional system privileges beyond what Coi already has.
+`[monitoring] enabled = true` activates process-level and filesystem-level threat detection — it watches spawned processes and file I/O rates. It requires no additional system privileges beyond what Coi already has, except the file watchers of [Sensitive File Access](#sensitive-file-access), which need coi to run as root or with `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH`.
 
 `[monitoring.nft] enabled = true` activates kernel-level network monitoring via nftables, which logs packet metadata to systemd-journal. This subsystem requires `nftables`, `libsystemd`, and the current user to be in the `systemd-journal` group (see Setup below). Once it is set, `coi health` checks these prerequisites; it skips them while it is off (see [Health Checks](#health-checks)).
 
@@ -80,9 +80,9 @@ A file watcher flags access to sensitive files in the container, for example rea
 Creating, writing or replacing (renaming over) one of the code user's persistence and credential files raises a HIGH threat, which pauses the session under `auto_pause_on_high`:
 
 - `~/.ssh/authorized_keys`, `~/.bashrc`, `~/.profile` and the user crontab
-- a tool credential file coi copies in, such as `~/.claude/.credentials.json`
+- the credential files of every tool in coi's credential catalog, whichever tool runs: `~/.claude/.credentials.json`, `~/.pi/agent/auth.json`, `~/.codex/auth.json`, `~/.ollama/id_ed25519` and goose's credential files under `~/.config/goose`, such as `secrets.yaml`. omp's `~/.omp/agent.db` is not watched
 
-coi's own copy at session start and `coi file push` are not flagged. Reads of these files are not flagged. A tool that refreshes its token in its credential file, or an installer that adds a line to `~/.bashrc`, also pauses the session: run `coi unfreeze` to continue (see [Unfreezing Paused Containers](#unfreezing-paused-containers)). If this watcher cannot be set up, the session log says user persistence and credential file monitoring is disabled.
+coi's own copy at session start and `coi file push` are not flagged. Reads of these files are not flagged. A tool that refreshes its token in its credential file, or an installer that adds a line to `~/.bashrc`, also pauses the session: run `coi unfreeze` to continue (see [Unfreezing Paused Containers](#unfreezing-paused-containers)). This watcher needs the same privileges as the one above. Without `CAP_SYS_ADMIN` (or on a kernel before 5.9) the session log says user persistence and credential file monitoring is disabled. Without `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH` the files are not watched and nothing is logged.
 
 ### Network-Level Threats (nftables)
 

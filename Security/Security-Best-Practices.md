@@ -274,7 +274,7 @@ In addition to path protection, Coi provides [network isolation](Network-Isolati
 
 - **Restricted mode** (default): Blocks access to private networks (RFC1918)
 - **Allowlist mode**: Only allows access to specific domains
-- **Open mode**: No restrictions (use only for trusted projects)
+- **Open mode**: No restrictions except the cloud metadata endpoint, blocked by default (use only for trusted projects)
 
 ## Real-Time Security Monitoring
 
