@@ -462,6 +462,7 @@ coi shell \
 coi shell --debug          # Launch bash instead of AI tool (for debugging)
 coi shell --background     # Run in background
 coi shell --container NAME # Target specific container
+coi shell --json           # Print the effective grants as one JSON line on stderr
 ```
 
 **Removed flags and their config keys:**
