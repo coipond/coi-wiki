@@ -43,7 +43,7 @@ The combined `coi update` also refreshes the two databases the security monitor 
 - **GTFOBins**: the reverse-shell / privilege-escalation binary database.
 - **Sigma**: the `rules/linux/process_creation/` rule subtree (pulled as a sparse, blobless checkout, ~300 KB).
 
-On first run each repository is cloned from its configured source; on later runs it is updated with `git pull --ff-only`. Source URLs and local directories live in `~/.coi/config.toml`:
+On first run each repository is cloned from its configured source; on later runs coi fetches the latest upstream commit (`git fetch --depth=1 origin HEAD`) and resets the clone to it (`git reset --hard FETCH_HEAD`), so local changes in the clone are discarded. Source URLs and local directories live in `~/.coi/config.toml`:
 
 ```toml
 [detection]
@@ -71,9 +71,9 @@ coi build --force
 
 ## Troubleshooting
 
-### `git pull` Fails When Updating Patterns (GTFOBins or Sigma)
+### `git fetch` or `git reset` Fails When Updating Patterns (GTFOBins or Sigma)
 
-`coi update patterns` uses `git pull --ff-only` against the existing clone, so it fails if the local database repo has diverged, has a broken/partial checkout, or was interrupted mid-clone. The fix is to remove the affected clone and let Coi re-clone it fresh:
+`coi update patterns` fetches into the existing clone and resets it, so it fails if the local database repo has a broken/partial checkout or was interrupted mid-clone. The fix is to remove the affected clone and let Coi re-clone it fresh:
 
 ```bash
 # For Sigma (adjust the path if you customized sigma_dir):

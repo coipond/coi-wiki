@@ -206,8 +206,10 @@ permission_mode = "bypass"   # "bypass" (default) or "interactive"; any other va
 # Claude: writes to ~/.claude/CLAUDE.md; OpenCode: sets instructions field in opencode.json
 # auto_context = true
 # Tool memory in a reused persistent container: "keep" (default) or "fresh".
-# "fresh" starts each new session without the tool's earlier conversation history
-# and memory (claude, codex and goose); packages, files and settings stay.
+# "fresh" starts each new `coi shell` session without the tool's earlier memory:
+# conversation history and memory for claude and codex, the memory extension's
+# memories for goose (goose's sessions stay). Packages, files and settings stay.
+# `coi run` keeps the memory.
 # --resume still brings back the resumed session. Saved sessions on the host are kept.
 # memory = "keep"
 

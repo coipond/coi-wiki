@@ -28,7 +28,7 @@ In addition to this static list, Coi dynamically discovers and protects each exi
 
 Host git also reads the git dirs of submodules: a plain `git status` in the superproject recurses into them, so a writable submodule `config` could run a command on the host (`core.fsmonitor`). At launch Coi therefore also finds:
 
-- the git dirs of submodules (`.git/modules/**`, nested submodules included)
+- the git dirs of submodules (`.git/modules/**`, nested submodules included), also those git creates for a linked worktree (`.git/worktrees/<name>/modules/**`)
 - the git dirs of repositories nested up to 3 levels below the workspace root
 
 For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout. For each linked worktree of such a git dir it also mounts `worktrees/<name>/config.worktree` read-only, created empty when absent, and `worktrees/<name>/commondir` when it exists. A symlinked `worktrees` dir, or a symlinked entry in it, is skipped. `writable_paths` and `disable_protection` apply to these paths as to the defaults; with `[git] writable_hooks = true` their `hooks` stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
@@ -237,7 +237,7 @@ By default the agent can't commit on, or push to, `main` or `master`: it works o
 
 Coi rejects symlinked protected paths to prevent attacks where a symlink could trick Coi into mounting arbitrary host paths as read-only (or failing to protect the real path).
 
-- Linked git worktrees (`.git` as a file pointing at git internals outside the workspace) are supported: Coi resolves the external gitdir and common dir, mounts the common dir so git works, and re-covers its auto-executing subpaths (`hooks`, `config`, `info/attributes`, `commondir`, `worktrees/*/config.worktree`, each existing `worktrees/*/commondir`) with the same read-only protection a normal repo's `.git` gets — synthesizing empty read-only placeholders for absent ones (for an absent `commondir`, a file with the content `./`, so it names the git dir itself)
+- Linked git worktrees (`.git` as a file pointing at git internals outside the workspace) are supported: Coi resolves the external gitdir and common dir, mounts the common dir so git works, and re-covers its auto-executing subpaths (`hooks`, `config`, `info/attributes`, `commondir`, `worktrees/*/config.worktree`, each existing `worktrees/*/commondir`, and the submodule git dirs under `modules/**` and `worktrees/*/modules/**`) with the same read-only protection a normal repo's `.git` gets — synthesizing empty read-only placeholders for absent ones (for an absent `commondir`, a file with the content `./`, so it names the git dir itself)
 - A bidirectional-link guard rejects malicious `gitdir:` pointers (e.g. an untrusted repo pointing at `~/.ssh`): the external dir is mounted only if its `gitdir` back-pointer resolves to this workspace and it is a real object store; on any guard failure Coi fails closed (nothing mounted)
 - When the workspace's own `.git` indirection still cannot be handled (e.g. the workspace's `.git` is a symlink, or a file because the workspace is itself a submodule checkout), Coi surfaces a setup warning instead of silently skipping git path protection, and continues protecting unrelated paths like `.vscode`
 - Symlinked protected paths like `.vscode -> /etc/passwd` are rejected
