@@ -127,6 +127,12 @@ storage_pool = ""              # empty = Incus default pool
 #                              # An untrusted project config can set false, but not true.
 # stale_base_check = "warn"    # "warn" (default), "error", or "off" — react when the image
 #                              # is older than the base it was built from
+# keep_on_failed_save = false  # Keep a stopped non-persistent container when saving its
+#                              # session data fails (e.g. the host disk is full), instead of
+#                              # deleting it with the conversation since the last saved copy.
+#                              # coi prints how to save it later (`coi shell --resume=<session-id>`)
+#                              # or remove it (`coi kill <container>`, `coi clean`). Default: false,
+#                              # because a kept container uses disk until removed.
 
 [container.build]
 # base = "ubuntu:26.04"        # Base to build from (default: "ubuntu:26.04" for coi-default,
@@ -198,6 +204,11 @@ permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # Auto-inject sandbox context into tool's native context system (default: true)
 # Claude: writes to ~/.claude/CLAUDE.md; OpenCode: sets instructions field in opencode.json
 # auto_context = true
+# Tool memory in a reused persistent container: "keep" (default) or "fresh".
+# "fresh" starts each new session without the tool's earlier conversation history
+# and memory (claude, codex and goose); packages, files and settings stay.
+# --resume still brings back the resumed session. Saved sessions on the host are kept.
+# memory = "keep"
 
 # Claude-specific settings
 [tool.claude]

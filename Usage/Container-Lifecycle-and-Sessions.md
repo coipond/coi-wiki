@@ -15,6 +15,7 @@ Understanding how containers and sessions work in Coi.
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
    - If persistent mode is NOT enabled: the container is deleted after saving only if it was stopped (`close` / `sudo poweroff`); after `exit` or a detach it is left running (reconnect with `coi attach`, stop with `coi shutdown`)
+   - If saving the session data fails (for example the host disk is full), a stopped non-persistent container is still deleted by default, and the conversation since the last saved copy is lost; the message names why the save failed. With `[container] keep_on_failed_save = true` (config or profile), coi keeps the stopped container instead and prints how to save it later (fix the cause, then `coi shell --resume=<session-id>` with the session id it prints) or remove it (`coi kill <container>` or `coi clean`). A kept container uses disk until it is removed.
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
 
@@ -61,6 +62,7 @@ Keeps the entire container with all modifications:
 - Set it in the project's `./.coi/config.toml`, your user config, or a profile — there is no CLI flag (as of v0.10.0)
 - On `--resume`, an explicitly configured `persistent` wins over the resumed session's saved mode, so config can convert a session's persistence; when unset, the saved mode is inherited
 - A stopped persistent container gets the current `[limits]` when `coi shell` or `coi run` starts it again; a running one keeps its limits (see [When Limits Apply](Resource-and-Time-Limits#when-limits-apply))
+- With `[tool] memory = "fresh"`, each new session in the reused container starts without the tool's earlier conversation history and memory; installed packages, files and settings stay. coi removes the tool's memory files in the container (claude, codex and goose); the saved sessions on the host are kept. `--resume` brings back the resumed session's memory. A session still running in the container is attached to as it is, and so is a container named with `--container`. The default, `"keep"`, keeps the tool's memory.
 
 ### `coi persist`
 
