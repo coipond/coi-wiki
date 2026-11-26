@@ -69,7 +69,7 @@ Network access is controlled by host-side nftables rules in the FORWARD chain (a
 
 **`allowlist`** - Only explicitly listed domains or IP ranges are reachable. Everything else is denied. Use for untrusted projects where you want to constrain which external services the AI can contact.
 
-**`open`** - No network filtering except the cloud metadata range 169.254.0.0/16, blocked by default (`block_metadata_endpoint`) only when nftables plus passwordless sudo for `nft` are available (see [Open Mode](Network-Isolation#open-mode)). Use only when nftables/passwordless sudo is unavailable (or `use_sudo = false` is set) or for fully trusted projects that require local network access.
+**`open`** - No network filtering except the cloud metadata range 169.254.0.0/16, blocked by default (`block_metadata_endpoint`) only when nftables plus passwordless sudo for `nft` are available and `use_sudo` is not `false` (see [Open Mode](Network-Isolation#open-mode)). Use only when nftables/passwordless sudo is unavailable (or `use_sudo = false` is set) or for fully trusted projects that require local network access.
 
 See [Network Isolation](Network-Isolation) for the full configuration reference.
 
