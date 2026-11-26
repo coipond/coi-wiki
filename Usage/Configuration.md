@@ -118,8 +118,9 @@ storage_pool = ""              # empty = Incus default pool
 # alias = "myproject"          # Human-friendly name for this workspace's containers
 # shutdown_timeout = 60        # Seconds to wait for graceful shutdown before force-killing (default: 60)
 # ready_timeout = 30           # Seconds to wait for a launched container to become ready (default: 30)
-#                              # Ready: it runs a command and, if systemd is PID 1, boot has
-#                              # reached sysinit.target (after boot empties /tmp)
+#                              # Ready: it runs a command and, if the image boots systemd
+#                              # (`/sbin/init`), PID 1 is systemd and boot has reached
+#                              # sysinit.target (after boot empties /tmp)
 #                              # Raise on slow hosts (nested virt, cold storage pools)
 # docker = true                # Docker-in-container support (nesting + syscall interception,
 #                              # default: true). false shrinks the shared-kernel attack surface.
@@ -361,7 +362,7 @@ writable_hooks = false  # Allow container to write .git/hooks
 
 [security]
 # host_immutable = true        # Apply chattr +i to protected paths (default: true)
-# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json", ".codex/config.toml"]
+# protected_paths = [".git/hooks", ".git/config", ".git/config.worktree", ".git/info/attributes", ".git/commondir", ".husky", ".vscode", ".coi", ".claude/settings.json", ".claude/settings.local.json", ".codex/config.toml"]
 # additional_protected_paths = [".idea", "Makefile"]
 # writable_paths = [".claude/settings.json"]  # Remove entries from the effective protected paths so the
 #                                             # container can write them (default: none). Trusted scope only.
@@ -557,7 +558,7 @@ shift = true      # force an idmapped mount → host files show up owned by `cod
 
 ## Replacing the Tool's Executable (`binary`)
 
-`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `pi`, `omp`, `goose`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
+`[tool] binary` makes `coi shell` (and `coi run --prompt`) launch a different executable in place of the tool's default (`claude`, `codex`, `opencode`, `opencode2`, `pi`, `omp`, `goose`). The executable receives the tool's usual arguments, so a wrapper script can do its own setup and then hand off:
 
 ```toml
 [tool]

@@ -61,7 +61,7 @@ Coi also includes [security monitoring](Security-Monitoring) that does not exist
 | **Home directory** | Shared with host | Isolated per slot |
 | **Network** | Shared with host | Isolated (restricted/allowlist/open) |
 | **Host filesystem** | Broadly accessible | Only workspace mounted |
-| **Credentials** | Fully exposed | Never exposed by default |
+| **Credentials** | Fully exposed | By default, only the AI tool's own credentials, copied in |
 | **Security monitoring** | None | Optional (real-time threat detection; off by default, needs `[monitoring] enabled`) |
 | **Purpose** | Run apps from other distros | Secure AI agent isolation |
 

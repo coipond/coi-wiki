@@ -20,6 +20,7 @@
 - [Snapshot Management](Snapshot-Management)
 - [File Transfer](File-Transfer)
 - [Port Publishing](Port-Publishing)
+- [Host-Side Credential Proxy](Host-Side-Credential-Proxy)
 - [Tmux Automation](Tmux-Automation)
 - [Headless Orchestration](Headless-Orchestration)
 - [Image Management](Image-Management)
