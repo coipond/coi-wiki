@@ -81,6 +81,8 @@ coi persist --all --force    # or -f
 
 coi asks for confirmation with `--all` and when you name more than one container; `-f`/`--force` skips it.
 
+The change applies to a session that is still running in the container: `close` or `sudo poweroff` in it keeps the container (stopped), and the saved session keeps persistent mode for `--resume`. With no `[container] persistent` in config, the next `coi shell` (also with `--slot` or `--resume`) restarts the persisted container instead of replacing it; an explicit `persistent = false` wins.
+
 After `coi persist`, `coi list` shows the container as `(persistent)` (see [List Containers](Container-Operations#list-containers)).
 
 This is useful when you started an ephemeral session but later decide you want to keep the container (e.g., after installing tools or setting up the environment).

@@ -18,7 +18,7 @@ coi shell  # Default behavior
 - Blocks: Cloud metadata endpoints (169.254.0.0/16)
 - Allows: All public internet (npm, pypi, GitHub, APIs, etc.)
 - Blocks: Services on the host itself, except DHCP, ping and DNS to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
-- IPv6 egress blocked host-side (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
+- IPv6 egress blocked host-side, at the container's veth, to every destination including the host (plus disabled inside the container as root-reversible defense-in-depth), so it cannot bypass the IPv4 firewall rules
 - A container's rules are installed (and replaced, e.g. when attaching to a running container) as one atomic firewall transaction, so it is never left briefly unfiltered
 - A blocked IPv4 TCP connection fails at once with "connection refused" (a TCP reset); other blocked IPv4 traffic gets ICMP port-unreachable. Allowlist mode rejects the same way. Blocked IPv6 traffic is dropped, with no reply
 

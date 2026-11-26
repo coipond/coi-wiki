@@ -41,9 +41,9 @@ Always validate with `visudo` first: a syntax error in `/etc/sudoers.d` disables
 
 - nftables plus passwordless sudo for `nft` must be available for network isolation to work
 - Coi adds nftables rules to its own `ip coi` table (a forward-hook chain, plus an input chain for traffic to the host itself, which holds the allowlist DNS block) to filter container traffic
-- In restricted and allowlist modes, Coi also adds one rule per container to the forward chain of its own `ip6 coi` table: it drops all forwarded IPv6 from the container's host-side veth (see [Restricted Mode](Network-Isolation#restricted-mode-default)). If Coi cannot add this rule, container setup fails
-- The `ip coi` filter rules are scoped by container IP address. The IPv6 drop rule matches the host-side veth name instead
-- The boot block is a temporary `ip coi` rule that also matches the host-side veth name. It drops all forwarded IPv4 from that veth from the moment the container starts until the container's IP-scoped rules are in place
+- In restricted and allowlist modes, Coi also adds one ingress chain per container to its own `netdev coi` table, bound to the container's host-side veth (`coi6-<name>`): it drops all IPv6 from the container, to every destination, the host included, also when root in the container re-enables IPv6 (see [Restricted Mode](Network-Isolation#restricted-mode-default))
+- The `ip coi` filter rules are scoped by container IP address. The IPv6 drop chain is bound to the host-side veth instead
+- The boot block is a temporary ingress chain on the same veth (`coi-boot-<name>`). From the moment the container starts until the mode's rules are in place, it lets through only DHCP broadcasts and drops all other IPv4 and IPv6 from the container
 - Rules are removed when containers are stopped/deleted
 
 ## How It Works
@@ -75,7 +75,7 @@ Coi automatically manages firewall resources to prevent accumulation of stale co
 - **Orphaned resource detection**: `coi clean --orphans` scans for and removes:
   - Orphaned veth interfaces (host veths Coi recorded for its containers in `~/.coi/veths`, with no master bridge, and not the host side of an Incus instance's NIC in any project; see [Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers))
   - Orphaned nft rules (for non-existent container IPs)
-  - Orphaned IPv6 block rules (for containers no longer running)
+  - Orphaned drop chains (the IPv6 and boot-block chains, plus the IPv6 rules in `ip6 coi forward` that older versions left)
   - Orphaned nftables monitoring rules and chains (when nftables monitoring is enabled)
   - Orphaned iptables bridge rules (coi-bridge-forward rules with no Coi containers running)
 
