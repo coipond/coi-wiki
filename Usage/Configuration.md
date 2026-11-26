@@ -242,7 +242,7 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 [network]
 # mode = "restricted"        # "restricted" (default), "open", or "allowlist"
 # block_private_networks = true                      # Block RFC1918 / 100.64.0.0/10 from the container
-# block_metadata_endpoint = true   # Reject 169.254.0.0/16 (cloud metadata) in every mode
+# block_metadata_endpoint = true                     # Reject 169.254.0.0/16 (cloud metadata) in every mode
 # allowed_domains = ["github.com", "pypi.org"]       # Only used in "allowlist" mode
 # refresh_interval_minutes = 30                       # Max DNS refresh interval (actual uses DNS TTL if shorter)
 # allow_local_network_access = false                  # Allow connections from entire local network
