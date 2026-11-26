@@ -34,7 +34,7 @@ What Coi does not protect against:
 
 - Store it in your host `~/.claude/settings.json` or similar config
 - During session setup, Coi copies the AI tool's essential config files into the container if they exist on the host
-- The copied files belong to the user that runs the AI tool (on Coi images, `code`). So the AI tool and every process it starts can read the key (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- The copied files belong to the user that runs the AI tool (`code` by default, set by `[incus] code_user`; root on an image without that user). So the AI tool and every process it starts can read the key (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - **Financial blast radius:** For subscription models (e.g., Claude Pro/Max), worst case is exhausting your daily quota. For pay-per-token models, set spending caps on your API key to limit potential abuse
 
 **If you are giving API keys to the AI for it to use** (e.g., AWS keys for the AI to deploy things):
