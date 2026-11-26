@@ -10,7 +10,7 @@ Understanding how containers and sessions work in Coi.
 
 2. **Inside the container**: `tmux` → `bash` → `<ai-tool>`
    - When the AI tool exits, you are dropped to bash
-   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0`
+   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the note under [Quick Task](#quick-task-default-mode))
 
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
@@ -133,7 +133,7 @@ NODE_ENV = "development"
 
 - `exit` in bash → exits bash but keeps container running (use for temporary shell exit)
 - `Ctrl+b d` → detaches from tmux, container stays running
-- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container. In a session without sudo, `close` and `poweroff` print `no sudo in this session; exit the tool or run 'coi shutdown' on the host` and exit with status 1.
 
 ### From Outside (Host)
 
@@ -231,7 +231,7 @@ sudo poweroff                # Shutdown container → session saved, container d
 coi shell --resume           # Continue conversation in fresh container
 ```
 
-**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password.
+**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password. With `[security] passwordless_sudo = false` (as in the built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos)) there is no sudo: exit the tool and run `coi shutdown` on the host instead.
 
 ### Long-Running Project (Persistent Mode)
 
