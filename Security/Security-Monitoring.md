@@ -54,7 +54,7 @@ The monitoring system detects multiple threat categories:
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
 | Suspicious ports | Open connections, checked each poll interval against the [same port list as nftables](#network-level-threats-nftables), except on a network inside the container (see the note on nested networks below) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
-| Private or non-allowlisted addresses | In allowlist mode only: open connections, checked each poll interval, to a private address (RFC1918 or 100.64.0.0/10) or an address outside the allowlist, unless the firewall allows that address on that port or the address is on a network inside the container (see the notes on nested networks and on addresses that leave the allowlist below) | HIGH | Pause |
+| Private or non-allowlisted addresses | Open connections, checked each poll interval, to a private address (RFC1918 or 100.64.0.0/10) in restricted and allowlist mode, or to an address outside the allowlist in allowlist mode, unless the firewall allows that address on that port or the address is on a network inside the container (see the notes on nested networks and on addresses that leave the allowlist below) | HIGH | Pause |
 
 **Note:** The process-level monitor skips the Incus bridge gateway on port 53 (TCP and UDP) and UDP port 67 (DHCP). A resolver in the container keeps a socket to the DNS port, although the firewall drops DNS. The firewall accepts DHCP to the gateway. Any other port on the gateway is still flagged.
 
