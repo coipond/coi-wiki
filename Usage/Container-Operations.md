@@ -29,7 +29,7 @@ coi list --json                    # shorthand for --format json (see below)
 #   coi-abc12345-2 (persistent)  - will be kept for reuse
 ```
 
-`coi list` reads each container's mode and workspace from its Incus config keys `user.coi.persistent` and `user.coi.workspace`. `coi shell` and `coi run` set both keys; `coi shell --container` and `coi persist` set only `user.coi.persistent`. For a container created by an older coi, which lacks `user.coi.persistent`, `coi list` reads the saved sessions in `~/.coi/sessions-<tool>/` instead. A `coi container launch` container entered with `coi shell --container` shows no workspace: the directory `coi shell` ran in is not mounted there.
+`coi list` reads each container's mode and workspace from its Incus config keys `user.coi.persistent` and `user.coi.workspace`. `coi shell` and `coi run` set both keys; `coi shell --container` and `coi persist` set only `user.coi.persistent`. For a container created by an older coi, which lacks `user.coi.persistent`, `coi list` instead reads the saved sessions of every tool, the configured tool's first, in `~/.coi/sessions-<tool>/`; the first saved session found for the container wins. A `coi container launch` container entered with `coi shell --container` shows no workspace: the directory `coi shell` ran in is not mounted there.
 
 ### JSON Output: `--json`
 
@@ -80,6 +80,31 @@ coi kill --all --force
 - A name given twice, or an alias and its container name, is killed once.
 - With `--all`, a container deleted while `coi kill --all` runs is not an error. `coi kill --all` fails only when nothing was killed.
 
+### Shut Down Containers
+
+`coi shutdown` (alias `coi close`) stops a container gracefully, force-kills it after the grace window (`[container] shutdown_timeout`, 60 seconds by default), then deletes it, even a persistent one. See [From Outside (Host)](Container-Lifecycle-and-Sessions#from-outside-host).
+
+```bash
+# Shut down specific container (graceful stop, then delete)
+coi shutdown <container-name>
+
+# Shut down multiple containers
+coi shutdown <container1> <container2>
+
+# Shut down all containers (with confirmation)
+coi shutdown --all
+
+# Shut down all without confirmation
+coi shutdown --all --force
+```
+
+- `coi shutdown` does not take `--slot`: it exits `2` before any container is touched. To shut down a slot, name it as `<alias>-<N>` (see [Aliases and Slots](Container-Lifecycle-and-Sessions#aliases-and-slots)) or use the container name.
+- `--all` takes no container names: `coi shutdown --all <name>` exits `2` before any container is touched.
+- An alias, or `<alias>-<N>`, that does not match exactly one running container makes `coi shutdown` exit `1` before it shuts down anything.
+- When some of the named containers cannot be shut down (the container does not exist, coi cannot check whether it exists, or its delete fails), the others are still shut down. Then `coi shutdown` exits `1` with `failed to shut down X of Y container(s): <names>`.
+- A name given twice, or an alias and its container name, is shut down once.
+- With `--all`, a container that cannot be shut down is not an error. `coi shutdown --all` fails only when nothing was shut down.
+
 ### Clean Up
 
 ```bash
@@ -100,7 +125,7 @@ coi clean --force
 # profile references; asks first unless --force. The pools themselves are kept
 coi clean --pools
 
-# Clean orphaned veths and stale nft/iptables rules
+# Clean orphaned veths that Coi recorded and stale nft/iptables rules
 coi clean --orphans
 
 # Dry run to see what would be cleaned
@@ -377,7 +402,8 @@ For entries that should be present on every launch, declare them in `[[network.h
 - **Container names:** `coi list`, `coi kill --all`, `coi shutdown --all`, `coi clean`, `coi clean --pools`, `coi attach`, `coi tmux list`, `coi snapshot list` and `coi unfreeze` act only on containers whose name starts with the container prefix: `coi-` by default, or the value of `COI_CONTAINER_PREFIX` (see [Environment Variables](Configuration#environment-variables)). The prefix must be at the start of the name, so `web-coi-db` is not a Coi container. Do not start the names of your other containers with the prefix: `coi kill --all`, for example, would delete them.
 - **Profiles, networks and storage pools:** The `coi` commands do not change them. `install.sh` does: on a host with no managed network and no storage pool it runs `incus admin init --auto`, and when it creates its `zfs-pool` (or `btrfs-pool`) it sets the root disk of the `default` profile to that pool.
 - **Firewall:** Coi's network-isolation rules are in its own `ip coi` and `ip6 coi` nftables tables and match only Coi containers, by their IP or by their host-side veth (see [nftables Setup](nftables-Setup#key-points)). The `coi-bridge-forward` ACCEPT rules that Coi can add to the host's FORWARD chain apply to all traffic of the Incus bridge, including your other containers on it (see [Bridge Forwarding Rules at Launch](nftables-Setup#bridge-forwarding-rules-at-launch)).
-- **`coi clean --orphans`:** Keeps the host-side veth of every Incus instance in every project, including the veths of routed and p2p NICs, which have no bridge. `coi health` does not count these veths as orphaned.
+- **`coi clean --orphans`:** Removes only host-side veths that Coi recorded in `~/.coi/veths`, that have no master bridge and that no Incus instance uses. Coi records a container's host veth when it starts the container and sets up its network. The host-side veth of every Incus instance in every project is kept, including the veths of routed and p2p NICs, which have no bridge. `coi health` counts the same veths as orphaned.
+- **Veths Coi did not record:** `coi clean --orphans` keeps them. These include veths of other tools (CNI plugins, manual `ip link` pairs), veths that Coi containers left before you upgraded to a Coi version that records veths, veths recorded in another user's `~/.coi`, and veths of `open` mode containers on a host without nft. To remove a leftover one, see [Troubleshooting → Leftover Veth Interfaces Not Removed](Troubleshooting#leftover-veth-interfaces-not-removed).
 
 ## Exit Codes
 
@@ -387,7 +413,7 @@ Scripts (CI, cron) can test Coi's exit code:
 |------|---------|-------------|
 | `0` | Success | |
 | `1` | Unclassified failure | Any command, for an error that has no code of its own |
-| `2` | Bad flags, arguments or format | Command checks, for example an invalid `--format` or `--slot`, `coi kill --slot`, `coi kill --all` with container names, or conflicting `coi run --prompt` options. Argument and flag parse errors (an unknown flag, a wrong number of arguments, a flag value of the wrong type) exit `1`. |
+| `2` | Bad flags, arguments or format | Command checks, for example an invalid `--format` or `--slot`, `coi kill --slot`, `coi kill --all` with container names, `coi shutdown --slot`, `coi shutdown --all` with container names, or conflicting `coi run --prompt` options. Argument and flag parse errors (an unknown flag, a wrong number of arguments, a flag value of the wrong type) exit `1`. |
 | `3` | Incus is not installed or not reachable | `coi shell`, `coi run`, `coi build` and `coi image list`, which check Incus first. Other commands can exit `3` when an Incus call fails because Incus is missing or its daemon does not answer. See [Incus Is Not Available](Troubleshooting#incus-is-not-available). |
 | `4` | The targeted container does not exist | `coi shell --container <name>` when that container does not exist. Other commands can exit `4` when Incus reports `instance not found`. |
 | `5` | The configuration could not be loaded, parsed or validated | Every command that loads the configuration. `coi health` runs with the default config instead; `coi validate` and `coi schema` do not load it. |

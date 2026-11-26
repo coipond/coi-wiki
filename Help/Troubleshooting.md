@@ -263,11 +263,25 @@ Confirm `auto_pause_on_high: true` and `auto_kill_on_critical: true` (the text o
 # Dry run - see what would be cleaned
 coi clean --orphans --dry-run
 
-# Clean orphaned veth interfaces and stale nft rules
+# Clean orphaned veths that Coi recorded and stale nft rules
 coi clean --orphans
 ```
 
 **Prevention:** Always stop containers via `coi shutdown` or `coi kill` rather than directly via `incus stop/delete`.
+
+## Leftover Veth Interfaces Not Removed
+
+**Symptom:** A host veth with no master bridge, left by a Coi container, stays after `coi clean --orphans`, and `coi health` does not count it as orphaned.
+
+**Cause:** `coi clean --orphans` removes only veths that Coi recorded in `~/.coi/veths`, and Coi did not record this one (see [Container Operations → Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers) for which veths Coi does not record).
+
+**Fix:** Delete the veth by hand:
+
+```bash
+sudo ip link delete <veth>
+```
+
+Delete only a veth that you know a Coi container left: other tools (CNI plugins, manual `ip link` pairs) also make host veths with no master bridge.
 
 ## Warning: "could not ensure bridge forwarding rules"
 
@@ -319,7 +333,7 @@ If your settings were already lost, restore from backup or recreate them. Going 
 
 **Symptom:** Session save fails with `EXDEV` (cross-device link) error, typically when `/tmp` and the session storage directory are on different filesystems or mount points.
 
-**Fix:** Coi now uses a recursive copy with proper symlink handling as a fallback when `os.Rename` fails with `EXDEV`. Update to the latest version.
+**Fix:** Coi now falls back to a recursive copy when `os.Rename` fails with `EXDEV`. Update to the latest version. The saved session leaves out symlinks and special files (FIFOs, sockets, device nodes).
 
 ## Parent Dir of a Protected Path Cannot Be Renamed or Removed
 
@@ -518,7 +532,8 @@ systemctl is-enabled udisks2.service
 
 - **Chrome / Chromium:** run with `--no-sandbox`; the container is the sandbox. Playwright's headless default needs no change.
 - **Podman / Buildah:** run them with `sudo`, or use Docker, which works unchanged.
-- **Flatpak, snaps:** install the tool another way (apt, mise, a release binary).
+- **Flatpak:** install the tool another way (apt, mise, a release binary).
+- **Snaps:** the image has no snapd ([Image Management - No snapd in the Image](Image-Management#no-snapd-in-the-image)); install the tool another way.
 
 **Verification:**
 

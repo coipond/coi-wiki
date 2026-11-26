@@ -61,6 +61,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 - Config file: `~/.config/opencode/opencode.json` (XDG-compliant location)
 - Session storage: opencode's data dirs (`~/.local/share/opencode/` with its SQLite session database, and `~/.local/state/opencode/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/opencode/<workspace-hash>/`, so they survive ephemeral containers and stay out of the workspace. Data that an older coi kept in the workspace (`.local/share/opencode/`, `.local/state/opencode/`) is moved once, to opencode (`tool-data/opencode/`); [opencode2](#opencode2-opencode-v2) never takes it. If the move fails, coi warns and the data stays in the workspace. If opencode2 on 0.16.0 already took it, see [Migration Guide - Upgrading to 0.16](Migration-Guide#upgrading-to-016) to move it back.
 - Resume: `coi shell --resume` with `[tool] name = "opencode"` configured (or `--continue`, both are aliases). As for the other tools, it needs a saved session for the workspace, and when you pass both flags, a session ID wins over a flag without one (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). In that session, coi opens the workspace's latest opencode session with `opencode --session <id>`; when it finds none, it starts opencode with `--continue`.
+- Permissions: in bypass mode (the default) coi also starts opencode with `--auto`, which approves everything that is not explicitly denied. Otherwise an `ask` rule in the host or workspace `opencode.json`, an agent's permission or `OPENCODE_PERMISSION` would win over coi's `"*": "allow"`, as OpenCode applies the last matching rule. `--auto` needs OpenCode 1.18 or later; `coi build` installs a newer one. With `permission_mode = "interactive"` coi does not pass `--auto`.
 
 **Requirements:**
 
@@ -86,7 +87,7 @@ A per-tool [profile](Profiles) is the ergonomic equivalent of the removed `--too
 | Session storage | `~/.claude/` (home dir) | `~/.local/share/opencode/` (SQLite), mounted from `~/.coi/tool-data/opencode/` on the host |
 | Resume behavior | `--resume` continues last conversation | `--resume` or `--continue` (identical aliases) resumes the saved session, then opens the workspace's latest opencode session |
 | Config location | `~/.claude/` directory | `~/.config/opencode/opencode.json` |
-| Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` |
+| Permission bypass | Auto-injected into settings.json | Auto-injected `"permission": {"*": "allow"}` and the `--auto` flag |
 
 **Not in the default image** (since 0.16) - the image installs [opencode2](#opencode2-opencode-v2) by default. To keep opencode (v1), add it to the agent set and rebuild:
 
@@ -239,11 +240,13 @@ The build installs goose v1.57.0 from its release tarball and checks the tarball
 - Config directory: `~/.config/goose/`
 - Host files copied into the container: `config.yaml`, `secrets.yaml`, `.goosehints`, `AGENTS.md`, and the provider token files `chatgpt_codex/tokens.json`, `githubcopilot/info.json`, `gemini_oauth/tokens.json`, `xai_oauth/tokens.json`, `kimicode/token.json`. On a resume, coi also copies a token file that the saved session does not have yet.
 - Image defaults: `/etc/goose/config.yaml` turns goose telemetry off (`GOOSE_TELEMETRY_ENABLED: false`) and keeps secrets in a file, not the system keyring (`GOOSE_DISABLE_KEYRING: true`). A copied host `config.yaml` that sets these keys wins.
-- Launch: coi starts `goose session`. `permission_mode` has no effect on goose, and coi does not wire the [sandbox context](Sandbox-Context) into it.
+- Launch: coi starts `goose session`.
+- Permissions: coi sets the container env var `GOOSE_MODE` from [`permission_mode`](#permission-mode): `approve` (goose asks before every tool call) for `interactive`, `auto` otherwise. The env var wins over the mode in your goose `config.yaml`, also on a resume. `GOOSE_MODE` is goose's own approval mode, not a security control: the container is the security boundary.
+- Context injection: coi writes the [sandbox context](Sandbox-Context) as a coi-managed block into `~/.config/goose/.goosehints`, which goose loads as global hints. Your own hints in that file are kept.
 - Session storage: goose's data dir (`~/.local/share/goose/`, with its SQLite session database) and state dir (`~/.local/state/goose/`) are mounted from per-workspace host dirs under `~/.coi/tool-data/goose/<workspace-hash>/`, so sessions survive ephemeral containers.
 - A saved goose session (`~/.coi/sessions-goose/`) leaves out `tls` and `roaming_node_key`, the private keys of `goose serve`, which coi does not run.
 - Resume: `coi shell --resume` needs a saved goose session for the workspace (see [`--resume` Flag](Container-Lifecycle-and-Sessions#--resume-flag)). coi then looks up the workspace's latest goose session and runs `goose session --resume --session-id <id>`; when it finds none, it starts a new goose session.
-- `coi run --prompt` does not support goose: it exits with code 2 (`tool "goose" cannot run a prompt headlessly via coi run`).
+- Headless runs: `coi run --prompt` runs `goose run --quiet --instructions -` with the prompt on stdin (see [Fire-and-Forget Prompt Runs](Headless-Orchestration#fire-and-forget-prompt-runs-coi-run---prompt)).
 
 ## Passing API Keys
 
@@ -307,7 +310,7 @@ permission_mode = "interactive"  # "bypass" (default) or "interactive"
 
 | Mode | Claude Code | opencode |
 |------|-------------|----------|
-| `bypass` (default) | `--permission-mode bypassPermissions` flag + bypass settings injected into `settings.json` | `"permission": {"*": "allow"}` injected into `opencode.json` |
+| `bypass` (default) | `--permission-mode bypassPermissions` flag + bypass settings injected into `settings.json` | `--auto` flag + `"permission": {"*": "allow"}` injected into `opencode.json` |
 | `interactive` | No bypass flag or settings - Claude asks before running commands, and **auto mode stays selectable in-session** (Shift+Tab) | `"permission": {"*": "ask"}` injected - opencode asks before running commands |
 
 **Notes:**
@@ -353,7 +356,7 @@ Coi's tool abstraction (the `Tool` interface plus optional capability interfaces
 
 ## Sandbox Context File
 
-Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system, except goose.
+Coi injects a `~/SANDBOX_CONTEXT.md` (and an optional structured `~/SANDBOX_CONTEXT.json`) describing the sandbox to the tool, and by default wires it into each tool's native context system.
 
 **→ See [Sandbox Context](Sandbox-Context)** for what it includes, auto-context injection per tool, disabling it, and custom / JSON context files.
 

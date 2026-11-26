@@ -244,6 +244,14 @@ base = "ubuntu:24.04"
 
 An existing image keeps the base it was built from: run `coi build --force` to rebuild it from `ubuntu:26.04` or the `base` you set. A custom image builds on `coi-default` unless its `base` names another image (see [Build Configuration in Project Config](#build-configuration-in-project-config)).
 
+Coi imports each Ubuntu base it downloads as a local image with the alias `coi-ubuntu-<version>`, the base cache. After each build that creates an image, coi removes the base caches that no build still needs, such as `coi-ubuntu-24.04` after the default moved to 26.04. This includes the build that `coi shell` or `coi run` starts from its prompt. Coi keeps the base cache for:
+
+- `ubuntu:26.04`, the default base
+- each `ubuntu:<version>` set as `[container.build] base` in your config or one of its profiles
+- the base recorded in `~/.coi/image-meta.json` for each image coi built, while that image exists
+
+A base cache that an instance was created from is kept. If its image has other aliases too, coi removes only the `coi-ubuntu-<version>` alias and keeps the image. Each removal prints a line such as `Removed unused Ubuntu base image 'coi-ubuntu-24.04'`. `coi build --all` cleans up once, at the end, if it built at least one image. When the cleanup fails, coi prints a warning and the build still succeeds.
+
 ## cloud-init
 
 The coi image is built from Ubuntu's cloud image but ships with **cloud-init disabled**: it ran on every container boot, ahead of the network, and slowed every start. Coi containers don't need it — Incus sets the hostname and the image brings its own DHCP network config.
@@ -274,9 +282,18 @@ What changes is unprivileged user namespaces for a non-root user, on hosts that 
 | Google Chrome / Chromium, own sandbox | Fails to start its sandbox | Run with `--no-sandbox` (the container is the sandbox); Playwright's headless default already does |
 | Rootless Podman / Buildah | Cannot set up the user namespace | Run them with `sudo`, or use Docker |
 | Flatpak | Cannot start apps | None inside the container |
-| Snaps installed in the container | May fail to start | Install the tool another way (apt, mise, a release binary) |
 
 Root inside the container is unaffected, as are hosts that do not restrict unprivileged user namespaces. The mask applies to images built with 0.15.0 or later (`coi build --force`); existing images and containers keep the old behavior until rebuilt.
+
+## No snapd in the Image
+
+The Ubuntu base image ships snapd, which contacts the Snap Store as soon as a container starts. In `restricted` and `allowlist` modes the [security monitor](Security-Monitoring) could flag that connection and pause the container. So `coi build` removes snapd and pins it in apt: `snap` is not available, and apt does not install snapd or a package that needs it (such as Ubuntu's `firefox` and `chromium` packages). Install such tools another way (mise, a release binary).
+
+Images built with a coi release after 0.16.0 have no snapd. Older images keep it until `coi build --force`.
+
+## SSH Host Keys
+
+The image's `~/.ssh/known_hosts` holds the SSH host keys of github.com, gitlab.com and bitbucket.org. `coi build` gets them over HTTPS, not with `ssh-keyscan`, so the build makes no connection to port 22: the github.com keys from `https://api.github.com/meta`, the bitbucket.org keys from `https://bitbucket.org/site/ssh`, and the gitlab.com keys from the published keys built into coi. When a fetch fails or returns incomplete keys, that host gets the keys built into coi, and the build continues.
 
 ## Pre-installed Runtime Manager (mise)
 

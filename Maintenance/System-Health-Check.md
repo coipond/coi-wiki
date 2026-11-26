@@ -122,7 +122,7 @@ These are `coi health`'s own codes. Other commands use the codes in [Exit Codes]
 | **Networking** | Network bridge, IP forwarding, nft (mode-aware, with masquerade check), bridge forward rules (warns if FORWARD policy is DROP without bridge ACCEPT rules), iptables sudo, ufw conflict (warns if ufw's FORWARD DROP could block container traffic), Docker FORWARD policy (warns if Docker sets FORWARD to DROP), firewalld veth bloat (warns when dead veth registrations accumulate in firewalld zones — the ruleset grows quadratically; see [Troubleshooting](Troubleshooting#firewall-ruleset-grows-huge-firewalld--networkmanager)) |
 | **Storage** | Coi directory, sessions directory, disk space (warns if <5GB), Incus storage pools (per-pool stats and **driver**; warns if <5GB free or >80% used, fails if <2GB free or >90% used; **warns on `dir`-driver pools** — every launch re-unpacks the whole image, ~5-6s per unpacked GB; recreate the pool with zfs/btrfs, e.g. by re-running `install.sh`) |
 | **Configuration** | Config files, network mode, tool, git protected-branch guard |
-| **Status** | Running containers, saved sessions, orphaned resources (veth interfaces, nft rules/chains, iptables bridge rules) |
+| **Status** | Running containers, saved sessions, orphaned resources (veth interfaces that Coi recorded for its containers, nft rules/chains, iptables bridge rules; see [Running Coi Next to Other Incus Containers](Container-Operations#running-coi-next-to-other-incus-containers)) |
 | **Monitoring** | nftables availability, systemd journal access, libsystemd-dev (these three when NFT monitoring enabled), monitoring config, audit log directory, cgroup availability |
 | **Container Networking** | Container connectivity (DNS + HTTP to external host), network restriction verification (confirms restricted mode blocks private networks), secret masking proof, host-credential isolation proof |
 | **Optional** | DNS resolution, process monitoring capability (with `--verbose`) |
@@ -197,6 +197,8 @@ sudo systemctl restart incus
 ```
 
 Until the line is in **both** files and Incus has been restarted, `coi health` keeps the warning and says which step is still missing.
+
+**Host UIDs of 65536 or above (e.g. FreeIPA, LDAP or AD accounts), outside root's range in `/etc/subuid`:** you need no fix. `coi health` cannot run its secret-masking check for such a UID, so it reports that check as a warning that names the UID and says it is not a masking failure. Sessions are not affected: they map the UID with `raw.idmap` and mask secrets as usual. `coi health` takes 65536 (Incus' default `security.idmap.size`) as the limit, also on a host that sets another size.
 
 
 ## Updating Coi
