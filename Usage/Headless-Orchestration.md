@@ -110,7 +110,7 @@ With `--json`, it emits a `command` (argv) and a tool-derived `env`:
   claude: `ANTHROPIC_MODEL` and `CLAUDE_CODE_EFFORT_LEVEL`, when the profile sets
   a model or effort; goose: `GOOSE_MODE` (`auto`, or `approve` when
   `permission_mode = "interactive"`); codex, opencode and opencode2: none; pi:
-  `PI_CODING_AGENT_SESSION_DIR`; omp: `OMP_SESSION_DIR`. The pi and omp paths
+  `PI_CODING_AGENT_SESSION_DIR`; omp: `PI_CODING_AGENT_SESSION_DIR` and `OMP_SESSION_DIR`. The pi and omp paths
   point under the container's workspace mount. Secrets and
   auth stay with the caller — the orchestrator adds its own `--env` (e.g.
   `CLAUDE_CODE_OAUTH_TOKEN`) when it execs. No auth is baked into the spec.
