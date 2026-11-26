@@ -48,7 +48,7 @@ mode = "open"
 ```
 
 - Blocks 169.254.0.0/16 (cloud metadata) by default; set `block_metadata_endpoint = false` to reach it
-- Without usable nft (`use_sudo = false`, or `nft` missing), coi cannot block it and warns: `coi shell` in the session log, `coi run` on stderr. The grants show the network as `open (no egress filtering)` (JSON: `"metadata_endpoint": "not_blocked"`)
+- Without usable nft (`use_sudo = false`, `nft` missing, or no passwordless sudo for `nft`), coi cannot block it and warns: `coi shell` in the session log, `coi run` on stderr. The grants show the network as `open (no egress filtering)` (JSON: `"metadata_endpoint": "not_blocked"`)
 
 ## Running Without Sudo (`use_sudo = false`)
 
