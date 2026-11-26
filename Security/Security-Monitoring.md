@@ -134,6 +134,8 @@ coi unfreeze <container-name>
 coi unfreeze
 ```
 
+`coi unfreeze` also takes an [alias](Container-Lifecycle-and-Sessions#aliases-and-slots): `coi unfreeze <alias>` unfreezes the frozen container of that alias, and `<alias>-<N>` names its slot `N`.
+
 **Note:** Only containers in the Frozen state can be unfrozen. Review the audit log before unfreezing to understand what triggered the pause.
 
 ### Preserving a Killed Container for Forensics (`forensics_on_kill`)
