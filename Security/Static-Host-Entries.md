@@ -63,7 +63,7 @@ An address of the host itself (the bridge gateway or another host address) is th
 
 ## Security Monitoring
 
-With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks (such as known attack ports) still apply to the host.
+With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks still apply to the host. A known attack port (C2/backdoor port) is not flagged only when it is in the entry's `ports`; an entry without `ports` gets no such exemption.
 
 ## Trusted Scope Only
 

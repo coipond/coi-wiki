@@ -48,6 +48,7 @@ The monitoring system detects multiple threat categories:
 | Threat | Detection Method | Severity | Response |
 |--------|-----------------|----------|----------|
 | Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, interactive shells such as `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
+| Reverse shells (shell on a socket) | A shell whose input or output is a TCP connection, also when its command line shows nothing suspicious. `reverse_shell_one_liners` does not lower it | CRITICAL | Kill |
 | Reverse shells (interpreter one-liners) | `python -c` / `python3 -c` / `perl -e` / `ruby -e` / `php -r` **combined with a real network indicator** (a socket/tcp/udp keyword, an IP address, or a `host:port` endpoint). Severity is configurable — see [Interpreter one-liner policy](#interpreter-one-liner-policy-reverse_shell_one_liners) | CRITICAL (default) | Kill |
 | Environment scanning | Command lines that read the environment (`env`, `printenv`, `/proc/*/environ`, language-specific env access patterns) or run grep/awk/sed with secret-related words (`token`, `key`, `password`, ...) | WARNING | Alert |
 | Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
@@ -70,7 +71,18 @@ The monitoring system detects multiple threat categories:
 | Data exfiltration (write) | Writing (tar, dd, etc.) past the same two thresholds; there is no separate write setting | HIGH | Pause |
 | /tmp exhaustion | /tmp usage exceeds 80% | WARNING | Alert |
 
-**Note:** The read and write amounts come from the container's cgroup `io.stat`: they count all block I/O of the container, not only the workspace.
+**Note:** The read and write amounts come from the container's cgroup `io.stat`. Where the workspace is on its own disk, only I/O on that disk counts, so installing packages or pulling images does not count as a large workspace read; the alert is titled "Large workspace read detected" (or write). Where coi cannot tell the two apart, all block I/O of the container counts and the alert is titled "Large container I/O read detected" (or write). This is so when the workspace and the container's root filesystem share a disk, when either has no block device of its own (for example a zfs or btrfs storage pool), or when coi cannot read the devices.
+
+### Sensitive File Access
+
+A file watcher flags access to sensitive files in the container, for example reads of `/etc/shadow` and writes to `/etc/sudoers` or root's `authorized_keys`. Reads of `/etc/shadow` by `sudo`, `su` and PAM's `unix_chkpwd` are not flagged, so `sudo` in the container does not pause it; `sudoedit` (`sudo -e`) reads are flagged. The watcher needs coi to run as root or with `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH`. Without `CAP_SYS_ADMIN` the session log says sensitive file monitoring is disabled; with it but without the other two, the log says no sensitive file could be marked.
+
+Creating, writing or replacing (renaming over) one of the code user's persistence and credential files raises a HIGH threat, which pauses the session under `auto_pause_on_high`:
+
+- `~/.ssh/authorized_keys`, `~/.bashrc`, `~/.profile` and the user crontab
+- a tool credential file coi copies in, such as `~/.claude/.credentials.json`
+
+coi's own copy at session start and `coi file push` are not flagged. Reads of these files are not flagged. A tool that refreshes its token in its credential file, or an installer that adds a line to `~/.bashrc`, also pauses the session: run `coi unfreeze` to continue (see [Unfreezing Paused Containers](#unfreezing-paused-containers)). If this watcher cannot be set up, the session log says user persistence and credential file monitoring is disabled.
 
 ### Network-Level Threats (nftables)
 
@@ -85,7 +97,7 @@ The monitoring system detects multiple threat categories:
 
 **Note:** In `open` mode, which allows LAN traffic, a connection to a private address raises no private network access threat, so it does not pause the container even with `auto_pause_on_high` on. The suspicious-port check still applies: a connection to one of the C2/backdoor ports above on a LAN host is flagged. To keep LAN connections detected, use `restricted` or `allowlist` mode.
 
-**Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
+**Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is exempted only for a host and port you permitted explicitly: a `[[network.hosts]]` entry with that port in `ports` (or `coi hosts add ... --ports`), or, in allowlist mode, an `allowed_domains` entry with that port as a `:ports` suffix, such as `"10.0.0.5:8080"`. The exemption holds in both monitors. A host permitted without `ports`, another port on that host, and any other host on one of the C2/backdoor ports above are still flagged.
 
 **Note:** The nftables monitor excludes the Incus bridge gateway IP from its private network check.
 

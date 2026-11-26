@@ -152,7 +152,7 @@ allowed_domains = [
 
 Each destination is then reachable only on its own ports. An entry with no `:ports` inherits the global `allowed_ports` (else all ports), so existing allowlists behave unchanged. IPv4 only; a malformed port fails the session closed at startup.
 
-> **Note:** With [Security Monitoring](Security-Monitoring) enabled, connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) are flagged even when the firewall allows them, so avoid those ports for allowlisted services.
+> **Note:** With [Security Monitoring](Security-Monitoring) enabled, connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) are flagged even when the firewall allows them, so avoid those ports for allowlisted services. An entry that names the address and the port, such as `"10.0.0.5:8080"`, is the exception: that host and port are not flagged (see [Security Monitoring → Network-Level Threats](Security-Monitoring#network-level-threats-nftables)).
 
 ### The "Internet Open, LAN Only redmine:443" Recipe
 
