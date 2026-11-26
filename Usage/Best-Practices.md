@@ -43,7 +43,7 @@ Match the network mode to your threat model:
 | Your own trusted project | `restricted` (default) | Internet for packages; no internal network access |
 | Third-party or unfamiliar repo | `allowlist` | Constrain egress to only the services the project needs |
 | Internal tooling that needs local services | `restricted` + `allow_local_network_access = true` | Only if you genuinely need cross-machine access |
-| Fully offline work or testing | `open` with monitoring | No egress filtering except the cloud metadata endpoint; rely on monitoring instead |
+| Fully offline work or testing | `open` with monitoring | No egress filtering except the cloud metadata endpoint (blocked only when nft is usable); rely on monitoring instead |
 
 When in doubt, start with `restricted`. If package managers fail, add the required registries to an allowlist config rather than switching to open.
 
