@@ -28,7 +28,7 @@ ports     = [443]                  # reachable ONLY on 443
 
 This is the piece the global `allowed_ports` cannot provide (it caps every destination, internet included): restricted mode can open one LAN service on one port while the internet stays fully open, and allowlist mode can reach one LAN service while everything else stays closed. Empty `ports` inherits the global `allowed_ports` (else all ports).
 
-It takes effect where the mode actually filters that class of address - a private host in restricted or allowlist mode, a public host in allowlist mode. A `ports` scope that could never be enforced is refused at setup with an explanation rather than silently ignored: a public host in restricted mode (already reachable on every port), a private host in allowlist mode with `allow_local_network_access = true` (the whole LAN is already open on the global `allowed_ports`), or anything in open mode. An address of the host itself is the exception: its `ports` are enforced in restricted and allowlist mode (without `allow_host_access`) whatever its class (see [Mode-Aware Reachability](#mode-aware-reachability)). At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
+It takes effect where the mode actually filters that class of address - a private host in restricted or allowlist mode, a public host in allowlist mode. A `ports` scope that could never be enforced is refused at setup with an explanation rather than silently ignored: a public host in restricted mode (already reachable on every port), a private host in allowlist mode with `allow_local_network_access = true` (the private networks are already open on the global `allowed_ports`), or anything in open mode. An address of the host itself is the exception: its `ports` are enforced in restricted and allowlist mode (without `allow_host_access`) whatever its class (see [Mode-Aware Reachability](#mode-aware-reachability)). At runtime: `coi hosts add <container> <ip> <hostname> --ports 443`.
 
 ### A LAN Service in Allowlist Mode
 
@@ -51,11 +51,13 @@ The container reaches `redmine.susanoo.pl:443` and nothing else on that machine 
 
 Writing a name into `/etc/hosts` only makes it resolve — the firewall still decides whether the address is reachable. Coi reconciles the two per mode, and refuses any entry that could never be reached (so you never get a dead name), aborting before it changes `/etc/hosts` or the firewall:
 
-| Network mode | Public IP | Private IP (RFC1918) | Metadata / link-local (169.254.0.0/16) |
+| Network mode | Public IP | Private IP (RFC1918, 100.64.0.0/10) | Metadata / link-local (169.254.0.0/16) |
 |--------------|-----------|----------------------|----------------------------------------|
 | `open`       | Resolves (no firewall change needed) | Resolves | Resolves |
-| `restricted` | Resolves (public egress already allowed) | Resolves **+** a targeted per-address allow is punched through the RFC1918 block | **Refused** (cloud-metadata SSRF) |
-| `allowlist`  | Resolves **+** the address is added to the firewall allow set (scoped to its ports) | Resolves **+** a targeted allow on the entry's `ports` (required) is punched through the RFC1918 block; with `allow_local_network_access = true` the LAN is already open, so no extra rule | **Refused** (cloud-metadata SSRF) |
+| `restricted` | Resolves (public egress already allowed) | Resolves **+** a targeted per-address allow is punched through the private-network block | **Refused** (cloud-metadata SSRF) |
+| `allowlist`  | Resolves **+** the address is added to the firewall allow set (scoped to its ports) | Resolves **+** a targeted allow on the entry's `ports` (required) is punched through the private-network block; with `allow_local_network_access = true` the private networks (RFC1918 and 100.64.0.0/10) are already open, so no extra rule | **Refused** (cloud-metadata SSRF) |
+
+A tailnet peer (Tailscale, Headscale, NetBird) or a CGNAT address is in `100.64.0.0/10`, so it is a private address here. To reach one peer, add an entry for its address with `ports`. `allow_local_network_access = true` opens every private range instead; in allowlist mode an entry must then leave out `ports`.
 
 Metadata / link-local addresses (`169.254.0.0/16`, the cloud metadata endpoint) are refused in both enforcing modes regardless of `allow_local_network_access` — pointing a name there is a credential-theft SSRF vector.
 
