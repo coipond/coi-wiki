@@ -97,7 +97,7 @@ Any section from the full config is valid in a project config:
 | `[git]` | Git settings — but `writable_hooks`, `name`/`email`, `seed_host_identity`, `readonly`, `strip_attribution`, `strip_attribution_patterns` and `protected_branches` are all **trusted-scope config only** (ignored from project config; a project config can't change the protected-branch list) |
 | `[ssh]` | SSH agent forwarding (`forward_agent = true` is **trusted-scope config only** — ignored with a warning from a project config or a project profile; `forward_agent = false` is honored) |
 | `[timezone]` | Container timezone (host, fixed, or UTC) |
-| `[security]` | Add-only protections (`additional_protected_paths`, `secret_paths`) — everything that removes or replaces protection (`protected_paths`, `writable_paths`, `disable_protection`, `host_immutable`) and `reduce_kernel_surface`/`reduce_kernel_surface_strict` are **trusted-scope config only** (ignored from project config) |
+| `[security]` | Add-only protections (`additional_protected_paths`, `secret_paths`) — everything that removes or replaces protection (`protected_paths`, `writable_paths`, `disable_protection`, `host_immutable`) and `reduce_kernel_surface`/`reduce_kernel_surface_strict`/`passwordless_sudo` are **trusted-scope config only** (ignored from project config) |
 | `[monitoring]` | Security monitoring settings |
 | `profiles/` | Named configuration profiles (as [profile directories](Profiles)) |
 
@@ -377,6 +377,13 @@ writable_hooks = false  # Allow container to write .git/hooks
 # reduce_kernel_surface_strict = false # STRICT tier: also deny perf_event_open (a kernel-LPE vector).
 #                                      # Implies reduce_kernel_surface. Removes kernel profiling (perf,
 #                                      # async-profiler) but degrades gracefully. Trusted scope only.
+# passwordless_sudo = true             # keep the image's NOPASSWD sudo rule for the code user (default).
+#                                      # false runs the session without any sudo: the agent cannot become
+#                                      # root or install system packages, so packages come from the image
+#                                      # ([container.build] script or commands). Also turns Docker off (the
+#                                      # docker socket gives root). Disabled by the built-in "hardened"
+#                                      # profile. A session that would run as root (no code user in
+#                                      # the image) does not start. Trusted scope only.
 
 [timezone]
 mode = "host"              # "host" (inherit from host, default), "fixed", or "utc"

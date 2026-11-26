@@ -10,7 +10,7 @@ Understanding how containers and sessions work in Coi.
 
 2. **Inside the container**: `tmux` → `bash` → `<ai-tool>`
    - When the AI tool exits, you are dropped to bash
-   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0`
+   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the notes under [Quick Task](#quick-task-default-mode) and [Long-Running Project](#long-running-project-persistent-mode))
 
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
@@ -18,7 +18,7 @@ Understanding how containers and sessions work in Coi.
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
 
-4. **Docker/Compose support**: Session containers automatically get Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod/setxattr`) applied before the container starts, so Docker and Docker Compose work out of the box inside sessions.
+4. **Docker/Compose support**: Session containers automatically get Docker support flags (`security.nesting`, `security.syscalls.intercept.mknod/setxattr`) applied before the container starts, so Docker and Docker Compose work out of the box inside sessions, unless Docker support is disabled via `[container] docker = false`, `[security] reduce_kernel_surface`, `[security] passwordless_sudo = false`, or the built-in `hardened` profile.
 
 ## Effective Grants at Startup
 
@@ -133,7 +133,9 @@ NODE_ENV = "development"
 
 - `exit` in bash → exits bash but keeps container running (use for temporary shell exit)
 - `Ctrl+b d` → detaches from tmux, container stays running
-- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). Coi tells `exit` from `close` immediately on leaving the session; if the image's `close` and `poweroff` commands do not mark the shutdown request, it needs a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container.
+
+**Note:** In a session without sudo (`[security] passwordless_sudo = false`), `close` and `poweroff` print `no sudo in this session; exit the tool or run 'coi shutdown' on the host` and exit with status 1. If they fail with a sudo error instead, the image was built without this check: rebuild it with `coi build --force` to get the check and the fast exit detection (see [Old Image After Coi Update](Image-Management#old-image-after-coi-update), and [Base Image](Image-Management#base-image) for profile images). A persistent container keeps its image until it is recreated (see [Running a Different AI Tool in the Same Container](#running-a-different-ai-tool-in-the-same-container-v012)), and `coi shutdown` deletes it: see the note under [Long-Running Project](#long-running-project-persistent-mode).
 
 ### From Outside (Host)
 
@@ -236,7 +238,7 @@ sudo poweroff                # Shutdown container → session saved, container d
 coi shell --resume           # Continue conversation in fresh container
 ```
 
-**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password.
+**Note:** `exit` in bash keeps the container running - use `sudo poweroff` or `sudo shutdown 0` to properly end the session. Both require sudo but no password. With `[security] passwordless_sudo = false` (as in the built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos)) there is no sudo: exit the tool and run `coi shutdown` on the host instead.
 
 ### Long-Running Project (Persistent Mode)
 
@@ -255,6 +257,8 @@ coi attach --bash            # Or open a bash shell in the workspace instead of 
 sudo poweroff                # When done, shutdown and save
 coi shell --resume           # Resume with all installed tools intact
 ```
+
+**Note:** In a session without sudo (`[security] passwordless_sudo = false`), `sudo poweroff` does not work, and `coi shutdown` deletes the persistent container. Leave the session with `exit` or `Ctrl+b d` instead: the session is saved and the container keeps running. Then stop it on the host with `coi container stop <name>` (see [Start/Stop/Delete](Container-Operations#startstopdelete)); the stopped container is kept for the next session.
 
 ### Parallel Sessions (Multi-Slot)
 
