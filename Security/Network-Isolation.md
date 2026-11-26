@@ -33,18 +33,21 @@ mode = "allowlist"
 
 - Requires configuration with `allowed_domains` list
 - **TTL-aware DNS refresh**: Domain IPs are re-resolved based on actual DNS TTL values, not a fixed interval. Domains with short TTLs (e.g., CDNs, cloud services) refresh more frequently, preventing allowed domains from becoming unreachable when their IPs rotate. The `refresh_interval_minutes` config acts as a maximum cap; the actual interval is the minimum TTL across all resolved domains (with a 60-second floor to prevent excessive queries)
-- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set), and an allowlisted address in 169.254.0.0/16, or an allowlisted name that resolves there, becomes reachable. `block_private_networks` and `block_metadata_endpoint` have no effect in this mode
+- Blocks RFC1918 private networks and 169.254.0.0/16 (cloud metadata) by default, even when an allowlisted name resolves there; a private [`[[network.hosts]]`](Static-Host-Entries) entry is still reachable on its ports. With `allow_local_network_access = true`, RFC1918 is accepted instead (only on the `allowed_ports` if set), and 169.254.0.0/16 stays rejected unless `block_metadata_endpoint = false`, which makes an allowlisted address there, or an allowlisted name that resolves there, reachable. `block_private_networks` has no effect in this mode, and `block_metadata_endpoint = false` has an effect only together with `allow_local_network_access = true`
 - Blocks services on the host itself, except DHCP and ping to the gateway, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services))
 - IP caching for DNS failure resilience
 
 ### Open Mode
 
-No restrictions (trusted projects only):
+No restrictions except the cloud metadata endpoint (trusted projects only):
 
 ```toml
 [network]
 mode = "open"
 ```
+
+- Blocks 169.254.0.0/16 (cloud metadata) by default; set `block_metadata_endpoint = false` to reach it
+- Without usable nft (`use_sudo = false`, or `nft` missing), coi cannot block it and warns: `coi shell` in the session log and in the grants (metadata "not blocked"), `coi run` on stderr
 
 ## Running Without Sudo (`use_sudo = false`)
 
@@ -94,7 +97,7 @@ refresh_interval_minutes = 30  # Maximum IP refresh interval; actual interval us
 
 - **Gateway handling**: Coi reads the gateway IP from the network that the container's `eth0` is attached to, so a container on a network other than the default one gets that network's gateway. In allowlist mode the firewall accepts it only for DHCP and a rate-limited ping, plus the ports of `[[network.hosts]]` and `allowed_domains` entries that name it, unless `allow_host_access` is set (see [Container Access to Host Services](#container-access-to-host-services)); DNS to it is blocked like all DNS. The security monitor does not flag the gateway's DNS and DHCP ports (see [Security Monitoring](Security-Monitoring#process-level-threats)). You do not need to add the gateway IP to `allowed_domains`.
 - **No DNS servers needed**: allowlist mode blocks all DNS from the container. Coi resolves each allowed hostname on the host and writes the addresses into the container's `/etc/hosts`, so listing `8.8.8.8`/`1.1.1.1` buys nothing. If the container runs systemd-resolved, Coi stops it until the container's next boot, so `resolvectl` does not work: names in `/etc/hosts` still resolve, and a lookup of any other name fails at once. Coi also puts `files [!SUCCESS=return]` in front of the `hosts:` modules in the container's `/etc/nsswitch.conf` (or adds a `hosts:` line if there is none), so a name not in `/etc/hosts` fails without a DNS query. When a running container that an allowlist session left this way is set up in restricted or open mode, Coi starts systemd-resolved again and removes the prefix. On a container with systemd, `coi-nss-restore.service` also removes the prefix at the next boot. Changes that packages make to the `hosts:` line meanwhile (for example `libnss-mdns`, `libnss-myhostname`) are kept.
-- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → RFC1918 + 169.254.0.0/16 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject. In both chains, each reject has a TCP reset rule ahead of it.
+- **Firewall rule ordering**: port-scoped accepts for private `[[network.hosts]]` entries → DNS reject → gateway DHCP accept → 169.254.0.0/16 reject (left out only with `allow_local_network_access` and `block_metadata_endpoint = false`) → RFC1918 reject (or LAN accept with `allow_local_network_access`) → port-scoped accepts for allowlisted addresses → rate-limited ICMP echo → default reject. Traffic to the host itself goes through the input chain instead: port-scoped accepts for `[[network.hosts]]` host-address entries → DNS reject → replies on existing connections → gateway DHCP accept → rate-limited ping to the gateway → port-scoped accepts for `allowed_domains` host-address entries → reject. In both chains, each reject has a TCP reset rule ahead of it.
 - Supports both domain names (`github.com`) and raw IPv4 addresses (`8.8.8.8`)
 - Subdomains must be listed explicitly (`github.com` ≠ `api.github.com`)
 - Domains behind CDNs may have many IPs that change frequently

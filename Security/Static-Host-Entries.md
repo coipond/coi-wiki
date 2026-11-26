@@ -53,7 +53,7 @@ Writing a name into `/etc/hosts` only makes it resolve — the firewall still de
 
 | Network mode | Public IP | Private IP (RFC1918) | Metadata / link-local (169.254.0.0/16) |
 |--------------|-----------|----------------------|----------------------------------------|
-| `open`       | Resolves (no firewall change needed) | Resolves | Resolves |
+| `open`       | Resolves (no firewall change needed) | Resolves | Resolves, but the firewall rejects it unless `block_metadata_endpoint = false` |
 | `restricted` | Resolves (public egress already allowed) | Resolves **+** a targeted per-address allow is punched through the RFC1918 block | **Refused** (cloud-metadata SSRF) |
 | `allowlist`  | Resolves **+** the address is added to the firewall allow set (scoped to its ports) | Resolves **+** a targeted allow on the entry's `ports` (required) is punched through the RFC1918 block; with `allow_local_network_access = true` the LAN is already open, so no extra rule | **Refused** (cloud-metadata SSRF) |
 
