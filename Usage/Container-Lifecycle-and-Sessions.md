@@ -10,7 +10,7 @@ Understanding how containers and sessions work in Coi.
 
 2. **Inside the container**: `tmux` → `bash` → `<ai-tool>`
    - When the AI tool exits, you are dropped to bash
-   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the note under [Quick Task](#quick-task-default-mode))
+   - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the notes under [Quick Task](#quick-task-default-mode) and [Long-Running Project](#long-running-project-persistent-mode))
 
 3. **On cleanup** (when you exit/detach):
    - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
@@ -133,7 +133,7 @@ NODE_ENV = "development"
 
 - `exit` in bash → exits bash but keeps container running (use for temporary shell exit)
 - `Ctrl+b d` → detaches from tmux, container stays running
-- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). With an image from a recent `coi build`, Coi tells `exit` from `close` immediately on leaving the session; older images need a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container. In a session without sudo, `close` and `poweroff` print `no sudo in this session; exit the tool or run 'coi shutdown' on the host` and exit with status 1. This message needs an image rebuilt with `coi build`; in an older image, `close` and `poweroff` fail with a sudo error.
+- `close` or `sudo poweroff` → stops container, session is saved, then container is deleted (or kept in persistent mode). If the image's power wrappers mark the shutdown request, Coi tells `exit` from `close` immediately on leaving the session; otherwise it needs a short extra check (~1.5 s). The `close` command is a safe alias for `poweroff` that only exists inside Coi containers, preventing accidental host shutdowns if typed outside the container. In a session without sudo, `close` and `poweroff` print `no sudo in this session; exit the tool or run 'coi shutdown' on the host` and exit with status 1; if the image's wrappers lack this check, they fail with a sudo error instead. Rebuild the image with `coi build` to get both wrappers. In persistent mode, `coi shutdown` deletes the container: see the note under [Long-Running Project](#long-running-project-persistent-mode).
 
 ### From Outside (Host)
 
