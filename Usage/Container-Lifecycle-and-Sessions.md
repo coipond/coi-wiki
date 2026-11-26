@@ -223,7 +223,7 @@ coi attach --slot 2   # attach to slot 2 of the current workspace
 
 `coi attach` with neither a name nor `--slot` looks only at running Coi containers: those whose name starts with the [container prefix](Container-Operations#running-coi-next-to-other-incus-containers), `coi-` by default. With exactly one running, it attaches to it. With none, it prints `No active sessions`; with several, it lists them.
 
-Give `coi attach` either one container name or a positive `--slot`, not both: `coi attach <name> --slot N` with `N` above `0` exits `2`, and so does a negative `--slot`. If `tmux attach` fails in the container, `coi attach` prints `No tmux session found in container.` and exits `1`; if the container still runs, it also suggests `coi attach <name> --bash`.
+Give `coi attach` either one container name or a positive `--slot`, not both: `coi attach <name> --slot N` exits `2`, and so does a negative `--slot`. If `tmux attach` fails in the container, `coi attach` prints `No tmux session found in container.` and exits `1`; if the container still runs, it also suggests `coi attach <name> --bash`.
 
 ## Example Workflows
 
