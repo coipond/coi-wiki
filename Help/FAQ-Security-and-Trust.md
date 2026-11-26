@@ -6,7 +6,7 @@ Common questions about what Coi protects against, credential handling, and why C
 
 **No**, Coi does not prevent prompt injection. What Coi does protect against:
 
-- ✅ **Credential exposure** - Coi passes your SSH keys, host environment variables (except `TERM`) and credential files in only when you configure it (`forward_env`, `[[credentials]]`, `[defaults.env_commands]`). Exception: the AI tool's own credentials, which Coi copies in if they exist on the host, are readable by the AI tool and every process it starts (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- ✅ **Credential exposure** - Coi passes your SSH keys, host environment variables (except `TERM`) and credential files in only when you configure it (`forward_env`, `[[credentials]]`, `[defaults.env_commands]`, profile `[env_commands]`). Exception: the AI tool's own credentials, which Coi copies in if they exist on the host, are readable by the AI tool and every process it starts (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 - ✅ **Host system access** - AI tools cannot access your entire filesystem, only the mounted workspace
 - ✅ **Lateral movement** - Network isolation prevents access to local network resources (in restricted mode)
 - ✅ **Remote code execution blast radius** - Built-in nftables-based network filtering limits access to private networks and metadata services in restricted mode, and allowlist mode can constrain egress to approved domains/IPs, reducing (but not eliminating) data exfiltration and command-and-control risk
