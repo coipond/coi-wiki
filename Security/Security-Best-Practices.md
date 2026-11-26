@@ -274,7 +274,7 @@ In addition to path protection, Coi provides [network isolation](Network-Isolati
 
 - **Restricted mode** (default): Blocks access to private networks (RFC1918)
 - **Allowlist mode**: Only allows access to specific domains
-- **Open mode**: No restrictions except the cloud metadata endpoint, blocked by default when nft is usable; without usable nft it is reachable and coi warns (use only for trusted projects)
+- **Open mode**: No restrictions except the cloud metadata endpoint, blocked by default only when nftables plus passwordless sudo for `nft` are available; otherwise it is reachable and coi warns (use only for trusted projects)
 
 ## Real-Time Security Monitoring
 
