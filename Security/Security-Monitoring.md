@@ -54,13 +54,13 @@ The monitoring system detects multiple threat categories:
 | Large file writes | Write amount or write rate exceeds the same thresholds as reads (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
 | Suspicious processes | Known attack tool patterns (socat, ncat, etc.) | HIGH | Alert/Pause |
 | Suspicious ports | Open connections, checked each poll interval against the [same port list as nftables](#network-level-threats-nftables), except on a network inside the container (see the note on nested networks below) | HIGH; CRITICAL for 4444 and 5555 | Pause; Kill for 4444 and 5555 |
-| Private or non-allowlisted addresses | In allowlist mode only: open connections, checked each poll interval, to an RFC1918 address or an address outside the allowlist, unless the firewall allows that address on that port or the address is on a network inside the container (see the notes on nested networks and on addresses that leave the allowlist below) | HIGH | Pause |
+| Private or non-allowlisted addresses | In allowlist mode only: open connections, checked each poll interval, to a private address (RFC1918 or 100.64.0.0/10) or an address outside the allowlist, unless the firewall allows that address on that port or the address is on a network inside the container (see the notes on nested networks and on addresses that leave the allowlist below) | HIGH | Pause |
 
 **Note:** The process-level monitor skips the Incus bridge gateway on port 53 (TCP and UDP) and UDP port 67 (DHCP). A resolver in the container keeps a socket to the DNS port, although the firewall drops DNS. The firewall accepts DHCP to the gateway. Any other port on the gateway is still flagged.
 
 **Note:** The process-level monitor does not flag a connection to a network inside the container, such as a nested Docker container on `docker0`, reached directly (e.g. `172.17.0.2:5432`) or through a published port. Such traffic never leaves the container. The monitor reads the container's IPv4 route table and skips a destination with a direct route (no gateway) to an interface other than `eth0`, `lo` or an interface with a default route. The skip applies to every process-level network check, also suspicious ports. Hosts on the subnet of `eth0` or of an interface with a default route, and private hosts reached through those interfaces, are still flagged. Nested IPv6 networks are not covered. When the monitor cannot read the route table, connections to a nested network are flagged as usual.
 
-**Note:** In allowlist mode, an address that Coi resolved for an `allowed_domains` entry can leave the allowlist while a connection to it is still open. The process-level monitor does not report that connection as an address outside the allowlist if the previous poll saw the same connection (protocol and both endpoints) and did not flag it. So a long keep-alive or streaming connection does not pause the container. The RFC1918 and suspicious-port checks still apply to it. A new connection to that address is flagged, and so is a connection that is missing from one poll and then comes back.
+**Note:** In allowlist mode, an address that Coi resolved for an `allowed_domains` entry can leave the allowlist while a connection to it is still open. The process-level monitor does not report that connection as an address outside the allowlist if the previous poll saw the same connection (protocol and both endpoints) and did not flag it. So a long keep-alive or streaming connection does not pause the container. The private-address and suspicious-port checks still apply to it. A new connection to that address is flagged, and so is a connection that is missing from one poll and then comes back.
 
 ### Filesystem Threats
 
@@ -76,7 +76,7 @@ The monitoring system detects multiple threat categories:
 
 | Threat | Detection Method | Severity | Response |
 |--------|-----------------|----------|----------|
-| Private network access | Connections to RFC1918 addresses (10.x, 172.16.x, 192.168.x), except in `open` mode | HIGH | Pause |
+| Private network access | Connections to private addresses (RFC1918: 10.x, 172.16.x, 192.168.x; and 100.64.0.0/10), except in `open` mode | HIGH | Pause |
 | Metadata endpoint | Access to 169.254.169.254 (cloud metadata service) | CRITICAL | Kill |
 | Suspicious ports | Connections to common C2/backdoor ports (1234, 4444, 5555, 6666, 6667, 6697, 8080, 12345, 31337) | CRITICAL | Kill |
 | DNS anomalies | More than `dns_query_threshold` queries/min, or queries to a non-gateway, non-allowlisted resolver | WARNING | Alert |
