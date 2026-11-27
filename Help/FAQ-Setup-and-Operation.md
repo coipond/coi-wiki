@@ -101,7 +101,7 @@ Coi supports multiple AI coding tools through its extensible tool interface. Cur
 - **opencode2** - OpenCode v2
 - **pi** - open-source AI coding agent
 - **codex** - OpenAI's Codex CLI (opt-in at image build)
-- **omp** - Oh My Pi
+- **omp** - Oh My Pi (opt-in at image build)
 - **goose** - open-source coding agent (opt-in at image build)
 
 Coming soon:

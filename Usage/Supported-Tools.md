@@ -175,7 +175,7 @@ coi build --force
 
 ### Codex CLI
 
-OpenAI's coding agent, [Codex CLI](https://developers.openai.com/codex/cli).
+OpenAI's coding agent, [Codex CLI](https://learn.chatgpt.com/docs/codex/cli).
 
 ```toml
 # Select codex in .coi/config.toml, ~/.coi/config.toml, or a profile

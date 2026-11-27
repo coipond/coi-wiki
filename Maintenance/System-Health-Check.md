@@ -53,7 +53,7 @@ SYSTEM:
   [OK]   Timezone          : Host timezone: Etc/UTC
 
 CRITICAL:
-  [OK]   Incus             : Running (version 6.21)
+  [OK]   Incus             : Running (version 7.5)
   [OK]   Permissions       : User in incus-admin group
   [OK]   Default image     : coi-default (fingerprint: 3c946d37f573)
   [OK]   Image age         : 2 days old
