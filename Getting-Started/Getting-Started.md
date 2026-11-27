@@ -1,6 +1,6 @@
 # Getting Started
 
-Coi wraps your AI coding tool in an Incus system container with credential isolation, network controls, and security monitoring. Setup takes about 10 minutes the first time — after that, starting a session is a single command from any project directory.
+Coi wraps your AI coding tool in an Incus system container with network controls and security monitoring. Your SSH keys and host environment variables (except `TERM`) stay out unless you pass them in. Setup takes about 10 minutes the first time — after that, starting a session is a single command from any project directory.
 
 ## Prerequisites
 

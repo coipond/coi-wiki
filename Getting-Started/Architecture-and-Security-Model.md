@@ -42,20 +42,22 @@ Each session runs inside an Incus system container - a full Linux OS instance wi
 What is mounted into the container:
 
 - Your workspace directory (read-write)
-- Essential AI tool config files (credentials, settings) - copied in at session start, not bind-mounted from your live home directory
+- Essential config files (credentials, settings) of the AI tool the session runs - copied in at session start if they exist on the host, not bind-mounted from your live home directory
 
 What is not accessible inside the container by default:
 
 - Your SSH keys and `~/.ssh`
 - Your home directory
-- Your shell environment variables (must be explicitly forwarded via `forward_env`)
+- Your shell environment variables except `TERM` (others must be explicitly forwarded via `forward_env`)
 - Any other host filesystem path
 
 File ownership is handled automatically: Coi selects per container between Incus idmapped (`shift=true`) mounts and a `raw.idmap` mapping, checking each mount source's filesystem before start (FUSE-family/9p sources get `raw.idmap`) and falling back automatically when a kernel or filesystem cannot do idmapped mounts. Either way the AI tool sees files owned by its `code` user without any manual `chown` or privilege escalation. On macOS VM hosts (Colima/Lima/OrbStack) see the [macOS Setup Guide](macOS-Setup-Guide) for the mechanism details.
 
-### Credential Isolation
+### Credential Handling
 
-Coi copies AI tool credentials (e.g., `~/.claude/.credentials.json`) into the container at session start rather than bind-mounting live config directories. This means:
+Coi copies the credentials of the AI tool the session runs (e.g., `~/.claude/.credentials.json`) into the container at session start, if they exist on the host. The AI tool and every process it starts can read them. The same holds for what you pass in with `forward_env`, `[[credentials]]`, `[defaults.environment]` or a profile's `[environment]`, and for the env vars that `[defaults.env_commands]` or a profile's `[env_commands]` set from host command output (see [Configuration](Configuration#full-config-reference) and [Profiles → Available Fields](Profiles#available-fields)). The built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) does not change this. Use short-lived or scoped tokens where the provider supports them. See [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes).
+
+Coi copies these files rather than bind-mounting live config directories. This means:
 
 - The AI tool can authenticate, but the credentials are a point-in-time copy, not a live window into your home directory
 - No arbitrary credential files are reachable - only what Coi explicitly copies
@@ -148,7 +150,7 @@ Coi contains the blast radius of AI tool compromise. It does not prevent the AI 
 
 **Prompt injection** - Malicious content in files the AI reads (README, source code, web pages) can instruct the AI to take actions it otherwise would not. Coi limits what those actions can accomplish, but it cannot detect that an instruction is malicious.
 
-**API key misuse** - If you give the AI an API key to use (e.g., AWS credentials to deploy something), a prompted AI can send those credentials to an attacker. Coi isolation only protects credentials that are not explicitly given to the AI.
+**API key misuse** - If you give the AI an API key to use (e.g., AWS credentials to deploy something), a prompted AI can send those credentials to an attacker. Coi isolation does not protect credentials given to the AI, nor the AI tool's own credentials that Coi copies in (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)).
 
 **Insecure code generation** - Coi has no visibility into the quality or security of code the AI writes. Generated code may contain SQL injection, XSS, hardcoded secrets, or other vulnerabilities.
 

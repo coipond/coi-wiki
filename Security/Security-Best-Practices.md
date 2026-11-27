@@ -265,8 +265,8 @@ Coi provides opt-in mechanisms to selectively share host resources with containe
 
 - Only enable SSH agent forwarding when you need git-over-SSH inside the container
 - Only forward the minimum set of environment variables needed (e.g., API keys for the AI tool)
-- Forwarded env vars are accessible to all processes in the container, including the AI tool
-- The tool's config and credential files that Coi copies in are readable by all processes in the container too (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
+- The AI tool and every process it starts can read forwarded env vars and the env vars that `[defaults.env_commands]` or profile `[env_commands]` set ([Configuration](Configuration#full-config-reference), [Profiles → Available Fields](Profiles#available-fields))
+- The tool's config and credential files that Coi copies in are readable by the AI tool and every process it starts too (see [Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 
 ## Network Isolation
 
@@ -305,7 +305,7 @@ Coi's defense-in-depth approach:
 6. **Host-side immutable protection**: Protected paths locked with `chattr +i` to prevent `unshare -m` + `umount` bypass
 7. **Guest API disabled**: Incus guest API (`/dev/incus`) disabled to prevent host topology leaks
 8. **Git identity guard**: `user.useConfigOnly=true` prevents commits without a real identity
-9. **Credential isolation**: SSH keys and env vars never exposed unless explicitly opted in
+9. **Credential isolation**: SSH keys and env vars (except `TERM`) stay out unless opted in; the AI tool and every process it starts can read the AI tool's copied credentials ([Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes))
 10. **Permission mode**: Optional human-in-the-loop approval for tool commands
 11. **Network isolation**: Prevents unauthorized network access
 12. **Security monitoring**: Real-time threat detection and automated response

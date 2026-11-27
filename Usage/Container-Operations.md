@@ -195,7 +195,7 @@ Key differences from `coi shell`:
 - **No image-build prompt without a TTY** - When run from an interactive terminal, a missing image triggers the same build-it-now prompt as `coi shell`; when stdin is not a terminal (CI, pipes), the error is returned immediately instead
 - **No tmux** - The command runs directly without a tmux session wrapper
 - **Suitable for piped input** - Works correctly when stdin is not a terminal
-- **Same isolation** - Uses the same container isolation, credential protection, and network modes as `coi shell`
+- **Same isolation** - Uses the same container isolation, credential handling, and network modes as `coi shell`
 
 All operational session flags are supported except `--resume` and `--continue`: `coi run` does not resume a tool session, and with either flag it exits with code `2`. To resume a tool session, use `coi shell --resume` or `coi shell --continue` (see [Container Lifecycle and Sessions](Container-Lifecycle-and-Sessions)). Image and persistence come from config or the selected profile:
 

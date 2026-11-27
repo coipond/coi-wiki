@@ -1,6 +1,6 @@
 # Threat Model: Containment Limits
 
-Coi isolates AI coding agents in unprivileged Incus system containers. That boundary is strong against the common failure modes (credential theft, workspace tampering, network exfiltration) — but it is a shared-kernel boundary, and what that means deserves an honest account.
+Coi isolates AI coding agents in unprivileged Incus system containers. That boundary is strong against the common failure modes (theft of host credentials, workspace tampering, network exfiltration) — but it is a shared-kernel boundary, and what that means deserves an honest account. The AI tool's own credentials, which Coi copies in if they exist on the host, are not protected: the AI tool and every process it starts can read them ([Limits and Non-Goals](Limits-and-Non-Goals#copied-tool-credentials-are-readable-by-the-agents-processes)).
 
 ## The Shared-Kernel Residual Risk
 

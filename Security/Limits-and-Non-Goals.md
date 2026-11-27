@@ -31,7 +31,7 @@ In `restricted` mode (the default), Coi blocks private networks and metadata end
 
 ### Copied Tool Credentials Are Readable by the Agent's Processes
 
-Coi does not pass host environment variables into the container unless you list them in `forward_env`. But it copies the AI tool's own credential files in (for Claude Code, `~/.claude/.credentials.json`) and gives them to the `code` user. The agent, and every command it starts, runs as that user. The `code` user also has passwordless sudo for all commands in the Coi image. So any process the agent starts can read these credentials, and the same applies to every `forward_env`, `[[credentials]]` and `environment` value.
+Coi does not pass host environment variables into the container (except `TERM`) unless you list them in `forward_env`. But it copies in the credential files of the AI tool the session runs, if they exist on the host (for Claude Code, `~/.claude/.credentials.json`), and gives them to the user the AI tool runs as (`code` by default, set by `[incus] code_user`; root on an image without that user). The agent, and every command it starts, runs as that user. By default, the `code` user also has passwordless sudo for all commands in the Coi image; the built-in [`hardened` profile](Profiles#built-in-hardened-profile-safe-open-for-untrusted-repos) and `[security] passwordless_sudo = false` remove it. Either way, any process the agent starts can read these credentials, and the same applies to every `forward_env`, `[[credentials]]`, `[defaults.environment]` and profile `[environment]` value, and to the env vars that `[defaults.env_commands]` and profile `[env_commands]` set from host command output.
 
 ### Permission Prompts Are Bypassed
 
@@ -47,7 +47,7 @@ Before you trust Coi with a repository you did not write:
 
 - Use `allowlist` mode, or at least set `allowed_ports`, if the agent must not reach arbitrary hosts.
 - Turn on `[monitoring]` (and `[monitoring.nft]` for network detection).
-- Assume the tool credentials in the container can leak. Use a credential you can revoke.
+- Assume the tool credentials in the container can leak. Use a short-lived or scoped token where the provider supports it, and a credential you can revoke.
 - Add the workspace files your host tools run to `additional_protected_paths`.
 - Review workspace changes before you run them on the host.
 - If you watch the session and your tool supports it, set `permission_mode = "interactive"` to approve each command. This helps only if you read each command: a command that looks routine is easy to approve.
