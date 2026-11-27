@@ -22,7 +22,7 @@ Coi automatically mounts security-sensitive paths as read-only by default. This 
 | `.claude/settings.local.json` | Same auto-executed `hooks` risk as `settings.json` | Read-only mount |
 | `.codex/config.toml` | Codex project config can define commands/hooks that a later session auto-executes | Read-only mount |
 
-In addition to this static list, Coi dynamically discovers and protects each existing per-worktree git config file (`.git/worktrees/<name>/config.worktree`) at session setup, since those are config sinks too when `extensions.worktreeConfig` is enabled. It also protects each existing `.git/worktrees/<name>/commondir`, which names the dir git reads config and hooks from in that worktree.
+In addition to this static list, Coi dynamically discovers and protects the per-worktree git config file (`.git/worktrees/<name>/config.worktree`) of each linked worktree at session setup, since those are config sinks too when `extensions.worktreeConfig` is enabled. An absent one is created empty, so it is protected too. `writable_paths` and `disable_protection` apply to these files as to the static list, but a file listed in `writable_paths` is still created empty when absent. It also protects each existing `.git/worktrees/<name>/commondir`, which names the dir git reads config and hooks from in that worktree.
 
 ### Submodules and Nested Repositories
 
@@ -31,17 +31,26 @@ Host git also reads the git dirs of submodules: a plain `git status` in the supe
 - the git dirs of submodules (`.git/modules/**`, nested submodules included)
 - the git dirs of repositories nested up to 3 levels below the workspace root
 
-For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout. For each linked worktree of such a git dir it also mounts `worktrees/<name>/config.worktree` read-only, created empty when absent, and `worktrees/<name>/commondir` when it exists. A symlinked `worktrees` dir, or a symlinked entry in it, is skipped. `writable_paths` and `disable_protection` apply to these paths as to the defaults; with `[git] writable_hooks = true` their `hooks` stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
+For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout when it exists. For each linked worktree of such a git dir it also mounts `worktrees/<name>/config.worktree` and, when it exists, `worktrees/<name>/commondir`. When its parent dir exists, Coi first creates these absent entries as at the workspace root (see [How It Works](#how-it-works)): `hooks` as an empty dir; `config`, `config.worktree`, `info/attributes`, `commondir` and `worktrees/<name>/config.worktree` as placeholder files. A symlinked entry, and anything below a symlinked dir, is skipped. `disable_protection` applies to these paths as to the defaults. When `writable_paths` lists one of the entries Coi creates, it is still created when absent, but not protected. With `[git] writable_hooks = true` their `hooks` are not created and stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
 
 ### How It Works
 
 When you start a session, Coi:
-1. Detects which protected paths exist in your workspace
+1. Finds the protected paths in your workspace and creates the absent ones it can (see below)
 2. Mounts them as separate read-only devices over the workspace mount
 3. Reports which paths were protected in the startup output
 
+An absent entry of `protected_paths` or `additional_protected_paths` is created only when its name is one of these:
+
+- `.git/hooks`, `.husky` and `.vscode`: created as empty dirs.
+- `.git/config`, `.git/config.worktree`, `.git/info/attributes`, `.git/commondir`, `.claude/settings.json`, `.claude/settings.local.json` and `.codex/config.toml`: created as empty placeholder files, only when the parent dir exists. For the `.claude` and `.codex` files Coi creates the parent dir first. An absent `.git/commondir` gets the content `./`.
+
+Coi skips any other absent path (for example `.coi` or `Makefile`). It never creates `.git`, so in a workspace that is not a git repository it skips the `.git/...` paths. It does not create or protect an entry that `writable_paths` also lists. With `[git] writable_hooks = true` it does not create or protect `.git/hooks`. With `disable_protection = true` it creates and protects no path.
+
+A default run in a git repository that has a `.git/info` dir, no `.coi` dir and no submodules, nested repositories or linked worktrees reports:
+
 ```text
-Protected paths (mounted read-only): .git/hooks, .git/config, .vscode
+Protected paths (mounted read-only): .git/hooks, .git/config, .git/config.worktree, .git/info/attributes, .git/commondir, .husky, .vscode, .claude/settings.json, .claude/settings.local.json, .codex/config.toml
 ```
 
 ### Parent Dirs Are Pinned
