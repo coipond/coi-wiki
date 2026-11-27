@@ -168,8 +168,9 @@ coi build --force
 **Configuration:**
 
 - Config directory: `~/.omp/`
-- Session storage: redirected to the workspace mount (via `OMP_SESSION_DIR`) so sessions survive ephemeral container recreation — the same mechanism `pi` uses
-- Context injection: the sandbox context is wired into omp's config dir at `~/.omp/APPEND_SYSTEM.md` (appended to omp's system prompt, like pi's `APPEND_SYSTEM.md`)
+- Copied from the host: `config.yml`, `models.yml`, `agent.db` with its `agent.db-wal` (credentials) and `AGENTS.md` from `~/.omp/agent`
+- Session storage: redirected to `.omp-sessions/` in the workspace (via `PI_CODING_AGENT_SESSION_DIR`; `OMP_SESSION_DIR` is set to the same path) so sessions survive ephemeral container recreation and `coi shell --resume` continues them — the same mechanism `pi` uses
+- Context injection: the sandbox context is linked to `~/.omp/agent/APPEND_SYSTEM.md` (appended to omp's system prompt, like pi's `APPEND_SYSTEM.md`)
 
 **Note:** the session-dir and system-prompt mechanisms are modeled on `pi`'s and should be validated against the omp version you run.
 

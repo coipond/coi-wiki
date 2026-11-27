@@ -13,8 +13,10 @@ Understanding how containers and sessions work in Coi.
    - From bash you can: type `exit`, press `Ctrl+b d` to detach, or run `sudo shutdown 0` (not in a session without sudo; see the notes under [Quick Task](#quick-task-default-mode) and [Long-Running Project](#long-running-project-persistent-mode))
 
 3. **On cleanup** (when you exit/detach):
-   - Session data (tool config directory) is always saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
+   - Session data (tool config directory) is saved to `~/.coi/sessions-<tool>/`; a previous saved copy is replaced only once the new one is complete, so a failed save never loses it
    - If persistent mode is NOT enabled: the container is deleted after saving only if it was stopped (`close` / `sudo poweroff`); after `exit` or a detach it is left running (reconnect with `coi attach`, stop with `coi shutdown`)
+   - If coi cannot reach Incus at cleanup, it leaves the container untouched and does not save the session data; when Incus is back, use `coi attach` or `coi shell --resume`
+   - If saving the session data fails (for example the host disk is full), a stopped non-persistent container is still deleted by default, and the conversation since the last saved copy is lost; the message names why the save failed. With `[container] keep_on_failed_save = true` (config or profile), coi keeps the stopped container instead and prints how to save it later (fix the cause, then `coi shell --resume=<session-id>` with the session id it prints) or remove it (`coi kill <container>` or `coi clean`). A kept container uses disk until it is removed.
    - If persistent mode is enabled (`[container] persistent = true` in config or profile, as of v0.10.0 — previously the `--persistent` flag): container is kept for reuse
    - Cleanup is protected by `sync.Once` to prevent race conditions between signal handlers and deferred cleanup
 
@@ -86,6 +88,7 @@ Restores the AI tool conversation in a fresh container:
 
 - Use when you want to continue a conversation but do not need installed packages
 - Container is recreated, only tool session data is restored
+- **Stopped leftover container**: after a host reboot or a killed coi, a non-persistent session's container can be left stopped, holding the session's latest turns. `--resume` saves its session data first, then removes it and resumes from that copy. If the save fails, coi keeps the container and the older saved copy and stops with an error: run `--resume` again, or remove the container with `coi kill <container>` to resume from the older copy
 - **Profile auto-restore**: The profile used when the session was originally created is automatically restored - no need to pass `--profile` again. Two sources win over it: an explicit `--profile` on resume, and the profile saved for a container alias when you resume through `coi shell <alias>`. See the [profile precedence table](Profiles#selecting-the-profile-a-bare-coi-uses-defaults-profile).
 - **Two forms**: `coi shell --resume` alone resumes the latest saved session of the workspace; `coi shell --resume=<id>` resumes the session `<id>` (`coi list --all` lists the saved session IDs, see [Container Operations](Container-Operations)). `--continue` is an alias of `--resume` and takes the same two forms.
 - **`--resume` and `--continue` together**: a session ID wins over a flag without one, in either order, so `coi shell --resume=<id> --continue` resumes `<id>`. When both flags name different IDs, `--resume` wins. coi prints a warning on stderr naming the session it resumes and the flag it ignores, for example `Warning: resuming session <id> from --resume; ignoring bare --continue`; the same ID in both flags prints none. If the session does not exist, coi fails with `session '<id>' not found` and prints no warning.
@@ -100,6 +103,7 @@ Keeps the entire container with all modifications:
 - Set it in the project's `./.coi/config.toml`, your user config, or a profile — there is no CLI flag (as of v0.10.0)
 - On `--resume`, an explicitly configured `persistent` wins over the resumed session's saved mode, so config can convert a session's persistence; when unset, the saved mode is inherited
 - A stopped persistent container gets the current `[limits]` when `coi shell` or `coi run` starts it again; a running one keeps its limits (see [When Limits Apply](Resource-and-Time-Limits#when-limits-apply))
+- With `[tool] memory = "fresh"`, each new `coi shell` session in the reused container starts without the tool's earlier conversation history and memory; installed packages, files and settings stay. coi removes the tool's memory files in the container (claude and codex; for goose only its memory extension's memories, goose's sessions stay); the saved sessions on the host are kept. `coi run` keeps the tool's memory. `--resume` brings back the resumed session's memory. A session still running in the container is attached to as it is, and so is a container named with `--container`.
 
 ### `coi persist`
 
@@ -117,6 +121,8 @@ coi persist --all --force    # or -f
 ```
 
 coi asks for confirmation with `--all` and when you name more than one container; `-f`/`--force` skips it.
+
+The change applies to a session that is still running in the container: `close` or `sudo poweroff` in it keeps the container (stopped), and the saved session keeps persistent mode for `--resume`. With no `[container] persistent` in config, the next `coi shell` (also with `--slot` or `--resume`) or `coi run` restarts the persisted container instead of replacing it; an explicit `persistent = false` wins.
 
 After `coi persist`, `coi list` shows the container as `(persistent)` (see [List Containers](Container-Operations#list-containers)).
 

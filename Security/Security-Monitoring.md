@@ -33,7 +33,7 @@ enabled = true
 enabled = true
 ```
 
-`[monitoring] enabled = true` activates process-level and filesystem-level threat detection — it watches spawned processes and file I/O rates. It requires no additional system privileges beyond what Coi already has.
+`[monitoring] enabled = true` activates process-level and filesystem-level threat detection — it watches spawned processes and file I/O rates. It requires no additional system privileges beyond what Coi already has, except the file watchers of [Sensitive File Access](#sensitive-file-access), which need coi to run as root or with `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH`.
 
 `[monitoring.nft] enabled = true` activates kernel-level network monitoring via nftables, which logs packet metadata to systemd-journal. This subsystem requires `nftables`, `libsystemd`, and the current user to be in the `systemd-journal` group (see Setup below). Once it is set, `coi health` checks these prerequisites; it skips them while it is off (see [Health Checks](#health-checks)).
 
@@ -48,6 +48,7 @@ The monitoring system detects multiple threat categories:
 | Threat | Detection Method | Severity | Response |
 |--------|-----------------|----------|----------|
 | Reverse shells (unambiguous) | Pattern matching on process commands (`nc -e`, interactive shells such as `bash -i`, a shell opening a `/dev/tcp/` connection to another machine, `socat EXEC:`, `socket.socket`, `fsockopen`, ...) | CRITICAL | Kill |
+| Reverse shells (shell on a socket) | A shell whose input or output is a TCP connection, also when its command line shows nothing suspicious. `reverse_shell_one_liners` does not lower it | CRITICAL | Kill |
 | Reverse shells (interpreter one-liners) | `python -c` / `python3 -c` / `perl -e` / `ruby -e` / `php -r` **combined with a real network indicator** (a socket/tcp/udp keyword, an IP address, or a `host:port` endpoint). Severity is configurable — see [Interpreter one-liner policy](#interpreter-one-liner-policy-reverse_shell_one_liners) | CRITICAL (default) | Kill |
 | Environment scanning | Command lines that read the environment (`env`, `printenv`, `/proc/*/environ`, language-specific env access patterns) or run grep/awk/sed with secret-related words (`token`, `key`, `password`, ...) | WARNING | Alert |
 | Large file reads | Read amount or read rate exceeds a threshold (see [Filesystem Threats](#filesystem-threats)) | HIGH | Pause |
@@ -70,7 +71,22 @@ The monitoring system detects multiple threat categories:
 | Data exfiltration (write) | Writing (tar, dd, etc.) past the same two thresholds; there is no separate write setting | HIGH | Pause |
 | /tmp exhaustion | /tmp usage exceeds 80% | WARNING | Alert |
 
-**Note:** The read and write amounts come from the container's cgroup `io.stat`: they count all block I/O of the container, not only the workspace.
+**Note:** The read and write amounts come from the container's cgroup `io.stat`. Where the workspace is on its own disk, only I/O on that disk counts, so installing packages or pulling images does not count as a large workspace read; the alert is titled "Large workspace read detected" (or write). Where coi cannot tell the two apart, all block I/O of the container counts and the alert is titled "Large container I/O read detected" (or write). This is so when the workspace and the container's root filesystem share a disk, when either has no block device of its own (for example a zfs or btrfs storage pool), or when coi cannot read the devices.
+
+### Sensitive File Access
+
+| Threat | Detection Method | Severity | Response |
+|--------|-----------------|----------|----------|
+| Credential file reads | A process opens `/etc/shadow`, `/etc/gshadow` or one of root's SSH private keys (`/root/.ssh/id_rsa`, `id_ecdsa`, `id_ed25519`, `id_dsa`) | HIGH | Pause |
+| Critical system file writes | A process writes to `/etc/shadow`, `/etc/sudoers` or `/root/.ssh/authorized_keys` | CRITICAL | Kill |
+| System persistence writes | A process writes to `/etc/passwd`, `/etc/gshadow`, `/etc/crontab` or root's `.bashrc`, `.profile` or `.bash_profile` | HIGH | Pause |
+| User persistence and credential file writes | A process creates, writes or replaces (renames over) the container's `code` user's `~/.ssh/authorized_keys`, `~/.bashrc`, `~/.profile` or user crontab, or a tool credential file (see the note below) | HIGH | Pause |
+
+**Note:** Reads of `/etc/shadow` by `sudo`, `su` and PAM's `unix_chkpwd` are not flagged, so `sudo` in the container does not pause it; `sudoedit` (`sudo -e`) reads are flagged.
+
+**Note:** The watched tool credential files are those of every tool in coi's credential catalog, whichever tool runs: `~/.claude/.credentials.json`, `~/.pi/agent/auth.json`, `~/.codex/auth.json`, `~/.ollama/id_ed25519` and goose's credential files under `~/.config/goose`, such as `secrets.yaml`. omp's `~/.omp/agent.db` is not watched. coi copying the credential files into the container at session start and `coi file push` are not flagged, and reads of these files are not flagged. A tool that refreshes its token in its credential file, or an installer that adds a line to `~/.bashrc`, also pauses the session.
+
+**Note:** These checks need coi to run as root or with `CAP_SYS_ADMIN`, `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH`. For the system files: without `CAP_SYS_ADMIN` the session log says sensitive file monitoring is disabled; with it but without the other two, the log says no sensitive file could be marked. For the `code` user's files: without `CAP_SYS_ADMIN` (or on a kernel before 5.9) the session log says user persistence and credential file monitoring is disabled; without `CAP_SYS_PTRACE` and `CAP_DAC_READ_SEARCH` the files are not watched and nothing is logged.
 
 ### Network-Level Threats (nftables)
 
@@ -85,7 +101,7 @@ The monitoring system detects multiple threat categories:
 
 **Note:** In `open` mode, which allows LAN traffic, a connection to a private address raises no private network access threat, so it does not pause the container even with `auto_pause_on_high` on. The suspicious-port check still applies: a connection to one of the C2/backdoor ports above on a LAN host is flagged. To keep LAN connections detected, use `restricted` or `allowlist` mode.
 
-**Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is not exempted: a connection to one of the C2/backdoor ports above is flagged even when the firewall allows it.
+**Note:** In restricted and allowlist mode, a private address the firewall deliberately allows on that port - a [`[[network.hosts]]`](Static-Host-Entries#security-monitoring) entry on its `ports` (also one added at runtime with `coi hosts add`), a LAN resolver pinned with `dns_servers`, or the LAN under `allow_local_network_access` - is not reported as private network access. The check reads the container's live firewall rules, so another port on the same host is still flagged. The suspicious-port check is exempted only for a host and port you permitted explicitly: a `[[network.hosts]]` entry with that port in `ports` (or `coi hosts add ... --ports`), or, in allowlist mode, an `allowed_domains` entry with that port as a `:ports` suffix, such as `"203.0.113.5:8080"`. The exemption holds in both monitors. A host permitted without `ports`, another port on that host, and any other host on one of the C2/backdoor ports above are still flagged.
 
 **Note:** The nftables monitor excludes the Incus bridge gateway IP from its private network check.
 
@@ -121,6 +137,8 @@ coi unfreeze <container-name>
 # Unfreeze all frozen Coi containers
 coi unfreeze
 ```
+
+`coi unfreeze` also takes an [alias](Container-Lifecycle-and-Sessions#aliases-and-slots): `coi unfreeze <alias>` unfreezes the frozen container of that alias, and `<alias>-<N>` names its slot `N`.
 
 **Note:** Only containers in the Frozen state can be unfrozen. Review the audit log before unfreezing to understand what triggered the pause.
 

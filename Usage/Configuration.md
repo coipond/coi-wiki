@@ -127,6 +127,8 @@ storage_pool = ""              # empty = Incus default pool
 #                              # An untrusted project config can set false, but not true.
 # stale_base_check = "warn"    # "warn" (default), "error", or "off" — react when the image
 #                              # is older than the base it was built from
+# keep_on_failed_save = false  # Keep a stopped non-persistent container when saving its
+#                              # session data fails, instead of deleting it (default: false)
 
 [container.build]
 # base = "ubuntu:26.04"        # Base to build from (default: "ubuntu:26.04" for coi-default,
@@ -173,7 +175,8 @@ storage_pool = ""              # empty = Incus default pool
 
 [tool]
 name = "claude"              # AI coding tool: "claude", "codex", "opencode", "opencode2", "pi", "omp", "goose"
-permission_mode = "bypass"   # "bypass" (default) or "interactive"
+permission_mode = "bypass"   # "bypass" (default) or "interactive"; any other value warns
+                             # and runs as "bypass"
 # binary = "/workspace/scripts/claude-wrapper.sh"
 #                            # Optional: executable to launch instead of the tool's default
 #                            # (e.g. a wrapper script); it receives the tool's usual arguments.
@@ -198,6 +201,9 @@ permission_mode = "bypass"   # "bypass" (default) or "interactive"
 # Auto-inject sandbox context into tool's native context system (default: true)
 # Claude: writes to ~/.claude/CLAUDE.md; OpenCode: sets instructions field in opencode.json
 # auto_context = true
+# Tool memory in a reused persistent container: "keep" (default) or "fresh",
+# which starts each new `coi shell` session without the tool's earlier memory.
+# memory = "keep"
 
 # Claude-specific settings
 [tool.claude]
@@ -236,7 +242,7 @@ forward_agent = false  # Forward host SSH agent (keys stay on host)
 [network]
 # mode = "restricted"        # "restricted" (default), "open", or "allowlist"
 # block_private_networks = true                      # Block RFC1918 / 100.64.0.0/10 from the container
-# block_metadata_endpoint = true
+# block_metadata_endpoint = true                     # Reject 169.254.0.0/16 (cloud metadata) in every mode
 # allowed_domains = ["github.com", "pypi.org"]       # Only used in "allowlist" mode
 # refresh_interval_minutes = 30                       # Max DNS refresh interval (actual uses DNS TTL if shorter)
 # allow_local_network_access = false                  # Allow connections from entire local network

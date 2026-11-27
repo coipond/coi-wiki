@@ -43,8 +43,8 @@ Evidence sub-objects (typed per threat kind, serialized with `omitempty`):
 |-------|-------------|-------------|
 | `evidence.process` | Suspicious processes and environment scanning | `pid`, `command`, `pattern`, `indicators` |
 | `evidence.network` | Unexpected network connections | `connection` (with `protocol`, `local_addr`, `remote_addr`, `state`), `reason`, `remote_host` |
-| `evidence.filesystem` | Large workspace reads | `read_bytes_mb`, `read_rate_mb_per_sec`, `threshold_mb` |
-| `evidence.file_write` | Large workspace writes | `write_bytes_mb`, `write_rate_mb_per_sec`, `threshold_mb` |
+| `evidence.filesystem` | Large workspace reads (large container I/O reads where coi cannot tell the workspace disk apart) | `read_bytes_mb`, `read_rate_mb_per_sec`, `threshold_mb` |
+| `evidence.file_write` | Large workspace writes (large container I/O writes where coi cannot tell the workspace disk apart) | `write_bytes_mb`, `write_rate_mb_per_sec`, `threshold_mb` |
 | `evidence.sensitive_file` | Sensitive-file access (fanotify) | `path`, `access`, `pid` |
 | `evidence.process_count` | Fork-bomb / spawn-rate spikes | `count`, `threshold`, `delta` |
 | `evidence.auth_log` | auth.log / syslog pattern matches | `log_file`, `line`, `pattern` |

@@ -21,7 +21,7 @@ By default, Coi also injects the sandbox context into each tool's native context
 - **OpenCode**: The `instructions` field in `opencode.json` is set to reference `~/SANDBOX_CONTEXT.md`.
 - **Codex**: A managed block is written into the container's `~/.codex/AGENTS.md` (never the workspace `AGENTS.md`).
 - **pi**: `~/.pi/agent/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
-- **omp**: `~/.omp/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
+- **omp**: `~/.omp/agent/APPEND_SYSTEM.md` is symlinked to `~/SANDBOX_CONTEXT.md`.
 - **goose**: A managed block is written into `~/.config/goose/.goosehints`, which goose loads as global hints. Your own hints in that file are preserved.
 
 This means these tools automatically have full sandbox awareness without users needing to manually reference `~/SANDBOX_CONTEXT.md`.

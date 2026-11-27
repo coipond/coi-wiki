@@ -71,7 +71,7 @@ Network access is controlled by host-side nftables rules in the FORWARD chain (a
 
 **`allowlist`** - Only explicitly listed domains or IP ranges are reachable. Everything else is denied. Use for untrusted projects where you want to constrain which external services the AI can contact.
 
-**`open`** - No network filtering. Use only when nftables/passwordless sudo is unavailable (or `use_sudo = false` is set) or for fully trusted projects that require local network access.
+**`open`** - No network filtering except the cloud metadata range 169.254.0.0/16, blocked by default (`block_metadata_endpoint`) only when nftables plus passwordless sudo for `nft` are available and `use_sudo` is not `false` (see [Open Mode](Network-Isolation#open-mode)). Use only when nftables/passwordless sudo is unavailable (or `use_sudo = false` is set) or for fully trusted projects that require local network access.
 
 See [Network Isolation](Network-Isolation) for the full configuration reference.
 
@@ -94,7 +94,7 @@ When enabled (`[monitoring] enabled = true`; off by default), Coi runs an active
 
 **Process monitoring** - Watches all processes spawned inside the container for patterns associated with reverse shells (outbound connections on non-standard ports, common shell-over-network tools), environment scanning (commands such as `env` or `printenv`, reads of `/proc/*/environ`), and suspicious process trees.
 
-**Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc. Opening `/etc/shadow`, `/etc/gshadow` or root's SSH private keys is flagged; opening the agent's own credential files, such as `~/.claude/.credentials.json`, is not.
+**Filesystem monitoring** - Tracks I/O patterns associated with bulk data exfiltration - unusually high read rates across large numbers of files, access to paths outside the workspace, etc. Opening `/etc/shadow`, `/etc/gshadow` or root's SSH private keys is flagged; opening the agent's own credential files, such as `~/.claude/.credentials.json`, is not, but writing to them is (see [Security Monitoring → Sensitive File Access](Security-Monitoring#sensitive-file-access)).
 
 **Network monitoring** (requires `[monitoring.nft] enabled = true`) - Uses kernel-level nftables rules to detect and log connections to blocked destinations. Connections to known C2 infrastructure and cloud metadata services are detected and logged even when the container is in `open` mode; connections to private network ranges are detected in the other modes.
 

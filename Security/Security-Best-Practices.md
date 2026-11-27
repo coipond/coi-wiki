@@ -28,7 +28,7 @@ In addition to this static list, Coi dynamically discovers and protects the per-
 
 Host git also reads the git dirs of submodules: a plain `git status` in the superproject recurses into them, so a writable submodule `config` could run a command on the host (`core.fsmonitor`). At launch Coi therefore also finds:
 
-- the git dirs of submodules (`.git/modules/**`, nested submodules included)
+- the git dirs of submodules (`.git/modules/**`, nested submodules included), also those git creates for a linked worktree (`.git/worktrees/<name>/modules/**`)
 - the git dirs of repositories nested up to 3 levels below the workspace root
 
 For each of them it mounts `hooks`, `config`, `config.worktree`, `info/attributes` and `commondir` read-only, plus the `.git` file of each submodule checkout when it exists. For each linked worktree of such a git dir it also mounts `worktrees/<name>/config.worktree` and, when it exists, `worktrees/<name>/commondir`. When its parent dir exists, Coi first creates these absent entries as at the workspace root (see [How It Works](#how-it-works)): `hooks` as an empty dir; `config`, `config.worktree`, `info/attributes`, `commondir` and `worktrees/<name>/config.worktree` as placeholder files. A symlinked entry, and anything below a symlinked dir, is skipped. `disable_protection` applies to these paths as to the defaults. When `writable_paths` lists one of the entries Coi creates, it is still created when absent, but not protected. With `[git] writable_hooks = true` their `hooks` are not created and stay writable. Discovery runs only at launch: a submodule or repository added during a session is protected from the next launch.
@@ -246,7 +246,7 @@ By default the agent can't commit on, or push to, `main` or `master`: it works o
 
 Coi rejects symlinked protected paths to prevent attacks where a symlink could trick Coi into mounting arbitrary host paths as read-only (or failing to protect the real path).
 
-- Linked git worktrees (`.git` as a file pointing at git internals outside the workspace) are supported: Coi resolves the external gitdir and common dir, mounts the common dir so git works, and re-covers its auto-executing subpaths (`hooks`, `config`, `info/attributes`, `commondir`, `worktrees/*/config.worktree`, each existing `worktrees/*/commondir`) with the same read-only protection a normal repo's `.git` gets — synthesizing empty read-only placeholders for absent ones (for an absent `commondir`, a file with the content `./`, so it names the git dir itself)
+- Linked git worktrees (`.git` as a file pointing at git internals outside the workspace) are supported: Coi resolves the external gitdir and common dir, mounts the common dir so git works, and re-covers its auto-executing subpaths (`hooks`, `config`, `info/attributes`, `commondir`, `worktrees/*/config.worktree`, each existing `worktrees/*/commondir`, and the same entries of each submodule git dir under `modules/**` and `worktrees/*/modules/**`) with the same read-only protection a normal repo's `.git` gets — synthesizing empty read-only placeholders for absent ones (for an absent `commondir`, a file with the content `./`, so it names the git dir itself)
 - A bidirectional-link guard rejects malicious `gitdir:` pointers (e.g. an untrusted repo pointing at `~/.ssh`): the external dir is mounted only if its `gitdir` back-pointer resolves to this workspace and it is a real object store; on any guard failure Coi fails closed (nothing mounted)
 - When the workspace's own `.git` indirection still cannot be handled (e.g. the workspace's `.git` is a symlink, or a file because the workspace is itself a submodule checkout), Coi surfaces a setup warning instead of silently skipping git path protection, and continues protecting unrelated paths like `.vscode`
 - Symlinked protected paths like `.vscode -> /etc/passwd` are rejected
@@ -283,7 +283,7 @@ In addition to path protection, Coi provides [network isolation](Network-Isolati
 
 - **Restricted mode** (default): Blocks access to private networks (RFC1918, 100.64.0.0/10)
 - **Allowlist mode**: Only allows access to specific domains
-- **Open mode**: No restrictions (use only for trusted projects)
+- **Open mode**: No restrictions except the cloud metadata endpoint, blocked by default only when nftables plus passwordless sudo for `nft` are available and `use_sudo` is not `false`; otherwise it is reachable and coi warns (use only for trusted projects)
 
 ## Real-Time Security Monitoring
 

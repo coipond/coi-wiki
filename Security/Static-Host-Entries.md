@@ -53,7 +53,7 @@ Writing a name into `/etc/hosts` only makes it resolve — the firewall still de
 
 | Network mode | Public IP | Private IP (RFC1918, 100.64.0.0/10) | Metadata / link-local (169.254.0.0/16) |
 |--------------|-----------|----------------------|----------------------------------------|
-| `open`       | Resolves (no firewall change needed) | Resolves | Resolves |
+| `open`       | Resolves (no firewall change needed) | Resolves | Resolves, but the firewall rejects it unless `block_metadata_endpoint = false` |
 | `restricted` | Resolves (public egress already allowed) | Resolves **+** a targeted per-address allow is punched through the private-network block | **Refused** (cloud-metadata SSRF) |
 | `allowlist`  | Resolves **+** the address is added to the firewall allow set (scoped to its ports) | Resolves **+** a targeted allow on the entry's `ports` (required) is punched through the private-network block; with `allow_local_network_access = true` the private networks (RFC1918 and 100.64.0.0/10) are already open, so no extra rule | **Refused** (cloud-metadata SSRF) |
 
@@ -65,7 +65,7 @@ An address of the host itself (the bridge gateway or another host address) is th
 
 ## Security Monitoring
 
-With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks (such as known attack ports) still apply to the host.
+With [security monitoring](Security-Monitoring) on, a connection to a host entry on one of its permitted ports is not reported as a private-network threat and does not pause the container - in restricted and allowlist mode alike, including entries added at runtime with `coi hosts add`. The monitors check against the container's live firewall rules, so the same holds for a LAN resolver pinned with `dns_servers`. A connection to any other port on that host is still blocked and still flagged, and the other checks still apply to the host. A known attack port (C2/backdoor port) is flagged unless it is in the entry's `ports`; an entry without `ports` gets no such exemption.
 
 ## Trusted Scope Only
 
