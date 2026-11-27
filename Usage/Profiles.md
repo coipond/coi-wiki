@@ -399,8 +399,21 @@ effort_level = "high"
 base = "coi-default"
 script = "/home/user/myproject/.coi/profiles/rust-dev/build.sh"
 
+[[mounts]]
+host = "~/.cargo"
+container = "/home/code/.cargo"
+
+[network]
+mode = "restricted"
+
 [limits.cpu]
 count = "4"
+
+[limits.memory]
+limit = "4GiB"
+
+[limits.runtime]
+max_duration = "4h"
 ```
 
 The `WARNING` goes to stderr: coi ignores `forward_env` in a project profile, so `rust-dev` above has none.
