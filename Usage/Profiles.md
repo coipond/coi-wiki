@@ -350,7 +350,7 @@ coi profile info hardened           # summary of its settings (full list below)
 
 | Setting | Value | Why |
 |---|---|---|
-| `network.mode` | `restricted` (+ block private nets & metadata endpoint) | no exfil path / SSRF |
+| `network.mode` | `allowlist` (+ block private nets & metadata endpoint) | no exfil path / SSRF |
 | `security.secret_paths` | `.env`, `*.pem`, `*.key`, `*.p12`, `id_rsa`, `id_ed25519`, `*.tfvars`, `*.tfstate`, `.npmrc`, `.netrc`, `.git-credentials`, `credentials.json`, `service_account.json`, `kubeconfig`, `database.yml`, `secrets/**` | mask repo-local secrets from the agent |
 | `security.host_immutable` | `true` | lock host-side protection of protected paths |
 | `container.persistent` | `false` | ephemeral — nothing from the session persists |
@@ -364,16 +364,21 @@ It overrides only the keys it sets (a global `mode = "open"` still becomes `allo
 
 Without sudo, packages come from the image ([`[container.build]`](Image-Management#workflow-2-profile-with-build-script) `script` or `commands`), and `close`/`poweroff` inside the container do not end the session: run `coi shutdown` on the host ([Stopping Containers](Container-Lifecycle-and-Sessions#from-inside-the-container)). A persistent container without sudo (for example after `coi persist`) is deleted by `coi shutdown`; see the note under [Long-Running Project](Container-Lifecycle-and-Sessions#long-running-project-persistent-mode).
 
-**Limitations:** keys the preset does not set keep your value, and it cannot remove entries from a list you configured, so these global settings still apply under `--profile hardened`:
+**Limitations:** keys the preset does not set keep your value. The preset replaces `allowed_domains` with its own list, but it only adds to the lists that merge (`forward_env`, `secret_paths`, `writable_paths`, `[[mounts]]`, `[[sockets]]`) and cannot remove your entries from them. The global settings that weaken a session and still apply under `--profile hardened` include:
 
 - `forward_env`: the variables are still forwarded.
 - `disable_protection = true`: protections stay off.
-- `[network] allow_host_access = true`: the container reaches every service on the coi host.
-- `[[network.hosts]]` entries: the firewall holes they open stay open.
-- `[git] writable_hooks = true`: `.git/hooks` stays writable.
+- `[security] protected_paths`: your list replaces the defaults, so a path it leaves out (for example `.git/hooks`) stays unprotected.
 - `[security] writable_paths`: the listed paths stay unprotected.
+- `[git] writable_hooks = true`: `.git/hooks` stays writable.
+- `[network] allow_host_access = true`: the container reaches every service on the coi host except DNS (port 53).
+- `[[network.hosts]]` entries: the firewall holes they open stay open.
+- `[[mounts]]` and `[[sockets]]`: they are still added to the container.
 
-A global `[network] dns_servers` also stays set, and allowlist mode rejects it: network setup fails with `network.dns_servers is not compatible with allowlist mode`.
+These global network settings make network setup fail in allowlist mode:
+
+- `[network] dns_servers`: `network.dns_servers is not compatible with allowlist mode`.
+- A `[[network.hosts]]` entry for a private (LAN) address with no `ports` and no global `allowed_ports`, or for a LAN or host address whose ports include 53 or 853.
 
 It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, sudo, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself, set `permission_mode = "interactive"`: this works for Claude Code, opencode, opencode2, Codex CLI and [goose](Supported-Tools#goose); pi and omp ignore it ([Permission Prompts Are Bypassed](Limits-and-Non-Goals#permission-prompts-are-bypassed)).
 
