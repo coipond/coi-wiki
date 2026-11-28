@@ -350,7 +350,7 @@ coi profile info hardened           # summary of its settings (full list below)
 
 | Setting | Value | Why |
 |---|---|---|
-| `network.mode` | `restricted` (+ block private nets & metadata endpoint) | no exfil path / SSRF |
+| `network.mode` | `allowlist` (+ block private nets & metadata endpoint) | no exfil path / SSRF |
 | `security.secret_paths` | `.env`, `*.pem`, `*.key`, `*.p12`, `id_rsa`, `id_ed25519`, `*.tfvars`, `*.tfstate`, `.npmrc`, `.netrc`, `.git-credentials`, `credentials.json`, `service_account.json`, `kubeconfig`, `database.yml`, `secrets/**` | mask repo-local secrets from the agent |
 | `security.host_immutable` | `true` | lock host-side protection of protected paths |
 | `container.persistent` | `false` | ephemeral — nothing from the session persists |
@@ -360,11 +360,27 @@ coi profile info hardened           # summary of its settings (full list below)
 | `security.passwordless_sudo` | `false` | no sudo: the agent cannot become root or install system packages, and Docker stays off |
 | `limits.runtime.max_duration` | `"4h"` | bound autonomous persistence — the [Trail of Bits escapes](https://blog.trailofbits.com/2026/08/26/vms-wont-contain-cyber-capable-agents/) took 12+ hours of uninterrupted autonomy |
 
-It is a fixed baseline that overrides a weaker base config (a global `mode = "open"` still becomes `restricted` under `--profile hardened`), ships built-in (no setup), and can be overridden by a same-named disk profile (`~/.coi/profiles/hardened/` or `.coi/profiles/hardened/`).
+It overrides only the keys it sets (a global `mode = "open"` still becomes `allowlist` under `--profile hardened`); every other key keeps the value from your config files (see Limitations below). It ships built-in (no setup), and can be overridden by a same-named disk profile (`~/.coi/profiles/hardened/` or `.coi/profiles/hardened/`).
 
 Without sudo, packages come from the image ([`[container.build]`](Image-Management#workflow-2-profile-with-build-script) `script` or `commands`), and `close`/`poweroff` inside the container do not end the session: run `coi shutdown` on the host ([Stopping Containers](Container-Lifecycle-and-Sessions#from-inside-the-container)). A persistent container without sudo (for example after `coi persist`) is deleted by `coi shutdown`; see the note under [Long-Running Project](Container-Lifecycle-and-Sessions#long-running-project-persistent-mode).
 
-**Limitations** (additive slice merges): the preset cannot subtract a `forward_env` you configured globally, nor re-enable protections if you globally set `disable_protection = true`. It hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, sudo, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself, set `permission_mode = "interactive"`: this works for Claude Code, opencode, opencode2, Codex CLI and [goose](Supported-Tools#goose); pi and omp ignore it ([Permission Prompts Are Bypassed](Limits-and-Non-Goals#permission-prompts-are-bypassed)).
+**Limitations:** the preset hardens network egress, secrets, immutability, ephemerality, SSH-agent forwarding, sudo, monitoring, the kernel attack surface, and session duration. `secret_paths` is a sensible default set, not exhaustive — add repo-specific paths via your own config if needed. It does not change `[tool] permission_mode`, so with the default `bypass` the AI tool still runs commands without asking. To approve each command yourself, set `permission_mode = "interactive"`: this works for Claude Code, opencode, opencode2, Codex CLI and [goose](Supported-Tools#goose); pi and omp ignore it ([Permission Prompts Are Bypassed](Limits-and-Non-Goals#permission-prompts-are-bypassed)).
+
+The preset replaces `[network] allowed_domains` with its own list. Some lists keep your entries, for example `forward_env`, `[security] secret_paths`, `[security] writable_paths`, `[security] additional_protected_paths`, `[[mounts]]`, `[[sockets]]` and `[[credentials]]`: the preset adds its entries to your list and cannot remove yours. Global settings that weaken a session and still apply under `--profile hardened` include:
+
+- `forward_env`: the variables are still forwarded.
+- `[security] disable_protection = true`: protections stay off.
+- `[security] protected_paths`: your list replaces the defaults, so a path it leaves out (for example `.git/hooks`) stays unprotected.
+- `[security] writable_paths`: the listed paths stay unprotected.
+- `[git] writable_hooks = true`: `.git/hooks` stays writable.
+- `[network] allow_host_access = true`: the container reaches every service on the coi host except DNS (port 53).
+- `[[network.hosts]]` entries: the ports they open stay open.
+- `[[mounts]]` and `[[sockets]]`: they are still added to the container.
+
+In allowlist mode these global settings make network setup fail:
+
+- `[network] dns_servers`: `network.dns_servers is not compatible with allowlist mode`.
+- A `[[network.hosts]]` entry that allowlist mode refuses: a private address with no `ports` and no global `allowed_ports` ([Container Access to Host Services](Network-Isolation#container-access-to-host-services)), or a LAN or host address whose ports include 53 or 853.
 
 ### Show Profile Details
 
