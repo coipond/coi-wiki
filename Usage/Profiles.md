@@ -364,7 +364,7 @@ It overrides only the keys it sets (a global `mode = "open"` still becomes `allo
 
 Without sudo, packages come from the image ([`[container.build]`](Image-Management#workflow-2-profile-with-build-script) `script` or `commands`), and `close`/`poweroff` inside the container do not end the session: run `coi shutdown` on the host ([Stopping Containers](Container-Lifecycle-and-Sessions#from-inside-the-container)). A persistent container without sudo (for example after `coi persist`) is deleted by `coi shutdown`; see the note under [Long-Running Project](Container-Lifecycle-and-Sessions#long-running-project-persistent-mode).
 
-**Limitations:** keys the preset does not set keep your value. The preset replaces `allowed_domains` with its own list, but it only adds to the lists that merge (`forward_env`, `secret_paths`, `writable_paths`, `[[mounts]]`, `[[sockets]]`) and cannot remove your entries from them. The global settings that weaken a session and still apply under `--profile hardened` include:
+**Limitations:** keys the preset does not set keep your value. The preset replaces `allowed_domains` with its own list, but it only adds to the lists that merge (for example `forward_env`, `secret_paths`, `writable_paths`, `additional_protected_paths`, `[[mounts]]`, `[[sockets]]`, `[[credentials]]`) and cannot remove your entries from them. The global settings that weaken a session and still apply under `--profile hardened` include:
 
 - `forward_env`: the variables are still forwarded.
 - `disable_protection = true`: protections stay off.
