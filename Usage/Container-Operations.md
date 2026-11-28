@@ -313,6 +313,30 @@ coi container exec my-container --capture --format=raw -- pwd
 
 `--group` sets the group ID and takes effect only together with `--user`; without `--user` it is ignored. With `--user` and no `--group`, the group ID is the same as the user ID.
 
+**Captured Output (`--capture`)**
+
+With `--capture`, `--format` selects the output: `json` (the default) or `raw`. `--format` without `--capture`, or any other value, exits `2`.
+
+In `json` format, coi prints one JSON object:
+
+```bash
+coi container exec my-container --capture -- sh -c 'echo hello; echo oops >&2; exit 3'
+```
+
+```json
+{
+  "exit_code": 3,
+  "stderr": "exit status 3: oops",
+  "stdout": "hello\n"
+}
+```
+
+- `stdout` - the command's standard output, not trimmed
+- `stderr` - empty when the command succeeds, even if it wrote to standard error. When it fails: `exit status N`, followed by `: ` and its standard error (trimmed) if it wrote any. When coi cannot read the exit code: coi's error message
+- `exit_code` - the command's exit code: `0` on success, `1` when coi cannot read the exit code
+
+In `json` format coi itself exits `0` even when the command fails, so scripts read `exit_code`. In `raw` format coi prints only the command's standard output, unchanged, and exits with the command's exit code (`1` when coi cannot read it).
+
 **PTY Allocation (`-t, --tty`)**
 
 The `-t` or `--tty` flag allocates a pseudo-terminal (PTY) for the command execution. This is essential for:
@@ -418,7 +442,7 @@ Scripts (CI, cron) can test Coi's exit code:
 | `4` | The targeted container does not exist | `coi shell --container <name>` when that container does not exist. Other commands can exit `4` when Incus reports `instance not found`. |
 | `5` | The configuration could not be loaded, parsed or validated | Every command that loads the configuration. `coi health` runs with the default config instead; `coi validate` and `coi schema` do not load it. |
 
-`coi run` exits with the command's exit code (with `--prompt`, the agent's), so a `2`-`5` from `coi run` can also come from the command. `coi container exec --capture --format raw` also exits with the command's exit code. `coi container exists`, `coi container running` and `coi image exists` exit `1` for "no", `coi validate profile` exits `1` for an invalid profile, and `coi attach` exits `1` when `tmux attach` fails in the container. `coi health` uses its own codes: see [System Health Check](System-Health-Check#exit-codes).
+`coi run` exits with the command's exit code (with `--prompt`, the agent's), so a `2`-`5` from `coi run` can also come from the command. `coi container exec --capture --format raw` also exits with the command's exit code; with the default `--format json` it exits `0` and reports the command's code in the `exit_code` field. `coi container exists`, `coi container running` and `coi image exists` exit `1` for "no", `coi validate profile` exits `1` for an invalid profile, and `coi attach` exits `1` when `tmux attach` fails in the container. `coi health` uses its own codes: see [System Health Check](System-Health-Check#exit-codes).
 
 ## Use Cases
 
